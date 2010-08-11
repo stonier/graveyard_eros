@@ -1,0 +1,14 @@
+<package>
+  <description brief="eros_rpc_latency">
+
+     eros_rpc_latency
+
+  </description>
+  <author>Daniel Stonier</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/eros_rpc_latency</url>
+
+</package>
+
+
