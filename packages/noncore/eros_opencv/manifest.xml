@@ -1,0 +1,14 @@
+<package>
+  <description brief="eros_opencv">
+
+     eros_opencv
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/eros_opencv</url>
+
+</package>
+
+

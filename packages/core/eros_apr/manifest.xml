@@ -1,0 +1,14 @@
+<package>
+  <description brief="eros_apr">
+
+     eros_apr
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/eros_apr</url>
+
+</package>
+
+

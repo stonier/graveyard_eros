@@ -1,0 +1,14 @@
+<package>
+  <description brief="eros_log4cxx">
+
+     eros_log4cxx
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/eros_log4cxx</url>
+
+</package>
+
+

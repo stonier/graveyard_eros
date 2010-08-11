@@ -1,0 +1,14 @@
+<package>
+  <description brief="eros_cmake_modules">
+
+     eros_cmake_modules
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/eros_cmake_modules</url>
+
+</package>
+
+

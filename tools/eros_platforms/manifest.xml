@@ -1,0 +1,14 @@
+<package>
+  <description brief="eros_platforms">
+
+     eros_platforms
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/eros_platforms</url>
+
+</package>
+
+

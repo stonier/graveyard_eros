@@ -1,0 +1,14 @@
+<package>
+  <description brief="eros_toolchains">
+
+     eros_toolchains
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/eros_toolchains</url>
+
+</package>
+
+

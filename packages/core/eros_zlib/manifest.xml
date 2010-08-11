@@ -1,0 +1,14 @@
+<package>
+  <description brief="eros_zlib">
+
+     eros_zlib
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/eros_zlib</url>
+
+</package>
+
+
