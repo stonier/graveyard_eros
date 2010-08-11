@@ -1,0 +1,12 @@
+<stack>
+  <description brief="Embedded support for ros">
+  <p>
+    This stack includes supporting components to enable ros development on embedded boards.
+  </p>
+  </description>
+  <author>Maintained by Daniel Stonier</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/eros</url>
+  <depend stack="ros" />
+</stack>
