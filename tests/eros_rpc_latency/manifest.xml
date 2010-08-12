@@ -1,7 +1,7 @@
 <package>
-  <description brief="eros_rpc_latency">
+  <description brief="Test utility for benchmarking rpc latencies">
 
-     eros_rpc_latency
+     Generates statistical data providing a benchmark for rpc messaging latencies.
 
   </description>
   <author>Daniel Stonier</author>

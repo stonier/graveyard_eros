@@ -1,7 +1,7 @@
 <package>
-  <description brief="eros_msg_latency">
+  <description brief="Test utility for benchmarking topic latencies">
 
-     eros_msg_latency
+     Generates statistical data providing a benchmark for msg latencies.
 
   </description>
   <author>Daniel Stonier</author>
