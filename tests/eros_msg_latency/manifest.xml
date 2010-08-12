@@ -8,7 +8,9 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/eros_msg_latency</url>
-
+  <depend package="roscpp"/>
+  <depend package="std_msgs"/>
+  <rosdep name="boost" />
 </package>
 
 
