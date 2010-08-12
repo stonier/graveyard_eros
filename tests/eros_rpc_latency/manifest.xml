@@ -8,6 +8,8 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/eros_rpc_latency</url>
+  <depend package="roscpp"/>
+  <depend package="std_srvs"/>
 
 </package>
 

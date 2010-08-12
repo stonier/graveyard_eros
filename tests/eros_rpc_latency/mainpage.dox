@@ -2,25 +2,33 @@
 \mainpage
 \htmlinclude manifest.html
 
-\b eros_rpc_latency is ... 
+\b eros_rpc_latency benchmarks the rpc messaging system. 
 
-<!-- 
-Provide an overview of your package.
--->
+\section Overview
 
+This package includes two separate tests. Both tests effectively timestamp an rpc service message, sends
+to a server, which again timestamps the respons and sends it back. Upon receipt, latencies are calculated.
+The only difference between the two tests are the storage type - either integers or floats. This is 
+important as on some embedded boards, float types can have some problems and also show a marked slowdown
+depending on whether it is software emulated or not.
 
-\section codeapi Code API
+\subsection Integral
 
-<!--
-Provide links to specific auto-generated API documentation within your
-package that is of particular interest to a reader. Doxygen will
-document pretty much every part of your code, so do your best here to
-point the reader to the actual API.
+@code
+roscd eros_rpc_latency/bin
+./server
+./client // in a separate terminal
+@endcode
 
-If your codebase is fairly large or has different sets of APIs, you
-should use the doxygen 'group' tag to keep these APIs together. For
-example, the roscpp documentation has 'libros' group.
--->
+Latencies will be printed every second, and upon termination of the client (ctrl-c), the average
+latency will be printed to standard output.
 
+\subsection Float
+
+@code
+roscd eros_rpc_latency/bin
+./float_server
+./float_client // in a separate terminal
+@endcode
 
 */
