@@ -1,0 +1,25 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+\section Overview
+
+A collection of python tools to assist in embedded development. The tools
+can be called from the scripts in the scripts folder or alternatively the
+interfaces can be integrated directly into your own python scripts.
+
+@section Usage
+
+To use the tools conveniently, ensure that the scripts directory is in your 
+PATH (i.e. in the same way as ${ROS_ROOT}/bin). Alternatively, calling
+rosrun will also work. For example:
+
+@code
+rosrun ecl_python_tools erosprotect --minimal
+@endcode
+
+@section list Tools List
+
+- @ref erosProtectGuide "erosprotect" : use to build and protect parts or all of the ros core stack.
+
+*/

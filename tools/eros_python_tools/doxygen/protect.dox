@@ -1,0 +1,31 @@
+/**
+@page erosProtectGuide Eros Protect
+
+@section Overview
+
+This is used to protect part or all of the core stack. Useful even when you're
+not cross compiling to save on compile times, but also essential when doing
+a partial cross of the RoS.
+
+@section Usage
+
+To build and protect the entire ros core:
+
+@code
+erosprotect --ros
+@endcode
+
+To build and protect only a minimal set of packages for cross development only
+or an absolutely minimal ros runtime, 
+
+@code
+erosprotect --minimal
+@endcode
+
+To reverse the process:
+
+@code
+erosprotect --unprotect
+@endcode
+
+**/
