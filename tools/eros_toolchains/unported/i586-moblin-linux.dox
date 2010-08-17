@@ -1,0 +1,46 @@
+/**
+  @file i586-moblin-linux.cmake
+
+  @ingroup CMakeToolchains
+
+  @brief Toolchain for moblin on intel atom boards.
+
+  Moblin's toolchain can be freely downloaded and untar'd anywhere on your machine. 
+  To keep with ecl's standard practice of finding toolchain include/headers in 
+  /usr/<toolchain-tuple>, I usually untar the moblin sdk, then do the following:
+  
+  @code
+  cd moblin-sdk-0.8
+  mv moblin-cross-toolchain /usr/local
+  ln -s /usr/local/moblin-cross-toolchain/i586-moblin-linux /usr/ 
+  @endcode
+  
+  Be sure to export the appropriate variables (e.g. path to /usr/local/moblin-cross-toolchain/bin).
+
+  The following variables are then preconfigured by this cmake module [default values in square brackets]:
+
+  @code
+  TOOLCHAIN_TUPLE       - the toolchain tuple [i586-moblin-linux] 
+  TARGET_ROOT           - the target root [/usr/i586-moblin-linux]
+  BUILD_INSTALL_PREFIX  - build platform install location [/usr/local]
+  TARGET_INSTALL_PREFIX - target platform install location [/usr/i586-moblin-linux/usr/local]
+  @endcode
+
+  For example,
+
+  @code
+  SET(TARGET_ROOT "/mnt/custom_dir" CACHE STRING
+    "Target root path where headers and libraries are found/installed." FORCE)
+  @endcode
+
+  The following variables can also be customised, but by default
+  they automatically derive from the above variables. In most
+  situations this is exactly what you want.
+
+  @code
+  CMAKE_FIND_ROOT_PATH - location of headers/libraries [/usr/i586-moblin-linux]
+  CMAKE_INSTALL_PREFIX - target install prefix [/usr/i586-moblin-linux/usr/local]
+  @endcode
+
+  @sa @ref toolchainsReference "Guide : Toolchains".
+ */

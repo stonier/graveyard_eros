@@ -1,0 +1,35 @@
+/**
+  @file i586-mingw32msvc.cmake
+
+  @ingroup CMakeToolchains
+
+  @brief Toolchain for ubuntu's mingw32 cross compiler.
+
+  The following variables can be preconfigured for custom locations before
+  calling this toolchain:
+
+  @code
+  TOOLCHAIN_TUPLE       - the toolchain tuple [i686-pc-mingw32]
+  TARGET_ROOT           - the target root [/usr/i686-pc-mingw32]
+  BUILD_INSTALL_PREFIX  - build platform install location [/usr/local]
+  TARGET_INSTALL_PREFIX - target platform install location [/usr/i686-pc-mingw32/usr/local]
+  @endcode
+
+  For example,
+
+  @code
+  SET(TARGET_ROOT "/mnt/custom_dir" CACHE STRING
+    "Target root path where headers and libraries are found/installed." FORCE)
+  @endcode
+
+  The following variables can also be customised, but by default
+  they automatically derive from the above variables. In most
+  situations this is exactly what you want.
+
+  @code
+  CMAKE_FIND_ROOT_PATH - location of headers/libraries [/usr/i686-pc-mingw32]
+  CMAKE_INSTALL_PREFIX - target install prefix [/usr/i686-pc-mingw32/usr/local]
+  @endcode
+
+  @sa @ref toolchainsReference "Guide : Toolchains".
+ */
