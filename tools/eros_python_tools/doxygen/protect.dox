@@ -1,5 +1,5 @@
 /**
-@page erosProtectGuide Eros Protect
+@page erosProtectGuide rosprotect
 
 @section Overview
 
@@ -12,20 +12,22 @@ a partial cross of the RoS.
 To build and protect the entire ros core:
 
 @code
-erosprotect --ros
+rosprotect --ros
 @endcode
 
 To build and protect only a minimal set of packages for cross development only
 or an absolutely minimal ros runtime, 
 
 @code
-erosprotect --minimal
+rosprotect --minimal
 @endcode
 
 To reverse the process:
 
 @code
-erosprotect --unprotect
+rosprotect --unprotect
+// OR
+rosunprotect
 @endcode
 
 **/

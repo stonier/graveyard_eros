@@ -11,6 +11,7 @@ import os
 import sys
 import subprocess
 from eros_python_tools.core import ros_version
+from eros_python_tools.unprotect import unprotect_ros_core
 
 def min_packages():
     ''' Return the minimal set of packages needed for a cross compiled ros runtime. '''
@@ -38,14 +39,6 @@ def protect_ros_core():
     ros_package_path = os.getenv('ROS_PACKAGE_PATH')
     os.environ['ROS_PACKAGE_PATH'] = os.getenv('ROS_ROOT')
     p = subprocess.Popen(["rosmake", "-ia", "--pre-clean", "--rosdep-install", "--rosdep-yes"])
-    p.wait()
-    os.environ['ROS_PACKAGE_PATH'] = ros_package_path
-
-def unprotect_ros_core():
-    ''' Removes any ROS_NOBUILD flags from all ros core stack packages.'''
-    ros_package_path = os.getenv('ROS_PACKAGE_PATH')
-    os.environ['ROS_PACKAGE_PATH'] = os.getenv('ROS_ROOT')
-    p = subprocess.Popen(["rosmake", "-u", "-a"])
     p.wait()
     os.environ['ROS_PACKAGE_PATH'] = ros_package_path
 

@@ -15,11 +15,11 @@ PATH (i.e. in the same way as ${ROS_ROOT}/bin). Alternatively, calling
 rosrun will also work. For example:
 
 @code
-rosrun ecl_python_tools erosprotect --minimal
+rosrun ecl_python_tools rosprotect --minimal
 @endcode
 
 @section list Tools List
 
-- @ref erosProtectGuide "erosprotect" : use to build and protect parts or all of the ros core stack.
+- @ref erosProtectGuide "rosprotect" : use to build and protect parts or all of the ros core stack.
 
 */
