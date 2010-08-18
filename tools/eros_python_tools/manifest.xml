@@ -1,14 +1,15 @@
 <package>
-  <description brief="eros_python_tools">
+  <description brief="Ros embedded development python tools.">
 
-     eros_python_tools
-
+  <p>
+  Provides python tools to aid in embedded development with the ros.
+  </p>
+  
   </description>
   <author></author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/eros_python_tools</url>
-
 </package>
 
 
