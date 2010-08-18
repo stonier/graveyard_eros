@@ -10,6 +10,7 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/eros_python_tools</url>
+  <depend package="eros_license"/>
 </package>
 
 
