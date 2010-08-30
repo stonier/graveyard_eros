@@ -8,7 +8,7 @@
 set(CMAKE_SYSTEM_NAME Linux)
 
 # Some useful variables that uniquely define this toolchain module
-set(BUILD_PLATFORM "crossdev")
+set(TOOLCHAIN_GROUP "crossdev")
 set(TOOLCHAIN_TUPLE "i686-pc-linux-gnu" CACHE STRING "Toolchain signature identifying cpu-vendor-platform-clibrary.")
 set(TARGET_ROOT "/usr/${TOOLCHAIN_TUPLE}" CACHE STRING "Root of the target development environment (libraries, headers etc).")
 
