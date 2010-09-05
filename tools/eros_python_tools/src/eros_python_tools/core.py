@@ -1,7 +1,7 @@
 '''
 Created on 17/08/2010
 
-Various common core functions used by the ecl, both generic and ros related.
+Various common core functions used by eros.
 
 @author: Daniel Stonier
 '''
@@ -10,17 +10,23 @@ import os
 import re
 import sys
 import subprocess
+import roslib
 
-bold = "\033[1m"
-reset = "\033[0;0m"
-red = "\033[31m"
+class Console:
+    bold = "\033[1m"
+    reset = "\033[0;0m"
+    red = "\033[31m"
 
-def print_error(msg):
-    """print warning to screen (bold red)"""
-    print >> sys.stderr, '\033[31m%s\033[0m'%msg
+def red_string(msg):
+    """bound string with console symbols for red output"""
+    return Console.red + msg + Console.reset
+
+def bold_string(msg):
+    """bound string with console symbols for bold output"""
+    return Console.bold + msg + Console.reset
 
 def ros_version():
-    rosversion_exe = os.getenv("ROS_ROOT")+"/bin/rosversion"
+    rosversion_exe = roslib.rosenv.get_ros_root()+"/bin/rosversion"
     rosversion_exists = os.path.exists(rosversion_exe)
     if ( not rosversion_exists ):
         print "Could not find rosversion - make sure ROS_ROOT is set appropriately."
@@ -33,3 +39,9 @@ def ros_version():
     else: 
         version = "unknown"
     return version
+
+def rostoolchain_cmake():
+    return os.path.join(roslib.rosenv.get_ros_root(),"rostoolchain.cmake")
+
+def rosconfig_cmake():
+    return os.path.join(roslib.rosenv.get_ros_root(),"rosconfig.cmake")
