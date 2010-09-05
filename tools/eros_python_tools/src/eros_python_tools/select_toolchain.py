@@ -51,17 +51,22 @@ class Toolchain:
         toolchain_exists = os.path.exists(core.rostoolchain_cmake())
         self.current = False
         if ( toolchain_exists ) :
-            if self.name in open(core.rostoolchain_cmake()).read():
-                if self.family in open(core.rostoolchain_cmake()).read():
+            name_string = "TOOLCHAIN_TUPLE \"" + self.name + "\""
+            if name_string in open(core.rostoolchain_cmake()).read():
+                family_string = "TOOLCHAIN_FAMILY \"" + self.family + "\""
+                if family_string in open(core.rostoolchain_cmake()).read():
                     self.current = True
         self.id = Toolchain.id_counter
         Toolchain.id_counter += 1
 #        print "Pathname: " + self.pathname
-#        print "Name: " + self.name
+#        print "Tuple " + self.name
 #        print "Group: " + self.group
 #        print "Family: " + self.family
-#        print "Current: " + self.current
-#        print "Id: " + self.id
+#        if ( self.current ):
+#            print "Current: True"
+#        else:
+#            print "Current: False"
+#        print "Id: " + repr(self.id)
 
     # Python attribute (aka static variable)            
     id_counter = 1
