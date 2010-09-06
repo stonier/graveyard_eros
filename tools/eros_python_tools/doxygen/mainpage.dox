@@ -10,9 +10,9 @@ interfaces can be integrated directly into your own python scripts.
 
 @section Usage
 
-To use the tools conveniently, ensure that the scripts directory is in your 
-PATH (i.e. in the same way as ${ROS_ROOT}/bin). Alternatively, calling
-rosrun will also work. For example:
+To use the tools conveniently, ensure that the <i>eros_python_tools/scripts</i> 
+directory is in your PATH (i.e. in the same way as ${ROS_ROOT}/bin). Alternatively, 
+calling rosrun will also work. For example:
 
 @code
 rosrun ecl_python_tools rosprotect --minimal
@@ -20,6 +20,7 @@ rosrun ecl_python_tools rosprotect --minimal
 
 @section list Tools List
 
-- @ref erosProtectGuide "rosprotect" : use to build and protect parts or all of the ros core stack.
+- @ref rosProtectGuide "rosprotect" : clean, build and protect parts or all of the ros core stack.
+- @ref rosToolchainGuide "rostoolchain" : create, delete or select from existing toolchain configurations.
 
 */

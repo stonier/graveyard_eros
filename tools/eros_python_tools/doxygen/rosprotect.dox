@@ -1,18 +1,21 @@
 /**
-@page erosProtectGuide rosprotect
+@page rosProtectGuide rosprotect
 
 @section Overview
 
 This is used to protect part or all of the core stack. Useful even when you're
 not cross compiling to save on compile times, but also essential when doing
-a partial cross of the RoS.
+a partial cross of the RoS. 
+
+Practically, all this does is clean, build and then flag each package with an 
+ROS_NOBUILD marker.
 
 @section Usage
 
-To build and protect the entire ros core:
+To build and protect all packages in the core ros stack:
 
 @code
-rosprotect --ros
+rosprotect
 @endcode
 
 To build and protect only a minimal set of packages for cross development only
@@ -26,8 +29,6 @@ To reverse the process:
 
 @code
 rosprotect --unprotect
-// OR
-rosunprotect
 @endcode
 
 **/

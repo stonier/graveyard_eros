@@ -50,34 +50,26 @@ def protect_minimal():
     p.wait()
 
 def main():
-    ''' Main entry point for creating an erosprotect script.'''
+    ''' Main entry point for creating an rosprotect script.'''
     from optparse import OptionParser
-    usage = "Usage: %prog [options] <core|minimal>"
+    usage = "Usage: %prog [options]\n\n\
+Description:\n\
+  Cleans, builds and then protects the entire core ros stack. Use with --minimal if you wish\n\
+  to rosprotect only a minimal set of packages necessary for a cross-compile environment.\n\
+  You can reverse the process with --unprotect." 
     parser = OptionParser(usage=usage)
+    parser.add_option("-m","--minimal", action="store_true", dest="minimal", default=False, help="build/protect only a minimal set of ros core packages necessary for a cross-compile environment.")
     parser.add_option("-u","--unprotect", action="store_true", dest="unprotect", default=False, help="unprotect the ros core stack.")
-    options, args = parser.parse_args()
+    options, unused_args = parser.parse_args()
     
-    ###################
-    # Abort Checks
-    ###################
-    if not args:
-        print "You must specify a target, valid targets include [core|minimal]."
-        return 1
-    
-    ###################
-    # Action
-    ###################
-    if ( options.unprotect ):
+    if options.unprotect :
         unprotect_ros_core()
-        sys.exit(0);
-    target = args[0]
-    if ( target == "core" ):
-        protect_ros_core()
-    elif ( target == "minimal" ):
+        return 0
+    if options.minimal :
         protect_minimal()
-    else:
-        print "Invalid target, valid targets include [core|minimal]."
-        return 1
+        return 0
+    # Else, do the whole stack.
+    protect_ros_core()
     return 0
         
 if __name__ == "__main__":

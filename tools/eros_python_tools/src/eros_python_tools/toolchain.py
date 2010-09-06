@@ -326,7 +326,7 @@ def main():
   %prog create   : create a user-defined toolchain configuration\n\
   %prog delete   : delete a preconfigured toolchain\n\
   %prog list     : list available eros and user-defined toolchains\n\
-  %prog select   : select a preconfigured toolchain\n"
+  %prog select   : select a preconfigured toolchain"
     parser = OptionParser(usage=usage)
     parser.add_option("-v","--validate", action="store_true", dest="validate", help="when creating, attempt to validate the configuration")
     options, args = parser.parse_args()
