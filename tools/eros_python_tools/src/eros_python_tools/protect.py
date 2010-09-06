@@ -54,7 +54,7 @@ def main():
     from optparse import OptionParser
     usage = "Usage: %prog [options] <core|minimal>"
     parser = OptionParser(usage=usage)
-    parser.add_option("-u","--unprotect", action="store_true", dest="unprotect", default=False, help="Unprotect the ros core stack.")
+    parser.add_option("-u","--unprotect", action="store_true", dest="unprotect", default=False, help="unprotect the ros core stack.")
     options, args = parser.parse_args()
     
     ###################
