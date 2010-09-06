@@ -42,14 +42,14 @@ def protect_ros_core():
     p.wait()
     os.environ['ROS_PACKAGE_PATH'] = ros_package_path
 
-def protect_min():
+def protect_minimal():
     ''' Cleans, then recompiles a minimal set of ros core packages, finally adds ROS_NOBUILD to all packages.'''
     unprotect_ros_core()
     make_rospack()
     p = subprocess.Popen(["rosmake", "-i", "--pre-clean", "--rosdep-install", "--rosdep-yes"] + min_packages())
     p.wait()
 
-def protect_main():
+def main():
     ''' Main entry point for creating an erosprotect script.'''
     from optparse import OptionParser
     usage = "Usage: %prog [options] <core|minimal>"
@@ -61,7 +61,8 @@ def protect_main():
     # Abort Checks
     ###################
     if not args:
-        parser.error("You must specify a target. Valid targets include [core|minimal].")
+        print "You must specify a target, valid targets include [core|minimal]."
+        return 1
     
     ###################
     # Action
@@ -69,13 +70,15 @@ def protect_main():
     if ( options.unprotect ):
         unprotect_ros_core()
         sys.exit(0);
-    if args:
-        target = args[0]
-        if ( target == "core" ):
-            protect_ros_core()
-        elif ( target == "minimal" ):
-            protect_min()
-        parser.error("Only options are permitted, run with --help to see options.")
+    target = args[0]
+    if ( target == "core" ):
+        protect_ros_core()
+    elif ( target == "minimal" ):
+        protect_minimal()
+    else:
+        print "Invalid target, valid targets include [core|minimal]."
+        return 1
+    return 0
         
 if __name__ == "__main__":
-    protect_main()
+    sys.exit(main())

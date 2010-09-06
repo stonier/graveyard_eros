@@ -31,7 +31,7 @@ class Toolchain:
       current : true if it is the currently configured ros toolchain
     '''
 
-    def __init__(self, toolchain_dir, toolchain_pathname):
+    def __init__(self, toolchain_dir, toolchain_pathname, toolchain_id):
         # e.g. 
         #  toolchain_dir = /home/snorri/.ros/toolchains
         #  toolchain_pathname = /home/snorri/.ros/toolchains/crossdev/i686-pc-linux-gnu.cmake
@@ -56,8 +56,7 @@ class Toolchain:
                 family_string = "TOOLCHAIN_FAMILY \"" + self.family + "\""
                 if family_string in open(core.rostoolchain_cmake()).read():
                     self.current = True
-        self.id = Toolchain.id_counter
-        Toolchain.id_counter += 1
+        self.id = toolchain_id
 #        print "Pathname: " + self.pathname
 #        print "Tuple " + self.name
 #        print "Group: " + self.group
@@ -67,9 +66,6 @@ class Toolchain:
 #        else:
 #            print "Current: False"
 #        print "Id: " + repr(self.id)
-
-    # Python attribute (aka static variable)            
-    id_counter = 1
 
 ###############################################################################
 # Methods
@@ -86,19 +82,21 @@ def user_toolchain_dir():
 
 def toolchain_list():
     toolchains = []
+    id_counter = 1
     for root, unused_dirs, files in os.walk(eros_toolchain_dir()):
         for name in files:
             if name.endswith('.cmake'):
-                toolchains += [Toolchain(eros_toolchain_dir(),os.path.join(root,name))]
+                toolchains += [Toolchain(eros_toolchain_dir(),os.path.join(root,name), id_counter)]
+                id_counter += 1
     for root, unused_dirs, files in os.walk(user_toolchain_dir()):
         for name in files:
             if name.endswith('.cmake'):
-                toolchains += [Toolchain(user_toolchain_dir(),os.path.join(root,name))]
+                toolchains += [Toolchain(user_toolchain_dir(),os.path.join(root,name), id_counter)]
+                id_counter += 1
     return toolchains 
     #return [files for root, dirs, files in os.walk(eros_toolchain_dir()) if f.endswith('.cmake')]
     
-
-def list_toolchains():
+def list_eros_toolchains():
     toolchains = toolchain_list()
     print
     print core.bold_string("Eros toolchains:")
@@ -109,6 +107,9 @@ def list_toolchains():
                 print "  %d) %s%s%s%s" %(toolchain.id,toolchain.family,os.sep,toolchain.name,core.red_string("*"))
             else:
                 print "  %d) %s%s%s" %(toolchain.id,toolchain.family,os.sep,toolchain.name)
+
+def list_user_toolchains():
+    toolchains = toolchain_list()
     print
     print core.bold_string("User toolchains:")
     print
@@ -118,6 +119,10 @@ def list_toolchains():
                 print "  %d) %s%s%s%s" %(toolchain.id,toolchain.family,os.sep,toolchain.name,core.red_string("*"))
             else:
                 print "  %d) %s%s%s" %(toolchain.id,toolchain.family,os.sep,toolchain.name)
+
+def list_toolchains():
+    list_eros_toolchains()
+    list_user_toolchains()
     print
     
 def show_current_toolchain():
@@ -135,35 +140,70 @@ def show_current_toolchain():
             found = True
             current_toolchain = toolchain
     if ( found ):
-        print pretext + current_toolchain.name
+        print pretext + current_toolchain.family + os.sep + current_toolchain.name
     else:
         if ( os.path.exists(core.rostoolchain_cmake()) ):
             print pretext + "unknown"
         else:
             print pretext + "none"
 
-def select_toolchain(toolchain_id):
+def select_toolchain():
     '''
-    Selects and configures the specified ros toolchain.
+    Interactively selects and sets an ros toolchain.
       - return true or false depending on success/failure.
     '''
+    list_toolchains()
+    toolchain_id_string = raw_input("Enter a toolchain id #: ")
+    if ( not toolchain_id_string.isdigit() ):
+        print core.red_string("Aborting, invalid id #.")
+        return False
+    toolchain_id = int(toolchain_id_string)
     toolchains = toolchain_list()
+    if not toolchain_id <= len(toolchains):
+        print core.red_string("Aborting, invalid id #.")
+        return False
     found_toolchain = False
     for toolchain in toolchains:
-        if ( toolchain_id.isdigit() ):
-            if ( toolchain.id == int(toolchain_id) ):
-                found_toolchain = True
-                selected_toolchain = toolchain
-        elif ( toolchain.name == toolchain_id ):
+        if ( toolchain.id == toolchain_id ):
             found_toolchain = True
             selected_toolchain = toolchain
     if ( not found_toolchain ):
+        print core.red_string("Aborting, toolchain not found.")
         return False
     else:
         shutil.copyfile(selected_toolchain.pathname,core.rostoolchain_cmake())
         return True
 
-def create_toolchain():
+def delete_toolchain():
+    '''
+    Interactively deletes a user-defined toolchain.
+      - return 1 if failure, 0 if success
+    '''
+    list_user_toolchains()
+    print
+    toolchain_id_string = raw_input("Enter a toolchain id #: ")
+    if ( not toolchain_id_string.isdigit() ):
+        print core.red_string("Aborting, invalid id #.")
+        return 1
+    toolchain_id = int(toolchain_id_string)
+    toolchains = toolchain_list()
+    if not toolchain_id <= len(toolchains):
+        print core.red_string("Aborting, invalid id #.")
+        return 1
+    found_toolchain = False
+    for toolchain in toolchains:
+        if ( toolchain.id == toolchain_id ):
+            if ( toolchain.group == 'user' ):
+                found_toolchain = True
+                selected_toolchain = toolchain
+    if ( not found_toolchain ):
+        print core.red_string("Aborting, invalid id #.") # probably passed an eros toolchain id
+        return 1
+    else:
+        os.remove(selected_toolchain.pathname)
+        return 0
+
+def create_toolchain(validate):
     '''
     Create a cross-compiler cmake configuration. Note: hardwired for gcc
     cross compiler configurations at this point in time - is there even a use
@@ -192,37 +232,38 @@ def create_toolchain():
     print "  This is essential so that cmake can find the gcc cross-compiler. The toolchain"
     print "  tuple should match the prefix to your toolchain's cross-compilers, e.g. if your"
     print "  cross-compiler is i686-pc-linux-gnu-gcc, then the tuple is i686-pc-linux-gnu."
-    print "  The c/c++ cross-compilers should be in your PATH, this script will attempt"
-    print "  to validate that it can find them before continuing."
+    print "  The c/c++ cross-compilers should be in your PATH, if --validate was requested," 
+    print "  this script will attempt to find them before continuing."
     print
     toolchain_tuple = raw_input('  Enter a string for the toolchain tuple: ')
-    if ( platform.system == 'Windows' ):
-        toolchain_gcc = toolchain_tuple + "-gcc.exe"
-        toolchain_gpp = toolchain_tuple + "-g++.exe"
-    else:
-        toolchain_gcc = toolchain_tuple + "-gcc"
-        toolchain_gpp = toolchain_tuple + "-g++"
-    toolchain_gcc_found = False 
-    toolchain_gpp_found = False 
-    path = os.environ['PATH']
-    paths = path.split(os.pathsep)
-    for dir in paths:
-        if ( os.path.isdir(dir) ):
-            pathname = os.path.join(dir,toolchain_gcc)
-            if ( os.path.isfile(pathname) ):
-                toolchain_gcc_pathname = pathname
-                toolchain_gcc_found = True
-            pathname = os.path.join(dir,toolchain_gpp)
-            if ( os.path.isfile(pathname) ):
-                toolchain_gpp_pathname = pathname
-                toolchain_gpp_found = True
-    if ( ( not toolchain_gcc_found ) or ( not toolchain_gpp_found ) ):
-        print core.red_string("  Aborting, cross compiler binaries not found in your path.")
-        return 1
-    print
-    print "  Compilers validated: "
-    print "    gcc : " + toolchain_gcc_pathname
-    print "    gpp : " + toolchain_gpp_pathname
+    if ( validate ):
+        if ( platform.system == 'Windows' ):
+            toolchain_gcc = toolchain_tuple + "-gcc.exe"
+            toolchain_gpp = toolchain_tuple + "-g++.exe"
+        else:
+            toolchain_gcc = toolchain_tuple + "-gcc"
+            toolchain_gpp = toolchain_tuple + "-g++"
+        toolchain_gcc_found = False 
+        toolchain_gpp_found = False 
+        path = os.environ['PATH']
+        paths = path.split(os.pathsep)
+        for dir in paths:
+            if ( os.path.isdir(dir) ):
+                pathname = os.path.join(dir,toolchain_gcc)
+                if ( os.path.isfile(pathname) ):
+                    toolchain_gcc_pathname = pathname
+                    toolchain_gcc_found = True
+                pathname = os.path.join(dir,toolchain_gpp)
+                if ( os.path.isfile(pathname) ):
+                    toolchain_gpp_pathname = pathname
+                    toolchain_gpp_found = True
+        if ( ( not toolchain_gcc_found ) or ( not toolchain_gpp_found ) ):
+            print core.red_string("  Aborting, cross compiler binaries not found in your path.")
+            return 1
+        print
+        print "  Compilers validated: "
+        print "    gcc : " + toolchain_gcc_pathname
+        print "    gpp : " + toolchain_gpp_pathname
     print
     print core.bold_string("  Toolchain Sysroot")
     print 
@@ -251,15 +292,11 @@ def create_toolchain():
     f = open(user_defined_toolchain_pathname, 'w')
     f.write(toolchain_template)
     f.close()
-    print "Toolchain " + toolchain_tuple + " saved to " + user_defined_toolchain_pathname 
-
-    
-
-    
-    print "Toolchain family: %s" %toolchain_family
-    print "Toolchain tuple: %s" %toolchain_tuple
-    print "Toolchain sysroot: %s" %toolchain_sysroot
-    
+    print core.bold_string("Toolchain Finalised")
+    print "  Family: %s" %toolchain_family
+    print "  Tuple: %s" %toolchain_tuple
+    print "  Sysroot: %s" %toolchain_sysroot
+    print "  File: %s" %user_defined_toolchain_pathname
     
 def check_platform():
     rosconfig_exists = os.path.exists(core.rosconfig_cmake())
@@ -284,26 +321,35 @@ def patch_ros():
 def main():
     from optparse import OptionParser
     usage = "\n\
-  %prog [option] : call with the specified option [see below]\n\
-  %prog          : shows currently configured toolchain\n\
-  %prog <id>     : select toolchain with id # (use with --list)\n\
-  %prog <tuple>  : select toolchain with specified tuple (use with --list)"
+  %prog          : shows the currently set ros toolchain\n\
+  %prog clear    : clear the currently set ros toolchain\n\
+  %prog create   : create a user-defined toolchain configuration\n\
+  %prog delete   : delete a preconfigured toolchain\n\
+  %prog list     : list available eros and user-defined toolchains\n\
+  %prog select   : select a preconfigured toolchain\n"
     parser = OptionParser(usage=usage)
-    parser.add_option("-a","--create", action="store_true", dest="create", help="interactively create a new user-defined toolchain")
-    parser.add_option("-c","--clear", action="store_true", dest="clear", help="clear the current toolchain configuration")
-    parser.add_option("-l","--list", action="store_true", dest="list", help="list available eros and user-defined toolchains")
+    parser.add_option("-v","--validate", action="store_true", dest="validate", help="when creating, attempt to validate the configuration")
     options, args = parser.parse_args()
     
     ###################
+    # Show current
+    ###################
+    if not args:
+        show_current_toolchain()
+        return 0
+
+    command = args[0]
+        
+    ###################
     # List
     ###################
-    if options.list:
+    if command == 'list':
         list_toolchains()
         return 0
     ###################
     # Clear
     ###################
-    if options.clear:
+    if command == 'clear':
         if os.path.exists(core.rostoolchain_cmake()):
             os.remove(core.rostoolchain_cmake())
             print "Toolchain configuration cleared - remember to reconfigure ROS_BOOST_ROOT if necessary."
@@ -313,31 +359,33 @@ def main():
     ###################
     # Create
     ###################
-    if options.create:
-        return create_toolchain()
+    if command == 'create':
+        return create_toolchain(options.validate)
+
     ###################
-    # Show current
+    # Delete
     ###################
-    if not args:
-        show_current_toolchain()
-        return 0
+    if command == 'delete':
+        return delete_toolchain()
 
     ###################
     # Select
     ###################
-    toolchain = args[0]
-    if ( not select_toolchain(toolchain) ):
-        print "The specified toolchain [%s] is not available." %toolchain
-        print "  To see available toolchains, supply the --list argument."
-        return 1
-    # Not currently needing it, but anyway, its good to have.
-    # check_platform()
-    # patch_ros()
-    print 
-    print "If doing a full cross, or using boost in a partial cross, ensure ROS_BOOST_ROOT"
-    print "is exported from your shell environment."
-    print 
-    return 0
+    if command == 'select': 
+        if not select_toolchain():
+            return 1
+        # Not currently needing it, but anyway, its good to have.
+        # check_platform()
+        # patch_ros()
+        print 
+        print "If doing a full cross, or using boost in a partial cross, ensure ROS_BOOST_ROOT"
+        print "is exported from your shell environment."
+        print 
+        return 0
+    
+    # If we reach here, we have not received a valid command.
+    print "Not a valid command [" + command + "], rerun with --help to list valid commands"
+    return 1
 
 if __name__ == "__main__":
     sys.exit(main())
