@@ -1,7 +1,7 @@
 ###############################################################################
-# Build Platform : crossdev
-# Toolchain : i686-pc-linux-gnu
-# Target Root : /usr/i686-pc-linux-gnu
+# Family : crossdev
+# Tuple : i686-pc-linux-gnu
+# Sysroot : /usr/i686-pc-linux-gnu
 ###############################################################################
 
 # Some useful custom variables that uniquely define this toolchain module
