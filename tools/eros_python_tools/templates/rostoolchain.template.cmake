@@ -1,7 +1,7 @@
 ###############################################################################
-# Build Platform : ${toolchain_family}
-# Toolchain : ${toolchain_tuple}
-# Target Root : ${toolchain_sysroot}
+# Family : ${toolchain_family}
+# Tuple : ${toolchain_tuple}
+# Sysroot : ${toolchain_sysroot}
 ###############################################################################
 
 # Some useful custom variables that uniquely define this toolchain module
