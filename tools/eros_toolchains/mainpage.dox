@@ -2,25 +2,77 @@
 \mainpage
 \htmlinclude manifest.html
 
-\b eros_toolchains is ... 
+@section Overview
 
-<!-- 
-Provide an overview of your package.
--->
+Eros toolchains is a library of preconfigured cmake toolchain modules
+for popular/standard toolchain configurations on various platforms.
 
+\section Arrangement
 
-\section codeapi Code API
+The library of cmake modules is grouped firstly according to platform
+(aka family) and then by name (usually the toolchain tuple). 
 
-<!--
-Provide links to specific auto-generated API documentation within your
-package that is of particular interest to a reader. Doxygen will
-document pretty much every part of your code, so do your best here to
-point the reader to the actual API.
+\section Usage
 
-If your codebase is fairly large or has different sets of APIs, you
-should use the doxygen 'group' tag to keep these APIs together. For
-example, the roscpp documentation has 'libros' group.
--->
+These can be copied across to ${ROS_ROOT}/rostoolchain.cmake and used
+directly, or more easily configured via the <i>rostoolchain</i> script
+in eros_python_tools. 
 
+@code
+> rosrun eros_python_tools rostoolchain --help
+
+Usage: 
+  rostoolchain          : shows the currently set ros toolchain
+  rostoolchain clear    : clear the currently set ros toolchain
+  rostoolchain create   : create a user-defined toolchain configuration
+  rostoolchain delete   : delete a preconfigured toolchain
+  rostoolchain list     : list available eros and user-defined toolchains
+  rostoolchain select   : select a preconfigured toolchain
+
+Options:
+  -h, --help      show this help message and exit
+  -v, --validate  when creating, attempt to validate the configuration
+@endcode
+
+@subsection Creating
+
+New user-defined toolchain configurations can be created via the 
+interactive '<i>rostoolchain create</i>' command. This asks a few simple 
+questions and then saves the toolchain configuration in the ros home dir
+(usually /home/<username>/.ros/toolchains).
+ 
+Currently, creation is hardwired for gcc toolchains. If there is a need
+to use alternative toolchains, then this functionality can be extended.
+Please contact the eros developers.
+ 
+\section Anatomy
+ 
+Each toolchain provides the necessary cmake variables for discovering
+your compiler, libs and headers. Some notes:
+
+- Make sure the cross-compiler is in your PATH
+- By default, it will utilise only the sysroot's libs and headers. 
+- Some extra variables are set for convenience that merely uniquely identify the toolchain
+
+@code
+TOOLCHAIN_FAMILY : the platform/group the toolchain belongs to (e.g. crossdev||ubuntu etc).
+TOOLCHAIN_TUPLE : signature identifying cpu-vendor-platform-clib.
+TOOLCHAIN_SYSROOT : root of the target development environment (libraries, headers etc).
+@endcode
+
+To check in detail what's been configured, track down the toolchain in the
+eros_toolchains package or your ros home (i.e. /home/<username>/.ros/toolchains) and
+check out the contents. If it is the currently set toolchain, you can
+edit $ROS_ROOT/rostoolchain.cmake for minor (temporary) modifications.
+
+\section Toolchains
+
+The following is a list of currently preconfigured eros toolchains.
+
+- code_sourcery/arm-none-linux-gnueabi.cmake
+- crossdev/arm-unknown-linux-gnueabi.cmake
+- crossdev/i686-pc-linux-gnu.cmake
+- crossdev/i686-pc-mingw32.cmake
+- ubuntu/i586-mingw32msvc.cmake
 
 */

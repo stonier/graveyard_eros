@@ -1,14 +1,16 @@
 <package>
-  <description brief="eros_toolchains">
+  <description brief="cmake toolchain modules for standard toolchain configurations">
 
-     eros_toolchains
+  <p>
+  Eros toolchains is a library of preconfigured cmake toolchain modules
+  for popular/standard toolchain configurations on various platforms.
+  </p>
 
   </description>
-  <author></author>
+  <author>Daniel Stonier</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="doc reviewed" notes=""/>
   <url>http://ros.org/wiki/eros_toolchains</url>
-
 </package>
 
 
