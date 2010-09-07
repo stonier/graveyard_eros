@@ -309,10 +309,39 @@ def check_platform():
 
 def patch_ros():
     version = core.ros_version()
+    patches_dir = os.path.join(roslib.packages.get_pkg_dir('eros_python_tools'),"patches",version)
     if ( version == 'cturtle' ):
         print "Applying various patches for cturtle"
+        # genmsg_cpp
+        genmsg_cpp_dir = roslib.packages.get_pkg_dir('genmsg_cpp')
+        genmsg_cmakelists = os.path.join(patches_dir,"genmsg_cpp","CMakeLists.txt")
+        genmsg_makefile = os.path.join(patches_dir,"genmsg_cpp","Makefile")
+        shutil.copyfile(genmsg_cmakelists,os.path.join(genmsg_cpp_dir,'CMakeLists.txt'))
+        shutil.copyfile(genmsg_makefile,os.path.join(genmsg_cpp_dir,'Makefile'))
+        # message_filters
+        message_filters_dir = roslib.packages.get_pkg_dir('message_filters')
+        message_filters_cmakelists = os.path.join(patches_dir,"message_filters","test","CMakeLists.txt")
+        shutil.copyfile(message_filters_cmakelists,os.path.join(message_filters_dir,"test","CMakeLists.txt"))
+        # rosbuild
+        rosbuild_dir = roslib.packages.get_pkg_dir('rosbuild')
+        rostoolchain_cmake = os.path.join(patches_dir,"rosbuild","rostoolchain.cmake")
+        private_cmake = os.path.join(patches_dir,"rosbuild","private.cmake")
+        shutil.copyfile(rostoolchain_cmake,os.path.join(rosbuild_dir,'rostoolchain.cmake'))
+        shutil.copyfile(private_cmake,os.path.join(rosbuild_dir,'private.cmake'))
+        # rospack
+        rospack_dir = roslib.packages.get_pkg_dir('rospack')
+        rospack_cmakelists = os.path.join(patches_dir,"rospack","CMakeLists.txt")
+        rospack_makefile = os.path.join(patches_dir,"rospack","Makefile")
+        shutil.copyfile(rospack_cmakelists,os.path.join(rospack_dir,'CMakeLists.txt'))
+        shutil.copyfile(rospack_makefile,os.path.join(rospack_dir,'Makefile'))
+        # topic_tools
+        topic_tools_dir = roslib.packages.get_pkg_dir('topic_tools')
+        topic_tools_cmakelists = os.path.join(patches_dir,"topic_tools","CMakeLists.txt")
+        shutil.copyfile(topic_tools_cmakelists,os.path.join(topic_tools_dir,'CMakeLists.txt'))
     else:
-        print "At this point in time, only cturtle is supported for patching."  
+        print "At this time, only cturtle is supported for patching."
+        print "Contact the eros developers if you require support for"
+        print "another type of installation."
 
 ###############################################################################
 # Main
@@ -376,7 +405,7 @@ def main():
             return 1
         # Not currently needing it, but anyway, its good to have.
         # check_platform()
-        # patch_ros()
+        patch_ros()
         print 
         print "If doing a full cross, or using boost in a partial cross, ensure ROS_BOOST_ROOT"
         print "is exported from your shell environment."

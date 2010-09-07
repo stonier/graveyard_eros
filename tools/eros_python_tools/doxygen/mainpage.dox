@@ -16,11 +16,16 @@ calling rosrun will also work. For example:
 
 @code
 rosrun ecl_python_tools rosprotect --minimal
+rosrun ecl_python_tools rostoolchain list
 @endcode
 
 @section list Tools List
 
 - @ref rosProtectGuide "rosprotect" : clean, build and protect parts or all of the ros core stack.
 - @ref rosToolchainGuide "rostoolchain" : create, delete or select from existing toolchain configurations.
+
+@section Other
+
+- @ref patchesGuide "Patching" : notes on how eros automagically applies and maintains patches the crossing the ros.
 
 */
