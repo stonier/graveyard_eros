@@ -67,6 +67,41 @@ class Toolchain:
 #            print "Current: False"
 #        print "Id: " + repr(self.id)
 
+    def validate(self):
+        """
+        Attempt to validate the configuration of this toolchain. It checks for
+        1) cross-compiler binaries in the PATH.
+        2) the existence of the sysroot (though no guarantee it is the sysroot).
+        3) a small program can be compiled.
+        """
+        if ( platform.system == 'Windows' ):
+            toolchain_gcc = self.name + "-gcc.exe"
+            toolchain_gpp = self.name + "-g++.exe"
+        else:
+            toolchain_gcc = self.name + "-gcc"
+            toolchain_gpp = self.name + "-g++"
+        toolchain_gcc_found = False 
+        toolchain_gpp_found = False 
+        path = os.environ['PATH']
+        paths = path.split(os.pathsep)
+        for dir in paths:
+            if ( os.path.isdir(dir) ):
+                pathname = os.path.join(dir,toolchain_gcc)
+                if ( os.path.isfile(pathname) ):
+                    toolchain_gcc_pathname = pathname
+                    toolchain_gcc_found = True
+                pathname = os.path.join(dir,toolchain_gpp)
+                if ( os.path.isfile(pathname) ):
+                    toolchain_gpp_pathname = pathname
+                    toolchain_gpp_found = True
+        if ( ( not toolchain_gcc_found ) or ( not toolchain_gpp_found ) ):
+            print core.red_string("Cross-compiler binaries not found.")
+            return 1
+        print
+        print "  Compilers validated: "
+        print "    gcc : " + toolchain_gcc_pathname
+        print "    gpp : " + toolchain_gpp_pathname
+
 ###############################################################################
 # Methods
 ###############################################################################
@@ -80,8 +115,17 @@ def eros_toolchain_dir():
 def user_toolchain_dir():
     return os.path.join(roslib.rosenv.get_ros_home(),"toolchains")
 
+toolchains = []
+
 def toolchain_list():
-    toolchains = []
+    """
+    Both provides access to and populates the toolchain list from both eros and user-defined
+    toolchain libraries.
+    """
+    global toolchains
+    if ( len(toolchains) != 0 ): 
+        return toolchains
+    # else populate from eros and user-defined libraries
     id_counter = 1
     for root, unused_dirs, files in os.walk(eros_toolchain_dir()):
         for name in files:
@@ -94,7 +138,6 @@ def toolchain_list():
                 toolchains += [Toolchain(user_toolchain_dir(),os.path.join(root,name), id_counter)]
                 id_counter += 1
     return toolchains 
-    #return [files for root, dirs, files in os.walk(eros_toolchain_dir()) if f.endswith('.cmake')]
     
 def list_eros_toolchains():
     toolchains = toolchain_list()
@@ -203,7 +246,7 @@ def delete_toolchain():
         os.remove(selected_toolchain.pathname)
         return 0
 
-def create_toolchain(validate):
+def create_toolchain():
     '''
     Create a cross-compiler cmake configuration. Note: hardwired for gcc
     cross compiler configurations at this point in time - is there even a use
@@ -232,38 +275,9 @@ def create_toolchain(validate):
     print "  This is essential so that cmake can find the gcc cross-compiler. The toolchain"
     print "  tuple should match the prefix to your toolchain's cross-compilers, e.g. if your"
     print "  cross-compiler is i686-pc-linux-gnu-gcc, then the tuple is i686-pc-linux-gnu."
-    print "  The c/c++ cross-compilers should be in your PATH, if --validate was requested," 
-    print "  this script will attempt to find them before continuing."
+    print "  Compilers need to be in your system's PATH."
     print
     toolchain_tuple = raw_input('  Enter a string for the toolchain tuple: ')
-    if ( validate ):
-        if ( platform.system == 'Windows' ):
-            toolchain_gcc = toolchain_tuple + "-gcc.exe"
-            toolchain_gpp = toolchain_tuple + "-g++.exe"
-        else:
-            toolchain_gcc = toolchain_tuple + "-gcc"
-            toolchain_gpp = toolchain_tuple + "-g++"
-        toolchain_gcc_found = False 
-        toolchain_gpp_found = False 
-        path = os.environ['PATH']
-        paths = path.split(os.pathsep)
-        for dir in paths:
-            if ( os.path.isdir(dir) ):
-                pathname = os.path.join(dir,toolchain_gcc)
-                if ( os.path.isfile(pathname) ):
-                    toolchain_gcc_pathname = pathname
-                    toolchain_gcc_found = True
-                pathname = os.path.join(dir,toolchain_gpp)
-                if ( os.path.isfile(pathname) ):
-                    toolchain_gpp_pathname = pathname
-                    toolchain_gpp_found = True
-        if ( ( not toolchain_gcc_found ) or ( not toolchain_gpp_found ) ):
-            print core.red_string("  Aborting, cross compiler binaries not found in your path.")
-            return 1
-        print
-        print "  Compilers validated: "
-        print "    gcc : " + toolchain_gcc_pathname
-        print "    gpp : " + toolchain_gpp_pathname
     print
     print core.bold_string("  Toolchain Sysroot")
     print 
@@ -276,7 +290,6 @@ def create_toolchain(validate):
     if ( toolchain_sysroot == ''):
         toolchain_sysroot = toolchain_sysroot_default
     print
-    # Should really validate somehow here 
     
     toolchain_template = open(eros_toolchain_template()).read()
     toolchain_template = toolchain_template.replace('${toolchain_family}',toolchain_family)
@@ -355,10 +368,11 @@ def main():
   %prog create   : create a user-defined toolchain configuration\n\
   %prog delete   : delete a preconfigured toolchain\n\
   %prog list     : list available eros and user-defined toolchains\n\
-  %prog select   : select a preconfigured toolchain"
+  %prog select   : select a preconfigured toolchain\n\
+  %prog validate : attempt to validate a toolchain (not yet implemented)"
     parser = OptionParser(usage=usage)
-    parser.add_option("-v","--validate", action="store_true", dest="validate", help="when creating, attempt to validate the configuration")
-    options, args = parser.parse_args()
+    #parser.add_option("-v","--validate", action="store_true", dest="validate", help="when creating, attempt to validate the configuration")
+    unused_options, args = parser.parse_args()
     
     ###################
     # Show current
@@ -389,7 +403,7 @@ def main():
     # Create
     ###################
     if command == 'create':
-        return create_toolchain(options.validate)
+        return create_toolchain()
 
     ###################
     # Delete
@@ -411,6 +425,15 @@ def main():
         print "is exported from your shell environment."
         print 
         return 0
+    
+    ###################
+    # Validate
+    ###################
+    if command == 'validate':
+        print
+        print "This command is not yet available."
+        print
+        return 0 
     
     # If we reach here, we have not received a valid command.
     print "Not a valid command [" + command + "], rerun with --help to list valid commands"
