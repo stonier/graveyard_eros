@@ -65,10 +65,21 @@ Description:\n\
   to rosprotect only a minimal set of packages necessary for a cross-compile environment.\n\
   You can reverse the process with --unprotect." 
     parser = OptionParser(usage=usage)
-    parser.add_option("-m","--minimal", action="store_true", dest="minimal", default=False, help="build/protect only a minimal set of ros core packages necessary for a cross-compile environment.")
-    parser.add_option("-u","--unprotect", action="store_true", dest="unprotect", default=False, help="unprotect the ros core stack.")
-    options, unused_args = parser.parse_args()
-    
+    parser.add_option("-c","--clean", action="store_true", dest="preclean", default=False, help="pre-clean packages before building and protecting them.")
+    parser.add_option("-m","--minimal", action="store_true", dest="minimal", default=False, help="target a selected minimal set of ros packages necessary for a cross-compile environment.")
+    parser.add_option("-s","--stacks", action="store_true", dest="stacks", default=False, help="target stacks instead of packages.")
+    parser.add_option("-u","--unprotect", action="store_true", dest="unprotect", default=False, help="unprotect packages instead of protecting them.")
+    options, args = parser.parse_args()
+
+    ###################
+    # Abort Check
+    ###################
+#    if ( not options.minimal and not args ):
+#        print
+#        parser.print_help()
+#        print    
+#        return 1
+
     if options.unprotect :
         unprotect_ros_core()
         return 0
