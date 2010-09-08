@@ -422,7 +422,8 @@ def main():
         patch_ros()
         print 
         print "If doing a full cross, or using boost in a partial cross, ensure ROS_BOOST_ROOT"
-        print "is exported from your shell environment."
+        print "is exported from your shell environment. e.g. in setup.sh:"
+        print "  export ROS_BOOST_ROOT=\"/usr/arm-none-linux-gnueabi/libc/usr\""
         print 
         return 0
     
