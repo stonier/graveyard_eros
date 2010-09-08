@@ -180,18 +180,33 @@ def select_platform():
         if ( platform.id == platform_id ):
             found_platform = True
             selected_platform = platform
+            break
     if ( not found_platform ):
         print core.red_string("Aborting, platform not found.")
         return 1
     else:
         # Copy across the platform specific file and append the default section as well
         shutil.copyfile(selected_platform.pathname,core.rosconfig_cmake())
-        rosconfig_tail = open(eros_rosconfig_tail()).read() 
+        rosconfig_tail = open(eros_rosconfig_tail()).read()
         f = open(core.rosconfig_cmake(), 'a')
         f.write(rosconfig_tail)
         f.close()
+        print
+        print selected_platform.pathname + "->" + core.rosconfig_cmake()
+        print
         return 0
 
+def select_default():
+    '''
+    Quietly selects and generates the default (vanilla) platform configuration.
+    '''
+    pathname = os.path.join(eros_platform_dir(),"generic","vanilla.cmake")
+    shutil.copyfile(pathname,core.rosconfig_cmake())
+    rosconfig_tail = open(eros_rosconfig_tail()).read()
+    f = open(core.rosconfig_cmake(), 'a')
+    f.write(rosconfig_tail)
+    f.close()
+    
 def delete_platform():
     '''
     Interactively deletes a user-defined platform.
@@ -222,9 +237,74 @@ def delete_platform():
         return 0
 
 def create_platform():
-    print "Create a platform"
+    '''
+    Create a platform configuration.
+    '''
+    print
+    print core.bold_string("  Creating a User-Defined Eros Platform Configuration")
+    print
+    print "This is an interactive assistant to help define a new eros style cmake platform"
+    print "configuration. It will prompt you for a few custom strings and then save the"
+    print "configured platform module in ROS_HOME/platforms (~/.ros/platforms on linux)."
+    print "It can then be listed and selected in the same way as as a regular eros platform"
+    print "configuration."
+    print
+    print core.bold_string("  Platform Family")
+    print 
+    print "  This is simply a convenience variable that helps sort platforms in the eros"
+    print "  and user-defined libraries. Common examples include: intel, arm etc."
+    print
+    platform_family = raw_input('  Enter a string for the platform family [custom]: ')
+    if ( platform_family == '' ):
+        platform_family = 'custom'
+    print
+    print core.bold_string("  Platform Name")
+    print 
+    print "  This is unique identifier usually denoting the specific cpu that it represents"
+    print "  and will be the name of the resulting cmake file. Common examples include: "
+    print "  core2, arm1176jzf-s etc."
+    print
+    platform_name = raw_input('  Enter a string for the platform name [generic]: ')
+    print
+    print core.bold_string("  Platform Compile flags")
+    print 
+    print "  A string containing any extra compile flags to be used for this configuration."
+    print "  e.g. '-march=core2 -sse4. This is in addition to the default ros flags."
+    print 
+    platform_compile_flags = raw_input('  Enter a string for the platform compile flags []: ')
+    print
+    print core.bold_string("  Platform Link flags")
+    print 
+    print "  A string containing any extra link flags to be used for this configuration."
+    print "  e.g. '-Wl,--as-needed'. This is in addition to the default ros flags."
+    print 
+    platform_link_flags = raw_input('  Enter a string for the platform link flags []: ')
     
-
+    platform_template = open(eros_platform_template()).read()
+    platform_template = platform_template.replace('${platform_family}',platform_family)
+    platform_template = platform_template.replace('${platform_name}',platform_name)
+    platform_template = platform_template.replace('${platform_compile_flags}',platform_compile_flags)
+    platform_template = platform_template.replace('${platform_link_flags}',platform_link_flags)
+    #print platform_template
+    user_defined_platform_pathname = os.path.join(user_platform_dir(),platform_family,platform_name+'.cmake')
+    if ( os.path.exists(user_defined_platform_pathname) ):
+        print core.red_string("  Aborting, this platform configuration already exists (use --delete to remove).")
+        return 1
+    if not os.path.exists( os.path.dirname(user_defined_platform_pathname) ): # Make sure the dir exists before we open for writing
+        os.makedirs(os.path.dirname(user_defined_platform_pathname))
+    f = open(user_defined_platform_pathname, 'w')
+    f.write(platform_template)
+    rosconfig_tail = open(eros_rosconfig_tail()).read()
+    f.write(rosconfig_tail)
+    f.close()
+    print
+    print core.bold_string("Platform Finalised")
+    print "  Family: %s" %platform_family
+    print "  Name: %s" %platform_name
+    print "  CFlags: %s" %platform_compile_flags
+    print "  LFlags: %s" %platform_link_flags
+    print "  File: %s" %user_defined_platform_pathname
+    print
     
 ###############################################################################
 # Main
@@ -237,6 +317,7 @@ def main():
   %prog clear    : clear the currently set ros platform\n\
   %prog create   : create a user-defined platform configuration\n\
   %prog delete   : delete a preconfigured platform\n\
+  %prog help     : print this help information\n\
   %prog list     : list available eros and user-defined platforms\n\
   %prog select   : select a preconfigured platform\n\
   %prog validate : attempt to validate a platform (not yet implemented)"
@@ -253,6 +334,13 @@ def main():
 
     command = args[0]
         
+    ###################
+    # Help
+    ###################
+    if command == 'help':
+        parser.print_help()
+        return 0
+    
     ###################
     # List
     ###################
@@ -301,7 +389,10 @@ def main():
         return 0 
     
     # If we reach here, we have not received a valid command.
-    print "Not a valid command [" + command + "], rerun with --help to list valid commands"
+    print "Not a valid command [" + command + "]."
+    print
+    parser.print_help()
+    print
     return 1
 
 if __name__ == "__main__":

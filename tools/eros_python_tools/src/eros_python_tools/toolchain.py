@@ -210,11 +210,15 @@ def select_toolchain():
         if ( toolchain.id == toolchain_id ):
             found_toolchain = True
             selected_toolchain = toolchain
+            break
     if ( not found_toolchain ):
         print core.red_string("Aborting, toolchain not found.")
         return False
     else:
         shutil.copyfile(selected_toolchain.pathname,core.rostoolchain_cmake())
+        print
+        print selected_toolchain.pathname + "->" + core.rostoolchain_cmake()
+        print
         return True
 
 def delete_toolchain():
@@ -255,15 +259,15 @@ def create_toolchain():
     print
     print core.bold_string("  Creating a User-Defined Eros Toolchain")
     print
-    print "This is a interactive assistant to help define a new eros style cmake toolchain."
+    print "This is an interactive assistant to help define a new eros style cmake toolchain."
     print "It will prompt you for a few custom strings and then save the configured toolchain"
-    print "in ROS_HOME/toolchains (~/.ros/toolchains) on linux platforms). It can then be"
+    print "in ROS_HOME/toolchains (~/.ros/toolchains on linux platforms). It can then be"
     print "listed and selected in the same way as as a regular eros toolchain."
     print
     print core.bold_string("  Toolchain Family")
     print 
     print "  This is simply a convenience variable that helps sort toolchains in the eros"
-    print "  user-defined toolchain libraries. Common examples include: crossdev, ubuntu,"
+    print "  and user-defined libraries. Common examples include: crossdev, ubuntu,"
     print "  openembedded, etc."
     print
     toolchain_family = raw_input('  Enter a string for the toolchain family [custom]: ')
@@ -317,12 +321,13 @@ def check_platform():
         print "Remember to confirm that the existing platform (rosconfig.cmake) is compatible."
         print
     else:
-        print "As yet no rosconfig.cmake exists -> generating a blank (Vanilla) template."
-        #select_platform.select_platform("Vanilla",None)
+        print "No rosconfig.cmake, generating a default (vanilla) configuration."
+        platform.select_default()
 
 def patch_ros():
     version = core.ros_version()
     patches_dir = os.path.join(roslib.packages.get_pkg_dir('eros_python_tools'),"patches",version)
+    print version
     if ( version == 'cturtle' ):
         print "Applying various patches for cturtle"
         # genmsg_cpp
@@ -367,6 +372,7 @@ def main():
   %prog clear    : clear the currently set ros toolchain\n\
   %prog create   : create a user-defined toolchain configuration\n\
   %prog delete   : delete a preconfigured toolchain\n\
+  %prog help     : print this help information\n\
   %prog list     : list available eros and user-defined toolchains\n\
   %prog select   : select a preconfigured toolchain\n\
   %prog validate : attempt to validate a toolchain (not yet implemented)"
@@ -382,6 +388,13 @@ def main():
         return 0
 
     command = args[0]
+
+    ###################
+    # Help
+    ###################
+    if command == 'help':
+        parser.print_help()
+        return 0
         
     ###################
     # List
@@ -418,7 +431,7 @@ def main():
         if not select_toolchain():
             return 1
         # Not currently needing it, but anyway, its good to have.
-        # check_platform()
+        check_platform()
         patch_ros()
         print 
         print "If doing a full cross, or using boost in a partial cross, ensure ROS_BOOST_ROOT"
@@ -437,7 +450,11 @@ def main():
         return 0 
     
     # If we reach here, we have not received a valid command.
-    print "Not a valid command [" + command + "], rerun with --help to list valid commands"
+    print "Not a valid command [" + command + "]."
+    print
+    parser.print_help()
+    print
+
     return 1
 
 if __name__ == "__main__":
