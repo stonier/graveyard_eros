@@ -188,7 +188,7 @@ macro(_rosbuild_add_rostest file)
 
   # Check that the file exists, #1621
   set(_file_name _file_name-NOTFOUND)
-  find_file(_file_name ${file} ${PROJECT_SOURCE_DIR} NO_CMAKE_FIND_ROOT_PATH /)
+  find_file(_file_name ${file} PATHS ${PROJECT_SOURCE_DIR} / NO_CMAKE_FIND_ROOT_PATH)
   if(NOT _file_name)
     message(FATAL_ERROR "Can't find rostest file \"${file}\"")
   endif(NOT _file_name)
@@ -225,7 +225,7 @@ macro(_rosbuild_add_pyunit file)
 
   # Check that the file exists, #1621
   set(_file_name _file_name-NOTFOUND)
-  find_file(_file_name ${file} ${PROJECT_SOURCE_DIR} NO_CMAKE_FIND_ROOT_PATH /)
+  find_file(_file_name ${file} PATHS ${PROJECT_SOURCE_DIR} / NO_CMAKE_FIND_ROOT_PATH)
   if(NOT _file_name)
     message(FATAL_ERROR "Can't find pyunit file \"${file}\"")
   endif(NOT _file_name)
