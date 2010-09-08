@@ -28,6 +28,7 @@ Usage:
   rostoolchain delete   : delete a preconfigured toolchain
   rostoolchain list     : list available eros and user-defined toolchains
   rostoolchain select   : select a preconfigured toolchain
+  rostoolchain validate : validate a preconfigured toolchain (n/a)
 
 Options:
   -h, --help      show this help message and exit

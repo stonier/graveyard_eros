@@ -192,7 +192,7 @@ def select_platform():
         f.write(rosconfig_tail)
         f.close()
         print
-        print selected_platform.pathname + "->" + core.rosconfig_cmake()
+        print "-- Platform configured ($ROS_ROOT/rosconfig.cmake)."
         print
         return 0
 
@@ -299,11 +299,11 @@ def create_platform():
     f.close()
     print
     print core.bold_string("Platform Finalised")
-    print "  Family: %s" %platform_family
-    print "  Name: %s" %platform_name
-    print "  CFlags: %s" %platform_compile_flags
-    print "  LFlags: %s" %platform_link_flags
-    print "  File: %s" %user_defined_platform_pathname
+    print "-- Family: %s" %platform_family
+    print "-- Name: %s" %platform_name
+    print "-- CFlags: %s" %platform_compile_flags
+    print "-- LFlags: %s" %platform_link_flags
+    print "-- File: %s" %user_defined_platform_pathname
     print
     
 ###############################################################################
@@ -354,9 +354,13 @@ def main():
     if command == 'clear':
         if os.path.exists(core.rosconfig_cmake()):
             os.remove(core.rosconfig_cmake())
-            print "Platform configuration cleared."
+            print
+            print "-- Platform configuration cleared."
+            print
         else:
-            print "Nothing to do (no $ROS_ROOT/rosconfig.cmake)."
+            print
+            print "-- Nothing to do (no $ROS_ROOT/rosconfig.cmake)."
+            print
         return 0
     ###################
     # Create
@@ -384,12 +388,13 @@ def main():
     ###################
     if command == 'validate':
         print
-        print "This command is not yet available."
+        print "-- This command is not yet available."
         print
         return 0 
     
     # If we reach here, we have not received a valid command.
-    print "Not a valid command [" + command + "]."
+    print
+    print "-- Not a valid command [" + command + "]."
     print
     parser.print_help()
     print

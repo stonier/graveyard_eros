@@ -216,8 +216,8 @@ def select_toolchain():
         return False
     else:
         shutil.copyfile(selected_toolchain.pathname,core.rostoolchain_cmake())
-        print
-        print selected_toolchain.pathname + "->" + core.rostoolchain_cmake()
+#        print
+#        print selected_toolchain.pathname + "->" + core.rostoolchain_cmake()
         print
         return True
 
@@ -310,26 +310,26 @@ def create_toolchain():
     f.write(toolchain_template)
     f.close()
     print core.bold_string("Toolchain Finalised")
-    print "  Family: %s" %toolchain_family
-    print "  Tuple: %s" %toolchain_tuple
-    print "  Sysroot: %s" %toolchain_sysroot
-    print "  File: %s" %user_defined_toolchain_pathname
+    print
+    print "-- Family: %s" %toolchain_family
+    print "-- Tuple: %s" %toolchain_tuple
+    print "-- Sysroot: %s" %toolchain_sysroot
+    print "-- File: %s" %user_defined_toolchain_pathname
+    print
     
 def check_platform():
     rosconfig_exists = os.path.exists(core.rosconfig_cmake())
     if rosconfig_exists:
-        print "Remember to confirm that the existing platform (rosconfig.cmake) is compatible."
-        print
+        print "-- Found a ${ROS_ROOT}/rosconfig.cmake, confirm that is compatible with the toolchain."
     else:
-        print "No rosconfig.cmake, generating a default (vanilla) configuration."
+        print "-- No ${ROS_ROOT}/rosconfig.cmake, generating a default (vanilla) configuration."
         platform.select_default()
 
 def patch_ros():
     version = core.ros_version()
     patches_dir = os.path.join(roslib.packages.get_pkg_dir('eros_python_tools'),"patches",version)
-    print version
     if ( version == 'cturtle' ):
-        print "Applying various patches for cturtle"
+        print "-- Applied various cross-compiling patches for cturtle."
         # genmsg_cpp
         genmsg_cpp_dir = roslib.packages.get_pkg_dir('genmsg_cpp')
         genmsg_cmakelists = os.path.join(patches_dir,"genmsg_cpp","CMakeLists.txt")
@@ -408,9 +408,14 @@ def main():
     if command == 'clear':
         if os.path.exists(core.rostoolchain_cmake()):
             os.remove(core.rostoolchain_cmake())
-            print "Toolchain configuration cleared - remember to reconfigure ROS_BOOST_ROOT if necessary."
+            print
+            print "-- Toolchain configuration cleared."
+            print "-- Remember to reconfigure ROS_BOOST_ROOT if necessary."
+            print
         else:
-            print "Nothing to do (no toolchain configuration present)."
+            print
+            print "-- Nothing to do (no toolchain configuration present)."
+            print
         return 0
     ###################
     # Create
@@ -431,12 +436,12 @@ def main():
         if not select_toolchain():
             return 1
         # Not currently needing it, but anyway, its good to have.
-        check_platform()
+        print "-- Toolchain copied to ${ROS_ROOT}/rostoolchain.cmake."
         patch_ros()
-        print 
-        print "If doing a full cross, or using boost in a partial cross, ensure ROS_BOOST_ROOT"
-        print "is exported from your shell environment. e.g. in setup.sh:"
-        print "  export ROS_BOOST_ROOT=\"/usr/arm-none-linux-gnueabi/libc/usr\""
+        check_platform()
+        print "-- You need to manually export a root for the boost in your toolchain, e.g. in setup.sh"
+        print
+        print "          export ROS_BOOST_ROOT=\"/usr/arm-none-linux-gnueabi/libc/usr\""
         print 
         return 0
     
@@ -445,12 +450,13 @@ def main():
     ###################
     if command == 'validate':
         print
-        print "This command is not yet available."
+        print "-- This command is not yet available."
         print
         return 0 
     
     # If we reach here, we have not received a valid command.
-    print "Not a valid command [" + command + "]."
+    print
+    print "-- Not a valid command [" + command + "]."
     print
     parser.print_help()
     print
