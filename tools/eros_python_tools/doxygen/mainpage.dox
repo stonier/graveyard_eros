@@ -15,12 +15,13 @@ directory is in your PATH (i.e. in the same way as ${ROS_ROOT}/bin). Alternative
 calling rosrun will also work. For example:
 
 @code
-rosrun ecl_python_tools rosprotect --minimal
 rosrun ecl_python_tools rostoolchain list
 @endcode
 
 @section list Tools List
 
+- @ref rosBuildGuide "rosbuild" : conveniently setting/viewing the current global build mode (debug, release etc).
+- @ref rosPlatformGuide "rosplatform" : create, delete or select from existing platform configurations.
 - @ref rosProtectGuide "rosprotect" : clean, build and protect parts or all of the ros core stack.
 - @ref rosToolchainGuide "rostoolchain" : create, delete or select from existing toolchain configurations.
 

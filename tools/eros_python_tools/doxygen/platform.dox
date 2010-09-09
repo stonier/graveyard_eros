@@ -1,0 +1,43 @@
+/**
+@page rosPlatformGuide rosplatform
+
+@section Overview
+
+This is used to manage cmake platform configuration modules in a global way for the
+ros build environment. With it, platforms can be selected from a 
+library of existing configurations, or created and saved as a user-defined
+platform module.
+
+Practically, this manages what is saved in the ros user's rosconfig cmake module, 
+$ROS_ROOT/rosconfig.cmake. Starting out with cmake platforms can 
+be a bit bewildering so this eases the process and once familiar, this
+tool can help easily manage your build environment for your platform.
+
+The other eros tools also utilise this for setting various modes such as 
+the build mode type and install prefix.
+
+@section Usage
+
+The list of commands that can be passed to the platform script can be
+seen below:
+
+@code
+> rosplatform --help
+
+Usage: 
+  rosplatform          : shows the currently set ros platform
+  rosplatform clear    : clear the currently set ros platform
+  rosplatform create   : create a user-defined platform configuration
+  rosplatform delete   : delete a preconfigured platform
+  rosplatform list     : list available eros and user-defined platforms
+  rosplatform select   : select a preconfigured platform
+
+Options:
+  -h, --help      show this help message and exit
+  -v, --validate  when creating, attempt to validate the configuration
+@endcode
+
+Creation, selection and deletion are interactive - you will be prompted
+for the required actions. 
+
+**/

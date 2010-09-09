@@ -35,8 +35,5 @@ Options:
 @endcode
 
 Creation, selection and deletion are interactive - you will be prompted
-for the required actions. Also note, validation is only cursory at 
-this stage - it simply checks to see if a created configuration's 
-compilers already exist in your PATH.
-
+for the required actions. 
 **/

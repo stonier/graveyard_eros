@@ -1,0 +1,34 @@
+/**
+@page rosBuildGuide rosbuild
+
+@section Overview
+
+This is used to set/view the current global build mode type for your ros environment.
+
+@section Usage
+
+To view the current build mode:
+
+@code
+rosbuild
+@endcode
+
+To list possible modes: 
+
+@code
+rosbuild list
+@endcode
+
+To set the current build mode:
+
+@code
+rosbuild Debug
+@endcode
+
+@section howSection How it Works
+
+It uses a currently configured rosconfig.cmake configuration (if none are present, it inserts
+the default vanilla configuration). It parses this looking for the CMAKE_BUILD_TYPE variable
+and does some string substitutions to manage the switches between modes.
+
+**/
