@@ -95,11 +95,13 @@ def protect(packages):
 def main():
     ''' Main entry point for creating an rosprotect script.'''
     from optparse import OptionParser
-    usage = "Usage: %prog [options]\n\n\
+    usage = "\n\
+  %prog [options] targets : protect/unprotect the specified targets\n\
+  %prog help              : print this help information.\n\
+\n\
 Description:\n\
-  Cleans, builds and then protects the entire core ros stack. Use with --minimal if you wish\n\
-  to rosprotect only a minimal set of packages necessary for a cross-compile environment.\n\
-  You can reverse the process with --unprotect." 
+  Protect/unprotect ros packages via the ROS_NOBUILD mechanism. Targets can include\n\
+  a package list, stack list or one of the preconfigured groups (e.g. --minimal)." 
     parser = OptionParser(usage=usage)
     parser.add_option("-c","--clean", action="store_true", dest="clean", default=False, help="pre-clean packages before building and protecting them.")
     parser.add_option("-m","--minimal", action="store_true", dest="minimal", default=False, help="target a selected minimal set of ros packages necessary for a cross-compile environment.")
@@ -125,7 +127,14 @@ Description:\n\
     
     if options.clean:
         Flags.clean = True
-        
+
+    ###################
+    # Commands
+    ###################
+    if args[0] == "help":
+        parser.print_help()
+        sys.exit(0)
+
     ###################
     # Packages
     ###################

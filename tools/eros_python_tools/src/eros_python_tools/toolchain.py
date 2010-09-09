@@ -375,7 +375,10 @@ def main():
   %prog help     : print this help information\n\
   %prog list     : list available eros and user-defined toolchains\n\
   %prog select   : select a preconfigured toolchain\n\
-  %prog validate : attempt to validate a toolchain (not yet implemented)"
+  %prog validate : attempt to validate a toolchain (not yet implemented)\n\
+  \n\
+Description: \n\
+  Create/delete and manage the toolchain configuration for this ros environment."
     parser = OptionParser(usage=usage)
     #parser.add_option("-v","--validate", action="store_true", dest="validate", help="when creating, attempt to validate the configuration")
     unused_options, args = parser.parse_args()
