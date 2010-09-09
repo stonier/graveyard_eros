@@ -45,3 +45,6 @@ def rostoolchain_cmake():
 
 def rosconfig_cmake():
     return os.path.join(roslib.rosenv.get_ros_root(),"rosconfig.cmake")
+
+def rosstack_packages(stack):
+    return roslib.rospack.rosstackexec(['contents',stack]).split()
