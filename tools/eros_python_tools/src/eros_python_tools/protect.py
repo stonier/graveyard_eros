@@ -131,7 +131,7 @@ Description:\n\
     ###################
     # Commands
     ###################
-    if args[0] == "help":
+    if len(args) != 0 and args[0] == "help":
         parser.print_help()
         sys.exit(0)
 
