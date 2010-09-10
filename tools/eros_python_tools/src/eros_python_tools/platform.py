@@ -185,8 +185,56 @@ def select_platform():
         print core.red_string("Aborting, platform not found.")
         return 1
     else:
+        set_platform(selected_platform)
+        return 0
+
+def select_platform_by_name(id_string):
+    '''
+    Selects platform by name or family/name string.
+      - return 1 if failure, 0 if success
+    '''
+    bits = os.path.split(id_string)
+    print bits
+    if  len(bits) == 2 :
+        family = bits[0] # if just name is given, this will be empty
+        name = bits[1]
+        found_platform = False
+        platforms = platform_list()
+        if family == "": # try and just match name
+            for platform in platforms:
+                if ( platform.name == name ):
+                    if found_platform:
+                        print
+                        print core.red_string("Multiple matches, please provide a full id string.")
+                        list_platforms()
+                        return 1
+                    else:
+                        found_platform = True
+                        selected_platform = platform
+        else: # try and match both family, name
+            for platform in platforms:
+                if platform.family == family and platform.name == name:
+                    found_platform = True
+                    selected_platform = platform
+                    break
+        if ( not found_platform ):
+            print
+            print core.red_string("Aborting, platform not found.")
+            list_platforms()
+            return 1
+        else:
+            set_platform(selected_platform)
+            return 0
+    else:
+        print
+        print core.red_string("Aborting, platform not found.")
+        list_platforms()
+        return 1
+        
+
+def set_platform(platform):
         # Copy across the platform specific file and append the default section as well
-        shutil.copyfile(selected_platform.pathname,core.rosconfig_cmake())
+        shutil.copyfile(platform.pathname,core.rosconfig_cmake())
         rosconfig_tail = open(eros_rosconfig_tail()).read()
         f = open(core.rosconfig_cmake(), 'a')
         f.write(rosconfig_tail)
@@ -194,7 +242,6 @@ def select_platform():
         print
         print "-- Platform configured ($ROS_ROOT/rosconfig.cmake)."
         print
-        return 0
 
 def select_default():
     '''
@@ -313,14 +360,15 @@ def create_platform():
 def main():
     from optparse import OptionParser
     usage = "\n\
-  %prog          : shows the currently set ros platform\n\
-  %prog clear    : clear the currently set ros platform\n\
-  %prog create   : create a user-defined platform configuration\n\
-  %prog delete   : delete a preconfigured platform\n\
-  %prog help     : print this help information\n\
-  %prog list     : list available eros and user-defined platforms\n\
-  %prog select   : select a preconfigured platform\n\
-  %prog validate : attempt to validate a platform (not yet implemented)\n\
+  %prog               : shows the currently set ros platform\n\
+  %prog clear         : clear the currently set ros platform\n\
+  %prog create        : create a user-defined platform configuration\n\
+  %prog delete        : delete a platform configuration\n\
+  %prog help          : print this help information\n\
+  %prog list          : list available eros and user-defined platforms\n\
+  %prog select        : interactively select a platform configuration\n\
+  %prog select <str>  : directly select the specified platform configuration\n\
+  %prog validate      : attempt to validate a platform (not yet implemented)\n\
 \n\
 Description: \n\
   Create/delete and manage the platform configuration for this ros environment."
@@ -381,10 +429,14 @@ Description: \n\
     ###################
     # Select
     ###################
-    if command == 'select': 
-        if not select_platform():
-            return 1
-        print 
+    if command == 'select':
+        if len(args) == 1: # interactive selection
+            if not select_platform():
+                return 1
+        else:
+            if not select_platform_by_name(args[1]):
+                return 1
+        print
         return 0
     
     ###################

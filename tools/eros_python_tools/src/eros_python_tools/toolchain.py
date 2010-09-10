@@ -216,10 +216,51 @@ def select_toolchain():
         return False
     else:
         shutil.copyfile(selected_toolchain.pathname,core.rostoolchain_cmake())
-#        print
-#        print selected_toolchain.pathname + "->" + core.rostoolchain_cmake()
         print
         return True
+
+def select_toolchain_by_name(id_string):
+    '''
+    Selects toolchain by name or family/name string.
+      - return 1 if failure, 0 if success
+    '''
+    bits = os.path.split(id_string)
+    print bits
+    if  len(bits) == 2 :
+        family = bits[0] # if just name is given, this will be empty
+        name = bits[1]
+        found_toolchain = False
+        toolchains = toolchain_list()
+        if family == "": # try and just match name
+            for toolchain in toolchains:
+                if ( toolchain.name == name ):
+                    if found_toolchain:
+                        print
+                        print core.red_string("Multiple matches, please provide a full id string.")
+                        list_toolchains()
+                        return 1
+                    else:
+                        found_toolchain = True
+                        selected_toolchain = toolchain
+        else: # try and match both family, name
+            for toolchain in toolchains:
+                if toolchain.family == family and toolchain.name == name:
+                    found_toolchain = True
+                    selected_toolchain = toolchain
+                    break
+        if ( not found_toolchain ):
+            print
+            print core.red_string("Aborting, toolchain not found.")
+            list_toolchains()
+            return 1
+        else:
+            shutil.copyfile(selected_toolchain.pathname,core.rostoolchain_cmake())
+            return 0
+    else:
+        print
+        print core.red_string("Aborting, toolchain not found.")
+        list_toolchains()
+        return 1
 
 def delete_toolchain():
     '''
@@ -368,14 +409,15 @@ def patch_ros():
 def main():
     from optparse import OptionParser
     usage = "\n\
-  %prog          : shows the currently set ros toolchain\n\
-  %prog clear    : clear the currently set ros toolchain\n\
-  %prog create   : create a user-defined toolchain configuration\n\
-  %prog delete   : delete a preconfigured toolchain\n\
-  %prog help     : print this help information\n\
-  %prog list     : list available eros and user-defined toolchains\n\
-  %prog select   : select a preconfigured toolchain\n\
-  %prog validate : attempt to validate a toolchain (not yet implemented)\n\
+  %prog               : shows the currently set ros toolchain\n\
+  %prog clear         : clear the currently set ros toolchain\n\
+  %prog create        : create a user-defined toolchain configuration\n\
+  %prog delete        : delete a preconfigured toolchain\n\
+  %prog help          : print this help information\n\
+  %prog list          : list available eros and user-defined toolchains\n\
+  %prog select        : interactively select a toolchain\n\
+  %prog select <str>  : directly select the specified toolchain\n\
+  %prog validate      : attempt to validate a toolchain (not yet implemented)\n\
   \n\
 Description: \n\
   Create/delete and manage the toolchain configuration for this ros environment."
@@ -436,8 +478,12 @@ Description: \n\
     # Select
     ###################
     if command == 'select': 
-        if not select_toolchain():
-            return 1
+        if len(args) == 1: # interactive selection
+            if not select_toolchain():
+                return 1
+        else:
+            if not select_toolchain_by_name(args[1]):
+                return 1
         # Not currently needing it, but anyway, its good to have.
         print "-- Toolchain copied to ${ROS_ROOT}/rostoolchain.cmake."
         patch_ros()
