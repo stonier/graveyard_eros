@@ -194,7 +194,6 @@ def select_platform_by_name(id_string):
       - return 1 if failure, 0 if success
     '''
     bits = os.path.split(id_string)
-    print bits
     if  len(bits) == 2 :
         family = bits[0] # if just name is given, this will be empty
         name = bits[1]
