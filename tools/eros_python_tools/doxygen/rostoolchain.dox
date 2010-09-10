@@ -20,20 +20,24 @@ seen below:
 
 @code
 > rostoolchain --help
-
 Usage: 
-  rostoolchain          : shows the currently set ros toolchain
-  rostoolchain clear    : clear the currently set ros toolchain
-  rostoolchain create   : create a user-defined toolchain configuration
-  rostoolchain delete   : delete a preconfigured toolchain
-  rostoolchain list     : list available eros and user-defined toolchains
-  rostoolchain select   : select a preconfigured toolchain
+  rostoolchain               : shows the currently set ros toolchain
+  rostoolchain clear         : clear the currently set ros toolchain
+  rostoolchain create        : create a user-defined toolchain configuration
+  rostoolchain delete        : delete a preconfigured toolchain
+  rostoolchain help          : print this help information
+  rostoolchain list          : list available eros and user-defined toolchains
+  rostoolchain select        : interactively select a toolchain
+  rostoolchain select <str>  : directly select the specified toolchain
+  rostoolchain validate      : attempt to validate a toolchain (not yet implemented)
+  
+Description: 
+  Create/delete and manage the toolchain configuration for this ros environment.
 
 Options:
-  -h, --help      show this help message and exit
-  -v, --validate  when creating, attempt to validate the configuration
+  -h, --help  show this help message and exit
 @endcode
 
-Creation, selection and deletion are interactive - you will be prompted
-for the required actions. 
+Creation, and deletion are interactive, selection also if you do not supply an argument.
+You will be prompted for the required actions. 
 **/
