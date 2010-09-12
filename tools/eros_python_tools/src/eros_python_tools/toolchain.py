@@ -15,6 +15,8 @@ import os
 import sys
 import core
 import shutil
+# eros_python_tools modules
+import install_prefix
 import platform
 
 ###############################################################################
@@ -361,9 +363,12 @@ def create_toolchain():
 def check_platform():
     rosconfig_exists = os.path.exists(core.rosconfig_cmake())
     if rosconfig_exists:
-        print "-- Found a ${ROS_ROOT}/rosconfig.cmake, confirm that is compatible with the toolchain."
+        print "-- Found rosconfig.cmake."
+        print "  -- Setting the install prefix to ${TOOLCHAIN_INSTALL_PREFIX}"
+        install_prefix.set_install_prefix("${TOOLCHAIN_INSTALL_PREFIX}")
+        print "  -- Confirm that it is compatible with the current toolchain."
     else:
-        print "-- No ${ROS_ROOT}/rosconfig.cmake, generating a default (vanilla) configuration."
+        print "-- No rosconfig.cmake, generating a default (vanilla) configuration."
         platform.select_default()
 
 def patch_ros():
@@ -485,7 +490,7 @@ Description: \n\
             if not select_toolchain_by_name(args[1]):
                 return 1
         # Not currently needing it, but anyway, its good to have.
-        print "-- Toolchain copied to ${ROS_ROOT}/rostoolchain.cmake."
+        print "-- Toolchain copied to rostoolchain.cmake."
         patch_ros()
         check_platform()
         print "-- You need to manually export a root for the boost in your toolchain, e.g. in setup.sh"

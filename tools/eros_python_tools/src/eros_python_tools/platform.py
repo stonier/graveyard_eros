@@ -239,7 +239,7 @@ def set_platform(platform):
         f.write(rosconfig_tail)
         f.close()
         print
-        print "-- Platform configured ($ROS_ROOT/rosconfig.cmake)."
+        print "-- Platform configured (rosconfig.cmake)."
         print
 
 def select_default():
@@ -410,7 +410,7 @@ Description: \n\
             print
         else:
             print
-            print "-- Nothing to do (no $ROS_ROOT/rosconfig.cmake)."
+            print "-- Nothing to do (no rosconfig.cmake)."
             print
         return 0
     ###################

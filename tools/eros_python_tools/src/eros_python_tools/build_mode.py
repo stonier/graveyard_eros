@@ -76,7 +76,7 @@ def main():
   %prog : display the current build mode.\n\
   %prog list : list valid build modes.\n\
   %prog help : print this help information.\n\
-  %prog  <Debug|Release|RelWithDebInfo|MinSizeRel> : set the build mode.\n\
+  %prog <Debug|Release|RelWithDebInfo|MinSizeRel> : set the build mode.\n\
 \n\
 Description: \n\
   Use to configure the global build mode for this ros environment."
