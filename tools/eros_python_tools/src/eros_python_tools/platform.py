@@ -32,8 +32,8 @@ class Platform:
 
     def __init__(self, platform_dir, platform_pathname, platform_id):
         # e.g. 
-        #  platform_dir = /home/snorri/.ros/platforms
-        #  platform_pathname = /home/snorri/.ros/platforms/arm/arm1176jzf-s.cmake
+        #  platform_dir = /home/snorri/.ros/eros/platforms
+        #  platform_pathname = /home/snorri/.ros/eros/platforms/arm/arm1176jzf-s.cmake
         self.pathname = platform_pathname
         # Could check here, but if calling from platform_list, will always be arg 1 we want.
         tail = self.pathname.split(platform_dir)[1] # e.g. /arm/arm1176jzf-s.cmake 
@@ -78,9 +78,19 @@ def eros_platform_template():
 def eros_platform_dir():
     return os.path.join(roslib.packages.get_pkg_dir('eros_platforms'),"library")
 
-def user_platform_dir():
-    return os.path.join(roslib.rosenv.get_ros_home(),"platforms")
+# global variable for the user platforms dir, access via user_platform_dir()
+_user_platforms_dir = os.path.join(core.eros_home(),"platforms")
 
+def user_platform_dir(dir=None):
+    global _user_platforms_dir
+    if ( dir != None ):
+        print dir
+        if ( not os.path.exists(dir) ):
+            raise Exception('Specified directory does not exist.')
+        _user_platforms_dir = dir
+    return _user_platforms_dir
+
+# global variable for the platform list, access via platform_list()
 platforms = []
 
 def platform_list():
@@ -291,7 +301,7 @@ def create_platform():
     print
     print "This is an interactive assistant to help define a new eros style cmake platform"
     print "configuration. It will prompt you for a few custom strings and then save the"
-    print "configured platform module in ROS_HOME/platforms (~/.ros/platforms on linux)."
+    print "configured platform module in ROS_HOME/eros/platforms (~/.ros/eros/platforms on linux)."
     print "It can then be listed and selected in the same way as as a regular eros platform"
     print "configuration."
     print
@@ -357,6 +367,8 @@ def create_platform():
 ###############################################################################
 
 def main():
+    from config import ErosConfig
+    config = ErosConfig()
     from optparse import OptionParser
     usage = "\n\
   %prog               : shows the currently set ros platform\n\
@@ -370,12 +382,17 @@ def main():
   %prog validate      : attempt to validate a platform (not yet implemented)\n\
 \n\
 Description: \n\
-  Create/delete and manage the platform configuration for this ros environment."
-  
+  Create/delete and manage the platform configuration for this ros environment\n\
+  Location of the user platform directory can be modified via --dir or more \n\
+  permanently via " + core.eros_config() + "."
     parser = OptionParser(usage=usage)
+    parser.add_option("-d","--dir", action="store", default=config.user_platforms_dir(), help="location of the user platforms directory.")
     #parser.add_option("-v","--validate", action="store_true", dest="validate", help="when creating, attempt to validate the configuration")
-    unused_options, args = parser.parse_args()
+    options, args = parser.parse_args()
     
+    # Configure the user platform directory.
+    user_platform_dir(options.dir)
+
     ###################
     # Show current
     ###################

@@ -48,3 +48,12 @@ def rosconfig_cmake():
 
 def rosstack_packages(stack):
     return roslib.rospack.rosstackexec(['contents',stack]).split()
+
+def eros_home():
+    return os.path.join(roslib.rosenv.get_ros_home(),"eros")
+    
+def eros_config():
+    return os.path.join(eros_home(),"eros.cfg")
+
+def eros_tools_templates_dir():
+    return os.path.join(roslib.packages.get_pkg_dir('eros_python_tools'),"templates")

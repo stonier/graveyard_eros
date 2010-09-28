@@ -35,8 +35,8 @@ class Toolchain:
 
     def __init__(self, toolchain_dir, toolchain_pathname, toolchain_id):
         # e.g. 
-        #  toolchain_dir = /home/snorri/.ros/toolchains
-        #  toolchain_pathname = /home/snorri/.ros/toolchains/crossdev/i686-pc-linux-gnu.cmake
+        #  toolchain_dir = /home/snorri/.ros/eros/toolchains
+        #  toolchain_pathname = /home/snorri/.ros/eros/toolchains/crossdev/i686-pc-linux-gnu.cmake
         self.pathname = toolchain_pathname
         # Could check here, but if calling from toolchain_list, will always be arg 1 we want.
         tail = self.pathname.split(toolchain_dir)[1] # e.g. /crossdev/i686-pc-linux-gnu.cmake 
@@ -103,7 +103,7 @@ class Toolchain:
         print "  Compilers validated: "
         print "    gcc : " + toolchain_gcc_pathname
         print "    gpp : " + toolchain_gpp_pathname
-
+        
 ###############################################################################
 # Methods
 ###############################################################################
@@ -114,9 +114,18 @@ def eros_toolchain_template():
 def eros_toolchain_dir():
     return os.path.join(roslib.packages.get_pkg_dir('eros_toolchains'),"library")
 
-def user_toolchain_dir():
-    return os.path.join(roslib.rosenv.get_ros_home(),"toolchains")
+# global variable for the user toolchains dir, access via user_toolchain_dir()
+_user_toolchains_dir = os.path.join(core.eros_home(),"toolchains")
 
+def user_toolchain_dir(dir=None):
+    global _user_toolchains_dir
+    if ( dir != None ):
+        if ( not os.path.exists(dir) ):
+            raise Exception('Specified directory does not exist.')
+        _user_toolchains_dir = dir
+    return _user_toolchains_dir
+
+# global variable for the toolchain list, access via toolchain_list()
 toolchains = []
 
 def toolchain_list():
@@ -186,6 +195,7 @@ def show_current_toolchain():
             current_toolchain = toolchain
     if ( found ):
         print pretext + current_toolchain.family + os.sep + current_toolchain.name
+        print current_toolchain.sysroot()
     else:
         if ( os.path.exists(core.rostoolchain_cmake()) ):
             print pretext + "unknown"
@@ -304,7 +314,7 @@ def create_toolchain():
     print
     print "This is an interactive assistant to help define a new eros style cmake toolchain."
     print "It will prompt you for a few custom strings and then save the configured toolchain"
-    print "in ROS_HOME/toolchains (~/.ros/toolchains on linux platforms). It can then be"
+    print "in ROS_HOME/eros/toolchains (~/.ros/eros/toolchains on linux platforms). It can then be"
     print "listed and selected in the same way as as a regular eros toolchain."
     print
     print core.bold_string("  Toolchain Family")
@@ -412,6 +422,8 @@ def patch_ros():
 ###############################################################################
 
 def main():
+    from config import ErosConfig
+    config = ErosConfig()
     from optparse import OptionParser
     usage = "\n\
   %prog               : shows the currently set ros toolchain\n\
@@ -425,11 +437,18 @@ def main():
   %prog validate      : attempt to validate a toolchain (not yet implemented)\n\
   \n\
 Description: \n\
-  Create/delete and manage the toolchain configuration for this ros environment."
+  Create/delete and manage the toolchain configuration for this ros environment.\n\
+  Location of the user toolchain directory can be modified via --dir or more \n\
+  permanently via " + core.eros_config() + "."
     parser = OptionParser(usage=usage)
+    print "Default: %s" %config.user_toolchains_dir()
+    parser.add_option("-d","--dir", action="store", default=config.user_toolchains_dir(), help="location of the user toolchain directory.")
     #parser.add_option("-v","--validate", action="store_true", dest="validate", help="when creating, attempt to validate the configuration")
-    unused_options, args = parser.parse_args()
+    options, args = parser.parse_args()
     
+    # Configure the user toolchain directory.
+    user_toolchain_dir(options.dir)
+        
     ###################
     # Show current
     ###################
@@ -493,9 +512,10 @@ Description: \n\
         print "-- Toolchain copied to rostoolchain.cmake."
         patch_ros()
         check_platform()
-        print "-- You need to manually export a root for the boost in your toolchain, e.g. in setup.sh"
+        print "-- You need to manually export a root for the boost in your toolchain in setup.sh."
+        print "  -- (typically the same as the TOOLCHAIN_INSTALL_PREFIX), e.g."
         print
-        print "          export ROS_BOOST_ROOT=\"/usr/arm-none-linux-gnueabi/libc/usr\""
+        print "          export ROS_BOOST_ROOT=\"/usr/my_toolchain_tuple/usr/local\""
         print 
         return 0
     
