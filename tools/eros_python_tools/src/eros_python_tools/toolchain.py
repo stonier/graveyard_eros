@@ -195,7 +195,6 @@ def show_current_toolchain():
             current_toolchain = toolchain
     if ( found ):
         print pretext + current_toolchain.family + os.sep + current_toolchain.name
-        print current_toolchain.sysroot()
     else:
         if ( os.path.exists(core.rostoolchain_cmake()) ):
             print pretext + "unknown"
