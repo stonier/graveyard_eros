@@ -385,6 +385,16 @@ def patch_ros():
     patches_dir = os.path.join(roslib.packages.get_pkg_dir('eros_python_tools'),"patches",version)
     if ( version == 'cturtle' ):
         print "-- Applied various cross-compiling patches for cturtle."
+        # rosccpp - cedric's patches.
+        roscpp_dir = os.path.join(roslib.packages.get_pkg_dir('roscpp'),'src','libros')
+        roscpp_init = os.path.join(patches_dir,"roscpp","init.cpp")
+        roscpp_spinner = os.path.join(patches_dir,"roscpp","spinner.cpp")
+        roscpp_poll_manager = os.path.join(patches_dir,"roscpp","poll_manager.cpp")
+        roscpp_xmlrpc_manager = os.path.join(patches_dir,"roscpp","xmlrpc_manager.cpp")
+        shutil.copyfile(roscpp_init,os.path.join(roscpp_dir,'init.cpp'))
+        shutil.copyfile(roscpp_spinner,os.path.join(roscpp_dir,'spinner.cpp'))
+        shutil.copyfile(roscpp_poll_manager,os.path.join(roscpp_dir,'poll_manager.cpp'))
+        shutil.copyfile(roscpp_xmlrpc_manager,os.path.join(roscpp_dir,'xmlrpc_manager.cpp'))
         # genmsg_cpp
         genmsg_cpp_dir = roslib.packages.get_pkg_dir('genmsg_cpp')
         genmsg_cmakelists = os.path.join(patches_dir,"genmsg_cpp","CMakeLists.txt")
