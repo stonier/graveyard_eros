@@ -1,7 +1,8 @@
 <package>
-  <description brief="eros_cmake_modules">
+  <description brief="cmake macros to assist 3rd party builds">
 
-     eros_cmake_modules
+     This is a cmake macro library used for assisting in the builds
+     of 3rd party packages for an eros toolchain bridge or utilities.
 
   </description>
   <author></author>
