@@ -9,7 +9,11 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/eros_build</url>
-
+  <depend package="eros_license"/>
+  <depend package="rosbuild"/>
+  <export>
+    <rosbuild cmake_directory="${prefix}/cmake/modules"/>
+  </export>
 </package>
 
 

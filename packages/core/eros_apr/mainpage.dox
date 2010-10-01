@@ -2,25 +2,26 @@
 \mainpage
 \htmlinclude manifest.html
 
-\b eros_apr is ... 
+\section packageSummary Package Summary
 
-<!-- 
-Provide an overview of your package.
--->
+	This provides a source package for compiling the apache runtime.
+	Ordinarily this is not useful as you would install via your system's
+	installation method (e.g. apt-get for ubuntu), but for cross-compiling 
+        it provides the recipe needed to make a toolchain ros-ready.
 
+\section usage Usage
 
-\section codeapi Code API
+    - Install your toolchain
+    - Configure the ros for your toolchain with rostoolchain.
+      - Or manually in $ROS_ROOT/rostoolchain.cmake.
+    - Run make to compile the package
+    - Run make install to install to your toolchain folder
 
-<!--
-Provide links to specific auto-generated API documentation within your
-package that is of particular interest to a reader. Doxygen will
-document pretty much every part of your code, so do your best here to
-point the reader to the actual API.
+    Alternatively you can simply run 'rosmake --target=install eros_apr' instead of the
+    separate make commands.
 
-If your codebase is fairly large or has different sets of APIs, you
-should use the doxygen 'group' tag to keep these APIs together. For
-example, the roscpp documentation has 'libros' group.
--->
+\section ChangeLog
 
+	- <b>Sep 10</b> : Initial creation.
 
 */
