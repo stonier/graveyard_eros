@@ -44,7 +44,7 @@ class ErosConfig:
             config.set('Toolchains', 'user_toolchains_dir', os.path.join(core.eros_home(),"toolchains"))
             # Writing the configuration file
             with open(core.eros_config(), 'wb') as configfile:
-                self.config.write(configfile)
+                config.write(configfile)
                 
     def user_toolchains_dir(self):
         return self.config.get("Toolchains",'user_toolchains_dir')
