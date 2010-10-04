@@ -5,18 +5,13 @@
 cmake_minimum_required(VERSION 2.4.6)
 
 ##############################################################################
-# Ros - pick up user's rostoolchain.cmake & rosconfig.cmake if exists
+# Init Configuration
 ##############################################################################
 
 include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 rosbuild_init()
 rosbuild_include(eros_build eros_package)
-
-##############################################################################
-# Configuration
-##############################################################################
-
-eros_3rd_party_build_init()
+eros_3rd_party_init()
 
 ##############################################################################
 # Variables
@@ -25,7 +20,7 @@ eros_3rd_party_build_init()
 set(SOURCE_NAME "apr-1.4.2")
 set(SOURCE_TARBALL "${SOURCE_NAME}.tar.gz")
 # Use ecl's repo, mirrors at apache keep bloody changing and they don't have a constant alias to use!
-set(SOURCE_TARBALL_URL "http://embedded-control-library.googlecode.com/files/${SOURCE_TARBALL}")
+set(SOURCE_TARBALL_URL "http://mirror.apache-kr.org/apr/${SOURCE_TARBALL}")
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 set(PREFIX ${CMAKE_BINARY_DIR}/fakeroot)
 
@@ -44,9 +39,9 @@ endif()
 # Build
 ##############################################################################
 
-ecl_download(${SOURCE_TARBALL_URL} ${CMAKE_BINARY_DIR}/${SOURCE_TARBALL})
-ecl_extract_tarball(${CMAKE_BINARY_DIR}/${SOURCE_TARBALL} ${CMAKE_BINARY_DIR})
-ecl_autotools_compile("${CONFIGURE_COMMAND}" ${SOURCE_DIR} ${CMAKE_BINARY_DIR}/extracted)
+eros_download(${SOURCE_TARBALL_URL} ${CMAKE_BINARY_DIR}/${SOURCE_TARBALL})
+eros_extract_tarball(${CMAKE_BINARY_DIR}/${SOURCE_TARBALL} ${CMAKE_BINARY_DIR})
+eros_autotools_compile("${CONFIGURE_COMMAND}" ${SOURCE_DIR} ${CMAKE_BINARY_DIR}/extracted)
 
 add_custom_target(
         source ALL
