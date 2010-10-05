@@ -15,6 +15,7 @@ import shutil
 import sys
 import roslib
 import core
+import prefix
 
 ###############################################################################
 # Objects
@@ -248,6 +249,7 @@ def set_platform(platform):
         f = open(core.rosconfig_cmake(), 'a')
         f.write(rosconfig_tail)
         f.close()
+        check_install_prefix()
         print
         print "-- Platform configured (rosconfig.cmake)."
         print
@@ -361,6 +363,23 @@ def create_platform():
     print "-- LFlags: %s" %platform_link_flags
     print "-- File: %s" %user_defined_platform_pathname
     print
+    check_install_prefix()
+    
+def check_install_prefix():
+    ''' 
+    Runs a quick check to see if a toolchain is installed, and if so, 
+    configures the install prefix to match the toolchain's install root.
+    '''
+    if core.is_rostoolchain_cmake():
+        print "-- Found rostoolchain.cmake."
+        print "  -- Setting the install prefix to ${TOOLCHAIN_INSTALL_PREFIX}"
+        prefix.set_install_prefix("${TOOLCHAIN_INSTALL_PREFIX}")
+        print "  -- Confirm that it is compatible with the current toolchain."
+        print "  -- Or modify it as you wish with 'rosprefix'"
+    else:
+        print "-- No rostoolchain.cmake."
+        print "  -- Setting the install prefix to /usr/local"
+    
     
 ###############################################################################
 # Main

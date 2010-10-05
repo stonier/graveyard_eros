@@ -16,7 +16,7 @@ import sys
 import core
 import shutil
 # eros_python_tools modules
-import install_prefix
+import prefix
 import platform
 
 ###############################################################################
@@ -374,7 +374,7 @@ def check_platform():
     if rosconfig_exists:
         print "-- Found rosconfig.cmake."
         print "  -- Setting the install prefix to ${TOOLCHAIN_INSTALL_PREFIX}"
-        install_prefix.set_install_prefix("${TOOLCHAIN_INSTALL_PREFIX}")
+        prefix.set_install_prefix("${TOOLCHAIN_INSTALL_PREFIX}")
         print "  -- Confirm that it is compatible with the current toolchain."
     else:
         print "-- No rosconfig.cmake, generating a default (vanilla) configuration."

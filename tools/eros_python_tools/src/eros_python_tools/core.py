@@ -43,6 +43,9 @@ def ros_version():
 def rostoolchain_cmake():
     return os.path.join(roslib.rosenv.get_ros_root(),"rostoolchain.cmake")
 
+def is_rostoolchain_cmake():
+    return os.path.exists(rostoolchain_cmake())
+
 def rosconfig_cmake():
     return os.path.join(roslib.rosenv.get_ros_root(),"rosconfig.cmake")
 
