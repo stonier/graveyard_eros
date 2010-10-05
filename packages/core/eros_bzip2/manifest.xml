@@ -1,7 +1,8 @@
 <package>
-  <description brief="Build recipe for cross-compiling the apache c++ logging library">
+  <description brief="Build recipe for cross-compiling bzip2">
 
-	This provides a source package for compiling the apache c++ logging library.
+	This provides a source package for compiling bzip2 (needed by boost).
+	
 	Ordinarily this is not useful as you would install via your system's
 	installation method (e.g. apt-get for ubuntu), but for cross-compiling 
     it provides the recipe needed to make a toolchain ros-ready.
@@ -10,11 +11,9 @@
   <author>Daniel Stonier (d.stonier@gmail.com)</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/eros_log4cxx</url>
+  <url>http://ros.org/wiki/eros_bzip2</url>
   <depend package="eros_license"/>
-  <depend package="eros_apr_util"/>
   <depend package="eros_build"/>
-
 </package>
 
 

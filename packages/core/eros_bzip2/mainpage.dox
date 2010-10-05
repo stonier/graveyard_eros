@@ -4,7 +4,7 @@
 
 \section packageSummary Package Summary
 
-	This provides a source package for (cross) compiling zlib (needed by boost).
+	This provides a source package for (cross) compiling bzip2 (needed by boost).
 	
 	Ordinarily this is not useful as you would install via your system's
 	installation method (e.g. apt-get for ubuntu), but for cross-compiling 
@@ -15,7 +15,7 @@
     - Install your toolchain
     - Configure the ros for your toolchain with rostoolchain.
       - Or manually in $ROS_ROOT/rostoolchain.cmake.
-    - Run 'rosmake --target=install eros_zlib' to install this package and its deps.
+    - Run 'rosmake --target=install eros_bzip2' to install this package and its deps.
       - Or simply 'make clean', 'make', 'make install' to install without recompiling deps.
 
 \section ChangeLog

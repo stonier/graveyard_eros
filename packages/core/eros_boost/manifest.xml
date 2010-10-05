@@ -1,14 +1,22 @@
 <package>
-  <description brief="eros_boost">
+  <description brief="Build recipe for cross-compiling a minimal boost for embedded systems">
 
-     eros_boost
+	This provides a source package for compiling a minimal boost ideally
+	targetting embedded systems.
+	
+	Ordinarily this is not useful as you would install via your system's
+	installation method (e.g. apt-get for ubuntu), but for cross-compiling 
+    it provides the recipe needed to make a toolchain ros-ready.
 
   </description>
-  <author></author>
+  <author>Daniel Stonier (d.stonier@gmail.com)</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/eros_boost</url>
-
+  <depend package="eros_license"/>
+  <depend package="eros_zlib"/>
+  <depend package="eros_bzip2"/>
+  <depend package="eros_build"/>
 </package>
 
 
