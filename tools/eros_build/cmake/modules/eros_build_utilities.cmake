@@ -3,6 +3,26 @@
 ###############################################################################
 
 ###############################
+# Compiler Version
+###############################
+# Configures the variables:
+# 
+#  - COMPILER_VERSION
+#
+macro(eros_detect_compiler_version)
+    if(${MSVC})
+      set(COMPILER_VERSION ${MSVC})
+    else()
+      execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} --version
+        OUTPUT_VARIABLE COMPILER_VERSION
+        )
+      string(REGEX REPLACE ".* ([0-9])\\.([0-9])\\.([0-9]).*" "\\1.\\2.\\3"
+                         COMPILER_VERSION ${COMPILER_VERSION})
+    endif()
+endmacro()
+
+###############################
 # Download
 ###############################
 # Adds a custom command for downloading a url to a 
