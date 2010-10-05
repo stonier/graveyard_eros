@@ -250,7 +250,6 @@ def set_platform(platform):
         f.write(rosconfig_tail)
         f.close()
         check_install_prefix()
-        print
         print "-- Platform configured (rosconfig.cmake)."
         print
 
@@ -264,6 +263,7 @@ def select_default():
     f = open(core.rosconfig_cmake(), 'a')
     f.write(rosconfig_tail)
     f.close()
+    check_install_prefix()
     
 def delete_platform():
     '''
@@ -273,13 +273,14 @@ def delete_platform():
     list_user_platforms()
     print
     platform_id_string = raw_input("Enter a platform id #: ")
+    print
     if ( not platform_id_string.isdigit() ):
-        print core.red_string("Aborting, invalid id #.")
+        print core.red_string("-- Aborting, invalid id #.")
         return 1
     platform_id = int(platform_id_string)
     platforms = platform_list()
     if not platform_id <= len(platforms):
-        print core.red_string("Aborting, invalid id #.")
+        print core.red_string("-- Aborting, invalid id #.")
         return 1
     found_platform = False
     for platform in platforms:
@@ -288,7 +289,7 @@ def delete_platform():
                 found_platform = True
                 selected_platform = platform
     if ( not found_platform ):
-        print core.red_string("Aborting, invalid id #.") # probably passed an eros platform id
+        print core.red_string("-- Aborting, invalid id #.") # probably passed an eros platform id
         return 1
     else:
         os.remove(selected_platform.pathname)
@@ -371,14 +372,14 @@ def check_install_prefix():
     configures the install prefix to match the toolchain's install root.
     '''
     if core.is_rostoolchain_cmake():
-        print "-- Found rostoolchain.cmake."
+        print "-- Found rostoolchain configuration (rostoolchain.cmake)."
         print "  -- Setting the install prefix to ${TOOLCHAIN_INSTALL_PREFIX}"
         prefix.set_install_prefix("${TOOLCHAIN_INSTALL_PREFIX}")
         print "  -- Confirm that it is compatible with the current toolchain."
-        print "  -- Or modify it as you wish with 'rosprefix'"
+        print "  -- Or modify it as you wish with 'rosprefix'."
     else:
-        print "-- No rostoolchain.cmake."
-        print "  -- Setting the install prefix to /usr/local"
+        print "-- No rostoolchain found (rostoolchain.cmake)."
+        print "  -- Setting the install prefix to /usr/local."
     
     
 ###############################################################################
