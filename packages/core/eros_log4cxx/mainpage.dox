@@ -2,25 +2,33 @@
 \mainpage
 \htmlinclude manifest.html
 
-\b eros_log4cxx is ... 
+\section packageSummary Package Summary
 
-<!-- 
-Provide an overview of your package.
--->
+	This provides a source package for compiling the apache c++ logging library.
+	Ordinarily this is not useful as you would install via your system's
+	installation method (e.g. apt-get for ubuntu), but for cross-compiling 
+    it provides the recipe needed to make a toolchain ros-ready.
 
+\section usage Usage
 
-\section codeapi Code API
+    - Install your toolchain
+    - Configure the ros for your toolchain with rostoolchain.
+      - Or manually in $ROS_ROOT/rostoolchain.cmake.
+    - Run 'rosmake --target=install eros_log4cxx' to install this package and its deps.
+      - Or simply 'make clean', 'make', 'make install' to install without recompiling deps.
 
-<!--
-Provide links to specific auto-generated API documentation within your
-package that is of particular interest to a reader. Doxygen will
-document pretty much every part of your code, so do your best here to
-point the reader to the actual API.
+\section Oddities
 
-If your codebase is fairly large or has different sets of APIs, you
-should use the doxygen 'group' tag to keep these APIs together. For
-example, the roscpp documentation has 'libros' group.
--->
+    Currently downloads a patched version from willow garage, but also applies a further 
+    backwards compatible patch to remedy warnings/errors from later gcc's.
 
+\section potIssues Potential Issues
+
+    - Will eventually need to move to a newer log4cxx.
+    - Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
+
+\section ChangeLog
+
+	- <b>Oct 10</b> : Done and road tested.
 
 */
