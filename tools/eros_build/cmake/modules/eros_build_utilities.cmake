@@ -17,9 +17,9 @@
 #
 # Example:
 #
-#   TARBALL=dude.tar.gz
 #   URL=http://snorriheim.dnsdojo.com/tmp/${TARBALL}
-#   eros_download(${TARBALL} ${URL})
+#   TARBALL=dude.tar.gz
+#   eros_download(${URL} ${TARBALL})
 #
 macro(eros_download url file)
     add_custom_command(OUTPUT ${file}
@@ -36,13 +36,12 @@ endmacro()
 #
 # Depends : ${tarball}
 # Outputs : ${dir}/extracted
-#
 # 
 # Example:
 # 
 #   TARBALL=${CMAKE_BINARY_DIR}/dude.tar.gz
 #   URL=http://snorriheim.dnsdojo.com/tmp/${TARBALL}
-#   eros_download(${TARBALL} ${URL})
+#   eros_download(${URL} ${TARBALL})
 #   eros_extract_tarball(${TARBALL} ${CMAKE_BINARY_DIR}/fakeroot) 
 #
 macro(eros_extract_tarball tarball dir)
