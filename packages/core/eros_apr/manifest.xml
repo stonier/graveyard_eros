@@ -11,6 +11,7 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/eros_apr</url>
+  <depend package="eros_license"/>
   <depend package="eros_build"/>
 </package>
 

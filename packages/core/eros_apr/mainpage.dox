@@ -20,9 +20,10 @@
     Alternatively you can simply run 'rosmake --target=install eros_apr' instead of the
     separate make commands.
 
-\section Issues
+\section potIssues Potential Issues
   
     - Downloads from one of korea's apache mirrors. Not sure how to get it to automatically find a good mirror yet.
+    - Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
     
 \section ChangeLog
 
