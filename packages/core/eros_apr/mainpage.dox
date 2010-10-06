@@ -9,17 +9,6 @@
 	installation method (e.g. apt-get for ubuntu), but for cross-compiling 
         it provides the recipe needed to make a toolchain ros-ready.
 
-\section usage Usage
-
-    - Install your toolchain
-    - Configure the ros for your toolchain with rostoolchain.
-      - Or manually in $ROS_ROOT/rostoolchain.cmake.
-    - Run make to compile the package
-    - Run make install to install to your toolchain folder
-
-    Alternatively you can simply run 'rosmake --target=install eros_apr' instead of the
-    separate make commands.
-
 \section potIssues Potential Issues
   
     - Downloads from one of korea's apache mirrors. Not sure how to get it to automatically find a good mirror yet.

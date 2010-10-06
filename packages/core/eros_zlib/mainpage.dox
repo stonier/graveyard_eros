@@ -10,14 +10,6 @@
 	installation method (e.g. apt-get for ubuntu), but for cross-compiling 
     it provides the recipe needed to make a toolchain ros-ready.
 
-\section usage Usage
-
-    - Install your toolchain
-    - Configure the ros for your toolchain with rostoolchain.
-      - Or manually in $ROS_ROOT/rostoolchain.cmake.
-    - Run 'rosmake --target=install eros_zlib' to install this package and its deps.
-      - Or simply 'make clean', 'make', 'make install' to install without recompiling deps.
-
 \section ChangeLog
 
 	- <b>Oct 10</b> : Done and road tested.
