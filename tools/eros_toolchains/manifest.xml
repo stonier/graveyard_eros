@@ -1,16 +1,18 @@
 <package>
-  <description brief="cmake toolchain modules for standard toolchain configurations">
+  <description brief="cmake toolchain modules for popular toolchains">
 
-  <p>
-  Eros toolchains is a library of preconfigured cmake toolchain modules
+  eros_toolchains is a library of preconfigured cmake toolchain modules
   for popular/standard toolchain configurations on various platforms.
-  </p>
 
   </description>
   <author>Daniel Stonier</author>
   <license>BSD</license>
-  <review status="doc reviewed" notes=""/>
+  <review status="experimental" notes=""/>
   <url>http://ros.org/wiki/eros_toolchains</url>
+  <depend package="eros_license"/>
+  <export>
+    <rosdoc config="rosdoc.yaml" />
+  </export>
 </package>
 
 

@@ -450,9 +450,7 @@ Description: \n\
   Location of the user toolchain directory can be modified via --dir or more \n\
   permanently via " + core.eros_config() + "."
     parser = OptionParser(usage=usage)
-    print "Default: %s" %config.user_toolchains_dir()
-    parser.add_option("-d","--dir", action="store", default=config.user_toolchains_dir(), help="location of the user toolchain directory.")
-    #parser.add_option("-v","--validate", action="store_true", dest="validate", help="when creating, attempt to validate the configuration")
+    parser.add_option("-d","--dir", action="store", default=config.user_toolchains_dir(), help="location of the user toolchain library")
     options, args = parser.parse_args()
     
     # Configure the user toolchain directory.

@@ -12,39 +12,6 @@ that define various characteristics of your target platform.
 The library of cmake modules is grouped firstly according to platform
 (aka family) and then by name (usually the platform tuple). 
 
-\section Usage
-
-These can be copied across to ${ROS_ROOT}/rosplatform.cmake and used
-directly, or more easily configured via the <i>rosplatform</i> script
-in eros_python_tools. 
-
-@code
-> rosrun eros_python_tools rosplatform --help
-
-Usage: 
-  rosplatform          : shows the currently set ros platform
-  rosplatform clear    : clear the currently set ros platform
-  rosplatform create   : create a user-defined platform configuration
-  rosplatform delete   : delete a preconfigured platform
-  rosplatform list     : list available eros and user-defined platforms
-  rosplatform select   : select a preconfigured platform
-  rosplatform validate : validate a preconfigured platform (n/a)
-
-Options:
-  -h, --help      show this help message and exit
-  -v, --validate  when creating, attempt to validate the configuration
-@endcode
-
-@subsection Creating
-
-New user-defined platform configurations can be created via the 
-interactive '<i>rosplatform create</i>' command. This asks a few simple 
-questions and then saves the platform configuration in the ros home dir
-(usually /home/<username>/.ros/platforms).
-
-Feel free to contact the developers if you wish to add yours to the
-current eros_platforms package library or modify/correct an existing one.
- 
 \section Anatomy
  
 Each platform provides the necessary cmake variables for configuring

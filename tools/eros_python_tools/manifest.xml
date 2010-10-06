@@ -8,7 +8,7 @@
   </description>
   <author>Daniel Stonier (d.stonier@gmail.com)</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="experimental" notes=""/>
   <url>http://ros.org/wiki/eros_python_tools</url>
   <depend package="roslib"/>
   <depend package="eros_license"/>

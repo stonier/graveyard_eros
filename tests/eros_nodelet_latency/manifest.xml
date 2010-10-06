@@ -7,7 +7,7 @@
   </description>
   <author>Daniel Stonier</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="experimental" notes=""/>
   <url>http://ros.org/wiki/eros_nodelets_latency</url>
   <depend package="nodelet"/>
   <depend package="std_msgs"/>

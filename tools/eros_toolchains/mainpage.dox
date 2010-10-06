@@ -12,40 +12,6 @@ for popular/standard toolchain configurations on various platforms.
 The library of cmake modules is grouped firstly according to platform
 (aka family) and then by name (usually the toolchain tuple). 
 
-\section Usage
-
-These can be copied across to ${ROS_ROOT}/rostoolchain.cmake and used
-directly, or more easily configured via the <i>rostoolchain</i> script
-in eros_python_tools. 
-
-@code
-> rosrun eros_python_tools rostoolchain --help
-
-Usage: 
-  rostoolchain          : shows the currently set ros toolchain
-  rostoolchain clear    : clear the currently set ros toolchain
-  rostoolchain create   : create a user-defined toolchain configuration
-  rostoolchain delete   : delete a preconfigured toolchain
-  rostoolchain list     : list available eros and user-defined toolchains
-  rostoolchain select   : select a preconfigured toolchain
-  rostoolchain validate : validate a preconfigured toolchain (n/a)
-
-Options:
-  -h, --help      show this help message and exit
-  -v, --validate  when creating, attempt to validate the configuration
-@endcode
-
-@subsection Creating
-
-New user-defined toolchain configurations can be created via the 
-interactive '<i>rostoolchain create</i>' command. This asks a few simple 
-questions and then saves the toolchain configuration in the ros home dir
-(usually /home/<username>/.ros/toolchains).
- 
-Currently, creation is hardwired for gcc toolchains. If there is a need
-to use alternative toolchains, then this functionality can be extended.
-Please contact the eros developers.
- 
 \section Anatomy
  
 Each toolchain provides the necessary cmake variables for discovering

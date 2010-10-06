@@ -6,7 +6,7 @@
   </description>
   <author>Daniel Stonier</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="experimental" notes=""/>
   <url>http://ros.org/wiki/eros_msg_latency</url>
   <depend package="roscpp"/>
   <depend package="std_msgs"/>

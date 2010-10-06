@@ -9,7 +9,7 @@
   </description>
   <author>Daniel Stonier (d.stonier@gmail.com)</author>
   <license>BSD</license>
-  <review status="unreviewed" notes=""/>
+  <review status="experimental" notes=""/>
   <url>http://ros.org/wiki/eros_log4cxx</url>
   <depend package="eros_license"/>
   <depend package="eros_apr_util"/>
