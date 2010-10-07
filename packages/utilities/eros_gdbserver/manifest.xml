@@ -1,0 +1,14 @@
+<package>
+  <description brief="eros_gdbserver">
+
+     eros_gdbserver
+
+  </description>
+  <author></author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/eros_gdbserver</url>
+
+</package>
+
+
