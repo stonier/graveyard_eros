@@ -18,6 +18,10 @@ should always try and sync our opencv package with theirs.
 Opencv is compiled with all options turned off except JPEG and PNG. To modify the build,
 simply edit the appropriate section in the CMakeLists.txt file.
 
+\section Links 
+
+ -  http://opencvlibrary.sourceforge.net
+ 
 \section ChangeLog
 
 	- <b>Oct 10</b> : Done and road tested.

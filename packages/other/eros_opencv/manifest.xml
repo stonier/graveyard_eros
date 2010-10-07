@@ -12,6 +12,10 @@
   <url>http://ros.org/wiki/eros_opencv</url>
   <depend package="eros_license"/>
   <depend package="eros_build"/>
+  <versioncontrol type="svn" url="https://opencvlibrary.svn.sourceforge.net/svnroot/opencvlibrary/tags/latest_tested_snapshot/opencv"/>
+  <export>
+    <cpp cflags="-I${prefix}/build/fakeroot/include -I${prefix}/build/fakeroot/include/opencv" lflags="-Wl,-rpath,${prefix}/build/fakeroot/lib -L${prefix}/build/fakeroot/lib -lcvaux -lcv -lcxcore -lhighgui -lml"/>
+  </export>
 
 </package>
 

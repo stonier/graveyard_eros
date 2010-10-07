@@ -24,7 +24,7 @@ add_custom_command(OUTPUT ${SVN_DIR}
 
 # Check for sse's when the next ros release comes out.
 set(OPENCV_BUILD_DIR ${SVN_DIR}/build)
-set(OPENCV_INSTALL_DIR ${CMAKE_SOURCE_DIR}/opencv)
+set(OPENCV_INSTALL_DIR ${CMAKE_BINARY_DIR}/fakeroot)
 
 if(CMAKE_CROSSCOMPILING)
     # Default everything to the worst common denominator - horrible assumption!
