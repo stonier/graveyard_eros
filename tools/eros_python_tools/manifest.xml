@@ -12,6 +12,9 @@
   <url>http://ros.org/wiki/eros_python_tools</url>
   <depend package="roslib"/>
   <depend package="eros_license"/>
+  <export>
+    <rosdoc config="rosdoc.yaml" />
+  </export>
 </package>
 
 
