@@ -2,25 +2,15 @@
 \mainpage
 \htmlinclude manifest.html
 
-\b eros_gdbserver is ... 
+\section packageSummary Package Summary
 
-<!-- 
-Provide an overview of your package.
--->
+	This provides a source package for cross-compiling a gdb/gdbserver combo.
+	
+	This pair of tools allows you to do remote debugging without having
+	to run the debugger itself (nor libs with debugging symbols) on the
+	target. Very useful for embedded boards with limited memory or oomph.
 
+\section ChangeLog
 
-\section codeapi Code API
-
-<!--
-Provide links to specific auto-generated API documentation within your
-package that is of particular interest to a reader. Doxygen will
-document pretty much every part of your code, so do your best here to
-point the reader to the actual API.
-
-If your codebase is fairly large or has different sets of APIs, you
-should use the doxygen 'group' tag to keep these APIs together. For
-example, the roscpp documentation has 'libros' group.
--->
-
-
+	- <b>Oct 10</b> : Done and road tested.
 */

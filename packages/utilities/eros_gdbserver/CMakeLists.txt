@@ -1,30 +1,113 @@
+##############################################################################
+# Cmake
+##############################################################################
+
 cmake_minimum_required(VERSION 2.4.6)
+
+##############################################################################
+# Init Configuration
+##############################################################################
+
 include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
-
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
-
 rosbuild_init()
+rosbuild_include(eros_build eros_package)
+eros_3rd_party_init()
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+##############################################################################
+# Variables
+##############################################################################
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
+set(SOURCE_NAME "gdb-7.1")
+set(SOURCE_TARBALL "${SOURCE_NAME}.tar.gz")
+set(SOURCE_TARBALL_URL "http://ftp.gnu.org/gnu/gdb/${SOURCE_TARBALL}")
+set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
+if(NOT CMAKE_CROSSCOMPILING)
+  message(FATAL "This package is only intended for cross-compilations.")
+endif()
+
+# Add another check to make sure its an eros toolchain.
+
+set(PREFIX ${CMAKE_BINARY_DIR}/fakeroot)
+SET(LOCAL_PREFIX ${CMAKE_BINARY_DIR}/localroot)
+set(CMAKE_LOCAL_INSTALL_PREFIX /usr/local)
+
+# This needs TOOLCHAIN_TUPLE and TOOLCHAIN_SYSROOT variables defined by eros toolchains.
+SET(GDB_CONFIG_FLAGS --disable-werror --with-build-sysroot=${TOOLCHAIN_SYSROOT} --target=${TOOLCHAIN_TUPLE})
+SET(CONFIGURE_GDB_COMMAND ./configure ${GDB_CONFIG_FLAGS} --prefix=${LOCAL_PREFIX} --exec-prefix=${LOCAL_PREFIX})
+
+SET(CONFIGURE_GDB_SERVER_COMMAND ./configure --prefix=${PREFIX} --exec-prefix=${PREFIX} --host=${TOOLCHAIN_TUPLE} --target=${TOOLCHAIN_TUPLE} CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER})
+
+##############################################################################
+# Download
+##############################################################################
+
+eros_download(${SOURCE_TARBALL_URL} ${CMAKE_BINARY_DIR}/${SOURCE_TARBALL})
+eros_extract_tarball(${CMAKE_BINARY_DIR}/${SOURCE_TARBALL} ${CMAKE_BINARY_DIR})
+
+##############################################################################
+# Building
+##############################################################################
+
+set(COMPILED_FLAG ${CMAKE_BINARY_DIR}/compiled)
+set(GDB_COMPILED_FLAG ${CMAKE_BINARY_DIR}/gdb_compiled)
+
+add_custom_command(OUTPUT ${GDB_COMPILED_FLAG}
+    COMMAND echo ${CONFIGURE_GDB_COMMAND}
+    COMMAND ${CONFIGURE_GDB_COMMAND}
+    COMMAND make $ENV{ROS_PARALLEL_JOBS}
+    COMMAND make install
+    COMMAND touch ${GDB_COMPILED_FLAG}
+    DEPENDS ${CMAKE_BINARY_DIR}/extracted
+    WORKING_DIRECTORY ${SOURCE_DIR}
+    COMMENT "Compiling gdb."
+    VERBATIM
+    )
+
+add_custom_command(OUTPUT ${COMPILED_FLAG}
+    COMMAND echo ${CONFIGURE_GDB_SERVER_COMMAND}
+    COMMAND ${CONFIGURE_GDB_SERVER_COMMAND}
+    COMMAND make $ENV{ROS_PARALLEL_JOBS}
+    COMMAND make install
+    COMMAND touch ${COMPILED_FLAG}
+    DEPENDS ${GDB_COMPILED_FLAG}
+    WORKING_DIRECTORY ${SOURCE_DIR}/gdb/gdbserver
+    COMMENT "Compiling gdbserver."
+    VERBATIM
+    )
+
+# By adding ALL here, it automatically gets built before the packaging command.
+add_custom_target(
+        source ALL
+        DEPENDS ${COMPILED_FLAG}
+        COMMENT "This is ${PROJECT_NAME}."
+        )
+
+##############################################################################
+# Install
+##############################################################################
+
+install(DIRECTORY ${LOCAL_PREFIX}/bin/
+        DESTINATION ${CMAKE_LOCAL_INSTALL_PREFIX}/bin
+        USE_SOURCE_PERMISSIONS
+        )
+
+install(DIRECTORY ${LOCAL_PREFIX}/lib/
+        DESTINATION ${CMAKE_LOCAL_INSTALL_PREFIX}/lib
+        USE_SOURCE_PERMISSIONS
+        )
+
+install(DIRECTORY ${LOCAL_PREFIX}/share/
+        DESTINATION ${CMAKE_LOCAL_INSTALL_PREFIX}/share
+        USE_SOURCE_PERMISSIONS
+        )
+
+install(DIRECTORY ${PREFIX}/bin/
+        DESTINATION bin
+        USE_SOURCE_PERMISSIONS
+        )
+
+install(DIRECTORY ${PREFIX}/share/
+        DESTINATION share
+        USE_SOURCE_PERMISSIONS
+        )
