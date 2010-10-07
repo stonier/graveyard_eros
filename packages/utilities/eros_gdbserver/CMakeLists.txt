@@ -14,6 +14,21 @@ rosbuild_include(eros_build eros_package)
 eros_3rd_party_init()
 
 ##############################################################################
+# Abort Checks
+##############################################################################
+
+if(NOT CMAKE_CROSSCOMPILING)
+  message(FATAL "This package is only intended for cross-compilations.")
+endif()
+# This needs TOOLCHAIN_TUPLE and TOOLCHAIN_SYSROOT variables defined by eros toolchains.
+if(NOT DEFINED TOOLCHAIN_TUPLE)
+  message(FATAL_ERROR "${TOOLCHAIN_TUPLE} is undefined - this script needs an eros toolchain to extract this information.")
+endif()
+if(NOT DEFINED TOOLCHAIN_SYSROOT)
+  message(FATAL_ERROR "${TOOLCHAIN_SYSROOT} is undefined - this script needs an eros toolchain to extract this information.")
+endif()
+
+##############################################################################
 # Variables
 ##############################################################################
 
@@ -22,21 +37,13 @@ set(SOURCE_TARBALL "${SOURCE_NAME}.tar.gz")
 set(SOURCE_TARBALL_URL "http://ftp.gnu.org/gnu/gdb/${SOURCE_TARBALL}")
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 
-if(NOT CMAKE_CROSSCOMPILING)
-  message(FATAL "This package is only intended for cross-compilations.")
-endif()
-
-# Add another check to make sure its an eros toolchain.
-
 set(PREFIX ${CMAKE_BINARY_DIR}/fakeroot)
-SET(LOCAL_PREFIX ${CMAKE_BINARY_DIR}/localroot)
+set(LOCAL_PREFIX ${CMAKE_BINARY_DIR}/localroot)
 set(CMAKE_LOCAL_INSTALL_PREFIX /usr/local)
 
-# This needs TOOLCHAIN_TUPLE and TOOLCHAIN_SYSROOT variables defined by eros toolchains.
-SET(GDB_CONFIG_FLAGS --disable-werror --with-build-sysroot=${TOOLCHAIN_SYSROOT} --target=${TOOLCHAIN_TUPLE})
-SET(CONFIGURE_GDB_COMMAND ./configure ${GDB_CONFIG_FLAGS} --prefix=${LOCAL_PREFIX} --exec-prefix=${LOCAL_PREFIX})
-
-SET(CONFIGURE_GDB_SERVER_COMMAND ./configure --prefix=${PREFIX} --exec-prefix=${PREFIX} --host=${TOOLCHAIN_TUPLE} --target=${TOOLCHAIN_TUPLE} CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER})
+set(GDB_CONFIG_FLAGS --disable-werror --with-build-sysroot=${TOOLCHAIN_SYSROOT} --target=${TOOLCHAIN_TUPLE})
+set(CONFIGURE_GDB_COMMAND ./configure ${GDB_CONFIG_FLAGS} --prefix=${LOCAL_PREFIX} --exec-prefix=${LOCAL_PREFIX})
+set(CONFIGURE_GDB_SERVER_COMMAND ./configure --prefix=${PREFIX} --exec-prefix=${PREFIX} --host=${TOOLCHAIN_TUPLE} --target=${TOOLCHAIN_TUPLE} CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER})
 
 ##############################################################################
 # Download
