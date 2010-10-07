@@ -51,10 +51,11 @@ The first continue will stop at main, the second continue starts it running. Aft
 The first command shows the source location of the last frame before the crash. The latter, the backtrace (f full) provides the last chain of commands. 
 
 \section Issues
+
 If the backtrace doesn't provide any symbols (all you see is alot of ??'s), it means gdb isn't finding the debug symbols 
 in the appropriate code/libraries. I thought it was supposed to embed these in your build when you enable the 
 –with-build-sysroot command, but it seems that is only for the build process. So, to point your cross debugger 
-at the right place, you can either set some variables while running, or (more easily) create a bash script to run with gdb
+at the right place, you can either set some variables while running, or (more easily) create a config file to run with gdb
 on the build platform. The following is my iclebo.gdb file which sets directories to parse standard libraries in:
 
 @code 
@@ -71,6 +72,8 @@ arm-samsung-linux-gnueabi-gdb --command=iclebo.gdb ./hello
 (gdb) continue
 (gdb) continue
 @encdoe
+
+Push this into a bash script to make it more convenient.
 
 \section ChangeLog
 
