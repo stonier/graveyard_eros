@@ -11,7 +11,7 @@ set(SVN_DIR ${CMAKE_BINARY_DIR}/opencv-svn)
 # Checkout
 ##############################################################################
 
-list(APPEND SVN_COMMAND svn co ${SVN_URL} ${SVN_DIR})
+list(APPEND SVN_COMMAND svn export ${SVN_URL} ${SVN_DIR})
 add_custom_command(OUTPUT ${SVN_DIR}
         COMMAND ${SVN_COMMAND}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
