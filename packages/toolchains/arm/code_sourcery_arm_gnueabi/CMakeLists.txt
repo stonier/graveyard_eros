@@ -33,9 +33,7 @@ set(SOURCE_TARBALL_URL http://www.codesourcery.com/public/gnu_toolchain/arm-none
 # Download
 ##############################################################################
 
-#message(STATUS "CMAKE_SIZEOF_VOID_P..................${CMAKE_SIZEOF_VOID_P}")
-
-if( CMAKE_SIZEOF_VOID_P EQUAL 2 ) # 32 bit
+if( CMAKE_SIZEOF_VOID_P EQUAL 4 ) # 32 bit
   eros_download(${BINARY_TARBALL_URL} ${CMAKE_BINARY_DIR}/${BINARY_TARBALL})
   eros_extract_bzip2(${CMAKE_BINARY_DIR}/${BINARY_TARBALL} ${CMAKE_BINARY_DIR})
 else()
