@@ -33,11 +33,13 @@ set(SOURCE_TARBALL_URL http://www.codesourcery.com/public/gnu_toolchain/arm-none
 # Download
 ##############################################################################
 
-if( CMAKE_SIZEOF_VOID_P EQUAL 4 ) # 32 bit
+#message(STATUS "CMAKE_SIZEOF_VOID_P..................${CMAKE_SIZEOF_VOID_P}")
+
+if( CMAKE_SIZEOF_VOID_P EQUAL 2 ) # 32 bit
   eros_download(${BINARY_TARBALL_URL} ${CMAKE_BINARY_DIR}/${BINARY_TARBALL})
   eros_extract_bzip2(${CMAKE_BINARY_DIR}/${BINARY_TARBALL} ${CMAKE_BINARY_DIR})
 else()
-  message(FATAL "Not yet supported - download/compile from source : ${SOURCE_TARBALL_URL}")
+  message(FATAL_ERROR "\n64 bit install is not yet supported - download/compile from source:\n  ${SOURCE_TARBALL_URL}")
 endif()
 
 ##############################################################################
