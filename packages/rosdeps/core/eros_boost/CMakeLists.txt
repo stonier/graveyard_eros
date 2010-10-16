@@ -36,6 +36,7 @@ set(SOURCE_TARBALL_URL "http://sourceforge.net/projects/boost/files/boost/${SOUR
 set(SOURCE_DIR boost_${SOURCE_VERSION_UNDERSCORE})
 set(PREFIX ${CMAKE_BINARY_DIR}/fakeroot)
 
+# We only need these if we want to build the iostreams for zlib and bzip2.
 #set(PACKAGE_OPTIONS -sNO_ZLIB=1 -sNO_BZIP2=1)
 set(COMMON_ARGS --prefix=${PREFIX} --toolset=gcc-${COMPILER_VERSION} $ENV{ROS_PARALLEL_JOBS})
 
