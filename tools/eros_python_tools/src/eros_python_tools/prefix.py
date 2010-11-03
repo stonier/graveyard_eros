@@ -26,9 +26,9 @@ def get_install_prefix():
 def show_current_install_prefix():
     prefix = get_install_prefix()
     if ( prefix is not None ):
-        print core.bold_string("Current install prefix: ") + prefix
+        print core.bold_string("Current install prefix:") + " " + prefix
     else:
-        print core.bold_string("Current install prefix: ") + "not configured (using cmake default)."
+        print core.bold_string("Current install prefix:") + " not configured (using cmake default)."
 
 
 def create_vanilla_config():
