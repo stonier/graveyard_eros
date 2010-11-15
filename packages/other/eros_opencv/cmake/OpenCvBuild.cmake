@@ -6,9 +6,11 @@
 set(SVN_URL https://code.ros.org/svn/opencv/tags/2.1/opencv)
 set(SVN_DIR ${CMAKE_BINARY_DIR}/opencv-svn)
 #set(SVN_REV 1978) # This is the tagged release number 
-set(PATCH_FILE "/opt/pr2/stacks/eros/packages/other/eros_opencv/build/opencv-svn/src/highgui/cvcap_dshow.cpp")
-set(SRC_FILE "/opt/pr2/stacks/eros/packages/other/eros_opencv/cvcap_dshow.cpp")
-
+set(PATCH_FILE ${PROJECT_SOURCE_DIR}/build/opencv-svn/src/highgui/cvcap_dshow.cpp)
+set(SRC_FILE ${PROJECT_SOURCE_DIR}/cvcap_dshow.cpp)
+message("yahoo")
+message(${CMAKE_SOURCE_DIR})
+message(${PROJECT_SOURCE_DIR})
 
 ##############################################################################
 # Checkout
@@ -16,10 +18,13 @@ set(SRC_FILE "/opt/pr2/stacks/eros/packages/other/eros_opencv/cvcap_dshow.cpp")
 
 list(APPEND SVN_COMMAND svn export ${SVN_URL} ${SVN_DIR})
 add_custom_command(OUTPUT ${SVN_DIR}
+	COMMAND pwd
         COMMAND ${SVN_COMMAND}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Checking out ${SVN_URL} -> ${SVN_DIR}."
+	COMMAND pwd
 	COMMAND cp ${SRC_FILE} ${PATCH_FILE}
+	COMMAND pwd
         )
 
 ##############################################################################
