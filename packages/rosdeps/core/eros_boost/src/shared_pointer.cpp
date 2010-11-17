@@ -12,14 +12,34 @@
 
 #include <iostream>
 #include <boost/shared_ptr.hpp>
+#include <boost/thread/thread.hpp>
 
 /*****************************************************************************
-** Main
-*****************************************************************************/
+ * Class
+ ****************************************************************************/
+
+struct Worker {
+
+    Worker() : count(0) {}
+    void operator()() {
+        while ( count < 10 ) {
+            ++count;
+            std::cout << "Count: " << count << std::endl;
+        }
+    }
+    int count;
+};
+
+/*****************************************************************************
+ * ** Main
+ * *****************************************************************************/
 
 int main(int argc, char **argv) {
-	boost::shared_ptr<int> ptr(new int(3));
-	std::cout << "Int: " << *ptr << std::endl;
-	return 0;
+    boost::shared_ptr<int> ptr(new int(3));
+    std::cout << "Int: " << *ptr << std::endl;
+    Worker worker;
+    boost::thread thrd(worker);
+    thrd.join();
+    std::cout << "Finishing" << std::endl;
+    return 0;
 }
-
