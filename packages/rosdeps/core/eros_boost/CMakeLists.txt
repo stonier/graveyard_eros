@@ -19,7 +19,7 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 rosbuild_init()
 rosbuild_include(eros_build eros_package)
 eros_3rd_party_init()
-eros_detect_compiler_version() # Sets the COMPILER_VERSION variable (used by bjam)
+eros_detect_compiler_version() # gets the COMPILER_VERSION variable (used by bjam)
 
 ##############################################################################
 # Variables
@@ -37,7 +37,7 @@ set(SOURCE_DIR boost_${SOURCE_VERSION_UNDERSCORE})
 set(PREFIX ${CMAKE_BINARY_DIR}/fakeroot)
 
 if(MINGW)
-  set(PLATFORM_OPTIONS target-os=windows threading=multi threadapi=win32)
+  set(PLATFORM_OPTIONS target-os=windows threadapi=win32) # used to need this: threadapi=win32
 else()
   set(PLATFORM_OPTIONS )
 endif()
@@ -70,6 +70,7 @@ else()
 endif()
 
 set(COMPILED_FLAG ${CMAKE_BINARY_DIR}/compiled)
+set(LINKED_FLAG ${CMAKE_BINARY_DIR}/linked)
 set(PATCHED_FLAG ${CMAKE_BINARY_DIR}/patched)
 
 ##############################################################################
@@ -97,6 +98,7 @@ add_custom_command(OUTPUT ${COMPILED_FLAG}
     COMMAND ./bootstrap.sh --without-icu
     COMMAND echo ${BJAM_COMMAND}
     COMMAND ${BJAM_COMMAND}
+    COMMAND ${LN_COMMAND} 
     COMMAND touch ${COMPILED_FLAG}
     DEPENDS ${PATCHED_FLAG}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/${SOURCE_DIR}
@@ -104,12 +106,35 @@ add_custom_command(OUTPUT ${COMPILED_FLAG}
     VERBATIM
     )
 
+if(MINGW)
+    set(LN_COMMAND ln -s boost_thread_win32.dll ./boost_thread.dll) 
+else()
+    set(LN_COMMAND echo "Symbolic links automatically made.")
+endif()
+
+add_custom_command(OUTPUT ${LINKED_FLAG}
+    COMMAND ${LN_COMMAND} 
+    COMMAND touch ${LINKED_FLAG}
+    DEPENDS ${COMPILED_FLAG}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/fakeroot/lib
+    COMMENT "Symbolically linking ${SOURCE_NAME}."
+    VERBATIM
+    )
+
+
 # By adding ALL here, it automatically gets built before the packaging command.
 add_custom_target(
         source ALL
-        DEPENDS ${COMPILED_FLAG}
+        DEPENDS ${LINKED_FLAG}
         COMMENT "This is ${PACKAGE_NAME}."
         )
+
+##############################################################################
+# Tests
+##############################################################################
+
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+add_subdirectory(src)
 
 ##############################################################################
 # Install

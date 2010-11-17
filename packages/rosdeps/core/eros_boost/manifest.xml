@@ -14,9 +14,11 @@
   <review status="experimental" notes=""/>
   <url>http://ros.org/wiki/eros_boost</url>
   <depend package="eros_license"/>
-  <depend package="eros_zlib"/>
-  <depend package="eros_bzip2"/>
   <depend package="eros_build"/>
+  <export>
+    <cpp cflags="-I${prefix}/build/fakeroot/include" lflags="-Wl,-rpath,${prefix}/build/fakeroot/lib -L${prefix}/build/fakeroot/lib -lboost_thread -lboost_date_time -lboost_iostreams -lboost_program_options -lboost_filesystem -lboost_signals -lboost_system"/>
+  </export>
+
 </package>
 
 
