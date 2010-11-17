@@ -85,7 +85,6 @@ _user_platforms_dir = os.path.join(core.eros_home(),"platforms")
 def user_platform_dir(dir=None):
     global _user_platforms_dir
     if ( dir != None ):
-        print dir
         if ( not os.path.exists(dir) ):
             raise Exception('Specified directory does not exist.')
         _user_platforms_dir = dir
