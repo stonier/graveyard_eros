@@ -31,8 +31,12 @@ set(PACKAGE_OPTIONS --without-pgsql --without-sqlite2 --without-sqlite3 --with-a
 set(COMMON_ARGS --prefix=${PREFIX} --exec-prefix=${PREFIX} C=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${ROS_COMPILE_FLAGS} CXXFLAGS=${ROS_COMPILE_FLAGS})
 
 if(CMAKE_CROSSCOMPILING)
-  # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
-  set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)
+  if(MINGW)
+    set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no)
+  else() # Arm
+    # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec 
+    set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)
+  endif()
   set(CONFIGURE_COMMAND ./configure --host=${TOOLCHAIN_TUPLE} --target=${TOOLCHAIN_TUPLE} ${PACKAGE_OPTIONS} ${PRESET_VARIABLES} ${COMMON_ARGS}) 
 else()
   set(CONFIGURE_COMMAND ./configure ${PACKAGE_OPTIONS} ${COMMON_ARGS})
@@ -44,7 +48,7 @@ endif()
 
 eros_download(${SOURCE_TARBALL_URL} ${CMAKE_BINARY_DIR}/${SOURCE_TARBALL})
 eros_extract_tarball(${CMAKE_BINARY_DIR}/${SOURCE_TARBALL} ${CMAKE_BINARY_DIR})
-eros_autotools_compile("${CONFIGURE_COMMAND}" ${SOURCE_DIR} ${CMAKE_BINARY_DIR}/extracted)
+eros_autotools_compile(CONFIGURE_COMMAND ${SOURCE_DIR} ${CMAKE_BINARY_DIR}/extracted)
 
 add_custom_target(
         source ALL

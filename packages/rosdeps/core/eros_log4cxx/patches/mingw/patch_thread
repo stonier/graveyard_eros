@@ -1,0 +1,18 @@
+--- thread.h	2010-11-18 09:14:51.258837471 +0900
++++ thread.h.new	2010-11-18 09:14:41.682892748 +0900
+@@ -22,11 +22,11 @@
+ #include <log4cxx/helpers/pool.h>
+ 
+ #if !defined(LOG4CXX_THREAD_FUNC)
+-#if defined(_WIN32)
+-#define LOG4CXX_THREAD_FUNC __stdcall
+-#else
++//#if defined(_WIN32)
++//#define LOG4CXX_THREAD_FUNC __stdcall
++//#else
+ #define LOG4CXX_THREAD_FUNC
+-#endif
++//#endif
+ #endif
+ 
+ extern "C" {

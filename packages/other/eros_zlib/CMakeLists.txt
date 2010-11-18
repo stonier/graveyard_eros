@@ -32,7 +32,7 @@ set(CONFIGURE_COMMAND  CC=${CMAKE_C_COMPILER} ./configure ${COMMON_ARGS})
 
 eros_download(${SOURCE_TARBALL_URL} ${CMAKE_BINARY_DIR}/${SOURCE_TARBALL})
 eros_extract_tarball(${CMAKE_BINARY_DIR}/${SOURCE_TARBALL} ${CMAKE_BINARY_DIR})
-eros_autotools_compile("${CONFIGURE_COMMAND}" ${SOURCE_DIR} ${CMAKE_BINARY_DIR}/extracted)
+eros_autotools_compile(CONFIGURE_COMMAND ${SOURCE_DIR} ${CMAKE_BINARY_DIR}/extracted)
 
 add_custom_target(
         source ALL

@@ -14,6 +14,21 @@
     Currently downloads a patched version from willow garage, but also applies a further 
     backwards compatible patch to remedy warnings/errors from later gcc's.
 
+\section Issues
+
+    Currently fails on building for mingw when linking - undefined reference to strtoi.
+    In the config.log, you can see something strange, can use lfs, but doesn't set it.
+    
+    @code
+    ac_cv_sizeof_off_t=8
+    apr_cv_use_lfs64=yes
+    aprlfs='0'
+    @endcode 
+
+    There is some discussion how all this is related, but no fix, at the link below.  
+    
+    http://www.mail-archive.com/dev@apr.apache.org/msg18167.html
+    
 \section potIssues Potential Issues
 
     - Will eventually need to move to a newer log4cxx.

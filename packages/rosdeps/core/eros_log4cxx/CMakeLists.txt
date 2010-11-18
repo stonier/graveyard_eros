@@ -27,8 +27,12 @@ set(PACKAGE_OPTIONS --with-apr=${CMAKE_INSTALL_PREFIX} --with-apr-util=${CMAKE_I
 set(COMMON_ARGS --prefix=${PREFIX} --exec-prefix=${PREFIX} C=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER})
 
 if(CMAKE_CROSSCOMPILING)
-  # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
-  set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)
+  if(MINGW)
+    set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no)
+  else() # Arm
+    # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
+    set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)
+  endif()
   set(CONFIGURE_COMMAND ./configure  --host=${TOOLCHAIN_TUPLE} --target=${TOOLCHAIN_TUPLE} ${PACKAGE_OPTIONS} ${PRESET_VARIABLES} ${COMMON_ARGS}) 
 else()
   set(CONFIGURE_COMMAND ./configure ${PACKAGE_OPTIONS} ${COMMON_ARGS})
@@ -43,9 +47,16 @@ set(PATCHED_FLAG ${CMAKE_BINARY_DIR}/patched)
 eros_download(${SOURCE_TARBALL_URL} ${CMAKE_BINARY_DIR}/${SOURCE_TARBALL})
 eros_extract_tarball(${CMAKE_BINARY_DIR}/${SOURCE_TARBALL} ${CMAKE_BINARY_DIR})
 
+if(MINGW)
+  set(PATCH_THREAD_COMMAND patch -d ${SOURCE_DIR}/src/main/include/log4cxx/helpers -p0 < ${CMAKE_SOURCE_DIR}/patches/mingw/patch_thread)
+else()
+  set(PATCH_THREAD_COMMAND echo "Only need to patch for threads on mingw.")
+endif()
+
 # Patch
 add_custom_command(OUTPUT ${PATCHED_FLAG}
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/patch_console
+    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/patches/all/patch_console
+    COMMAND ${PATCH_THREAD_COMMAND}
     COMMAND touch ${PATCHED_FLAG}
     DEPENDS ${CMAKE_BINARY_DIR}/extracted
     WORKING_DIRECTORY ${SOURCE_DIR}/src/examples/cpp
@@ -58,7 +69,7 @@ add_custom_command(OUTPUT ${PATCHED_FLAG}
 # Build
 ##############################################################################
 
-eros_autotools_compile("${CONFIGURE_COMMAND}" ${SOURCE_DIR} ${PATCHED_FLAG})
+eros_autotools_compile(CONFIGURE_COMMAND ${SOURCE_DIR} ${PATCHED_FLAG})
 
 # By adding ALL here, it automatically gets built before the packaging command.
 add_custom_target(
