@@ -19,9 +19,13 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER) # Don't search for programs in sysr
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)  # Headers and libs from sysroot only
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
+# Boost needs to be forced to use static libs
+set(ROS_COMPILE_FLAGS ${ROS_COMPILE_FLAGS} "-DBOOST_THREAD_USE_LIB")
+
 # Qt cross-compile variables
 # It doesn't build a qmake, so we need to set a few variables for cmake's
-# FindQt4.cmake module.
+# FindQt4.cmake module. 
+set(QT_QMAKE_EXECUTABLE ${TOOLCHAIN_TUPLE}-qmake) 
 set(QT_LIBRARY_DIR ${TOOLCHAIN_SYSROOT}/lib)
 set(QT_BINARY_DIR ${TOOLCHAIN_SYSROOT}/bin)
 set(QT_HEADERS_DIR ${TOOLCHAIN_SYSROOT}/include)
