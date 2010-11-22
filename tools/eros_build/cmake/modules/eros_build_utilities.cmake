@@ -89,6 +89,20 @@ macro(eros_extract_bzip2 bzip2 dir)
         )
 endmacro()
 
+
+# Similar to the untarball command, but for zips.
+#
+macro(eros_extract_zip zip dir)
+    add_custom_command(OUTPUT ${dir}/extracted
+        COMMAND unzip ${zip} -d ${dir}
+        COMMAND touch ${dir}/extracted
+        DEPENDS ${zip}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Extracting ${zip} -> ${dir}."
+        VERBATIM
+        )
+endmacro()
+
 ###############################
 # Autotools Compile
 ###############################
