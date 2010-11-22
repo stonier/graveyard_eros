@@ -1,11 +1,11 @@
 ###############################################################################
 # Family : ubuntu
-# Tuple : i586-mingw32msvc
-# Sysroot : /usr/i586-mingw32msvc
+# Tuple : i686-pc-mingw32
+# Sysroot : /opt/mingw/usr/i686-pc-mingw32
 ###############################################################################
 
 # Some useful custom variables that uniquely define this toolchain module
-set(TOOLCHAIN_FAMILY "ubuntu")
+set(TOOLCHAIN_FAMILY "mingw_cross")
 set(TOOLCHAIN_TUPLE "i686-pc-mingw32" CACHE STRING "Toolchain signature identifying cpu-vendor-platform-clibrary.")
 set(TOOLCHAIN_SYSROOT "/opt/mingw/usr/${TOOLCHAIN_TUPLE}" CACHE STRING "Root of the target development environment (libraries, headers etc).")
 set(TOOLCHAIN_INSTALL_PREFIX "${TOOLCHAIN_SYSROOT}" CACHE STRING "Preferred install location when using the toolchain.")
