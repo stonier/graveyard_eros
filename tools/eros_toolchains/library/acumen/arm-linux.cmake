@@ -7,7 +7,7 @@
 # Some useful custom variables that uniquely define this toolchain module
 set(TOOLCHAIN_FAMILY "custom")
 set(TOOLCHAIN_TUPLE "arm-linux" CACHE STRING "Toolchain signature identifying cpu-vendor-platform-clibrary.")
-set(TOOLCHAIN_SYSROOT "/usr/arm-linux/arm-linux" CACHE STRING "Root of the target development environment (libraries, headers etc).")
+set(TOOLCHAIN_SYSROOT "/usr/arm-linux" CACHE STRING "Root of the target development environment (libraries, headers etc).")
 
 # Now the cmake variables
 set(CMAKE_SYSTEM_NAME Linux)
