@@ -19,5 +19,14 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER) # Don't search for programs in sysr
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)  # Headers and libs from sysroot only
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
+# Qt cross-compile variables
+# It doesn't build a qmake, so we need to set a few variables for cmake's
+# FindQt4.cmake module.
+set(QT_LIBRARY_DIR ${TOOLCHAIN_SYSROOT}/lib)
+set(QT_BINARY_DIR ${TOOLCHAIN_SYSROOT}/bin)
+set(QT_HEADERS_DIR ${TOOLCHAIN_SYSROOT}/include)
+set(QT_MKSPECS_DIR ${TOOLCHAIN_SYSROOT}/mkspecs)
+set(QT_PLUGINS_DIR ${TOOLCHAIN_SYSROOT}/plugins)
+
 # Hide from cache's front page
 MARK_AS_ADVANCED(CMAKE_GENERATOR CMAKE_FIND_ROOT_PATH CMAKE_TOOLCHAIN_FILE TOOLCHAIN_FAMILY TOOLCHAIN_TUPLE TOOLCHAIN_SYSROOT)
