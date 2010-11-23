@@ -22,16 +22,11 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 # Boost needs to be forced to use static libs
 set(ROS_COMPILE_FLAGS ${ROS_COMPILE_FLAGS} "-DBOOST_THREAD_USE_LIB")
 
-# Qt cross-compile variables
-# It doesn't build a qmake, so we need to set a few variables for cmake's
-# FindQt4.cmake module. 
-set(QT_IS_STATIC 1) # Works on my gentoo (cmake 2.8.1)
+###############################
+# Prepare Qt Environment
+###############################
+set(QT_IS_STATIC 1) # Works on my gentoo (cmake 2.8.1), fails on lucid ubuntu (cmake 2.8.0)
 set(QT_QMAKE_EXECUTABLE ${TOOLCHAIN_TUPLE}-qmake) 
-set(QT_LIBRARY_DIR ${TOOLCHAIN_SYSROOT}/lib)
-set(QT_BINARY_DIR ${TOOLCHAIN_SYSROOT}/bin)
-set(QT_HEADERS_DIR ${TOOLCHAIN_SYSROOT}/include)
-set(QT_MKSPECS_DIR ${TOOLCHAIN_SYSROOT}/mkspecs)
-set(QT_PLUGINS_DIR ${TOOLCHAIN_SYSROOT}/plugins)
 
 # Hide from cache's front page
 MARK_AS_ADVANCED(CMAKE_GENERATOR CMAKE_FIND_ROOT_PATH CMAKE_TOOLCHAIN_FILE TOOLCHAIN_FAMILY TOOLCHAIN_TUPLE TOOLCHAIN_SYSROOT)
