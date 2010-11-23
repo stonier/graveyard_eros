@@ -126,6 +126,27 @@ macro(eros_autotools_compile configure_command dir depends)
 endmacro()
 
 ###############################
+# Autotools Compile Only
+###############################
+# This adds a custom command for a typical autotools compile.
+# Be sure to set up the configure command correctly before calling.
+#
+# Depends: ${depends} (input argument)
+# Outputs: ${dir}/compiled
+#
+macro(eros_autotools_compile_only configure_command dir depends)
+    add_custom_command(OUTPUT ${dir}/compiled
+        COMMAND ${${configure_command}}
+        COMMAND make $ENV{ROS_PARALLEL_JOBS} # If not ros, then that is just empty anyway
+        COMMAND touch ${dir}/compiled
+        DEPENDS ${depends}
+        WORKING_DIRECTORY ${dir}
+        COMMENT "Compiling ${dir}."
+        VERBATIM
+        )
+endmacro()
+
+###############################
 # Uninstall
 ###############################
 # Creates an uninstall target.
