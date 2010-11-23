@@ -60,3 +60,18 @@ def eros_config():
 
 def eros_tools_templates_dir():
     return os.path.join(roslib.packages.get_pkg_dir('eros_python_tools'),"templates")
+
+# Finds and reads one of the templates.
+def read_template(tmplf):
+    #p = os.path.join(roslib.packages.get_pkg_dir('eros_python_tools'), tmplf)
+    f = open(tmplf, 'r')
+    try:
+        t = f.read()
+    finally:
+        f.close()
+    return t
+
+# This inserts the labelled variables into the template wherever the corresponding
+# %package, %brief, %description and %depends is found.
+def instantiate_template(template, package, brief, description, author, depends):
+    return template%locals()

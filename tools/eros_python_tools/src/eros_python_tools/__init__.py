@@ -6,3 +6,4 @@ import prefix
 import protect
 import platform
 import toolchain
+import create_qt_package
