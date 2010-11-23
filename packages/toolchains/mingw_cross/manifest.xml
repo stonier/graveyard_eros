@@ -1,0 +1,17 @@
+<package>
+  <description brief="Build recipe to install the mingw cross environment">
+
+     Installer script for the mingw cross environment. This will install to /opt/mingw
+	 and immediately begin cross-compiling gcc and qt. Other libraries can be added by
+	 simply cd'ing to /opt/mingw and running make for the desired target.
+
+  </description>
+  <author>Daniel Stonier (d.stonier@gmail.com)</author>
+  <license>BSD</license>
+  <review status="experimental" notes=""/>
+  <url>http://mingw-cross-env.nongnu.org/</url>
+  <depend package="eros_license"/>
+  <depend package="eros_build"/>
+</package>
+
+

@@ -1,0 +1,25 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+\section packageSummary Package Summary
+
+     Installer script for the mingw cross environment.
+     
+\section Usage
+     
+     Simply run the following commands.
+     
+     @code
+     roscd mingw_cross
+     make
+     make install
+     @endcode
+     
+     It will install the toolchain in /opt/mingw.
+
+\section ChangeLog
+
+	- <b>Nov 10</b> : Done and road tested.
+
+*/
