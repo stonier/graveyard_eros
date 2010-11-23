@@ -4,17 +4,17 @@
 
 cmake_minimum_required(VERSION 2.4.6)
 
-set(CMAKE_VERBOSE_MAKEFILE true)
-
 ##############################################################################
-# YCS-ROS
+# Ros Initialisation
 ##############################################################################
 
 include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+rosbuild_init()
 
-##############################################################################
-# Build
-##############################################################################
+#set the default path for built executables to the "bin" directory
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set the default path for built libraries to the "lib" directory
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 # Set the build type.  Options are:
 #  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
@@ -23,12 +23,6 @@ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
 #set(ROS_BUILD_TYPE Debug)
-
-##############################################################################
-# Init - the order of the preceding commands is important!
-##############################################################################
-
-rosbuild_init()
 
 ##############################################################################
 # Qt Environment
