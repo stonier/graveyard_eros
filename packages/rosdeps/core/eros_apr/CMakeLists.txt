@@ -41,7 +41,6 @@ else()
   set(CONFIGURE_COMMAND ./configure ${PACKAGE_OPTIONS} ${COMMON_ARGS})
 endif()
 
-message(STATUS "CONFIGURE_COMMAND.........${CONFIGURE_COMMAND}")
 ##############################################################################
 # Build
 ##############################################################################
