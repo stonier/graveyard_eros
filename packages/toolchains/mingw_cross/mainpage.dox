@@ -12,12 +12,10 @@
      
      @code
      roscd mingw_cross
-     make
-     make install
+     make         // copies to /opt/mingw and compiles gcc, qt.
+     make install // installs links to binaries in /usr/local/bin.
      @endcode
      
-     It will install the toolchain in /opt/mingw.
-
 \section ChangeLog
 
 	- <b>Nov 10</b> : Done and road tested.
