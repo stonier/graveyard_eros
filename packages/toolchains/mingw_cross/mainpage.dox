@@ -13,7 +13,20 @@
      @code
      roscd mingw_cross
      make         // copies to /opt/mingw and compiles gcc, qt.
-     make install // installs links to binaries in /usr/local/bin.
+     make links // installs links to binaries in /usr/local/bin.
+     @endcode
+     
+     Further build recipes can be compiled into the toolchain by 
+     simply switching to the root and making the appropriate target.
+     A list of packages that can be installed can be found on 
+     
+     http://mingw-cross-env.nongnu.org/#packages
+     
+     To build qt for example,
+     
+     @code
+     cd /opt/mingw
+     make qt
      @endcode
      
 \section ChangeLog
