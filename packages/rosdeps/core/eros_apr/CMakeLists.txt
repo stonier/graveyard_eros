@@ -26,13 +26,12 @@ set(SOURCE_TARBALL_URL "http://mirror.apache-kr.org/apr/${SOURCE_TARBALL}")
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 #set(PREFIX ${CMAKE_BINARY_DIR}/fakeroot)
 
-set(PACKAGE_OPTIONS --disable-static --enable-shared)
 # The compilers and ros compile flags are all set by rostoolchain.cmake and rosconfig.cmake
 if(MINGW)
   # Fix a bug in mingw cross compiler not setting this macro for you.
   set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} -D_WIN32_WINNT=0x0500")
   # This is wierd, i used this to find the bug, but it then fails again if I remove it
-  set(ROS_LINK_FLAGS "${ROS_LINK_FLAGS} -no-undefined")
+  #set(ROS_LINK_FLAGS "${ROS_LINK_FLAGS} -no-undefined")
 endif()
 set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX} 
                 --exec-prefix=${CMAKE_INSTALL_PREFIX} 
@@ -51,19 +50,22 @@ if(CMAKE_CROSSCOMPILING)
         #ac_cv_func_setpgrp_void=no 
         #apr_cv_tcp_nodelay_with_cork=no
         #enable_threads="system_threads"
-        #eolstr="\\r\\n" 
+        #eolstr="\\r\\n"
         #file_as_socket=0
         #proc_mutex_is_global=1
-        # Broken in 1.4.2, defined as 4^M which kill configure, so redefine them here.
+        # Broken in 1.4.2 on ubuntu defined as 4^M which kill configure, so redefine them here.
         ac_cv_sizeof_off_t=4
         ac_cv_sizeof_pid_t=4 
         )
+    set(PACKAGE_OPTIONS --disable-shared --enable-static)
   else() # Arm
     # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
     set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)
+    set(PACKAGE_OPTIONS --disable-static --enable-shared)
   endif()
   set(CONFIGURE_COMMAND ./configure  --host=${TOOLCHAIN_TUPLE} --target=${TOOLCHAIN_TUPLE} ${PACKAGE_OPTIONS} ${PRESET_VARIABLES} ${COMMON_ARGS}) 
 else()
+  set(PACKAGE_OPTIONS --disable-static --enable-shared)
   set(CONFIGURE_COMMAND ./configure ${PACKAGE_OPTIONS} ${COMMON_ARGS})
 endif()
 

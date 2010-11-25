@@ -26,8 +26,21 @@ set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 
 # maybe need --with-expat=builtin?
 set(PACKAGE_OPTIONS --without-pgsql --without-sqlite2 --without-sqlite3 --with-apr=${CMAKE_INSTALL_PREFIX})
+if(MINGW)
+  # Fix a bug in mingw cross compiler not setting this macro for you.
+  set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} -D_WIN32_WINNT=0x0500")
+  # This is wierd, i used this to find the bug, but it then fails again if I remove it
+  set(ROS_LINK_FLAGS "${ROS_LINK_FLAGS} -no-undefined")
+endif()
 
-set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX} --exec-prefix=${CMAKE_INSTALL_PREFIX} C=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${ROS_COMPILE_FLAGS} CXXFLAGS=${ROS_COMPILE_FLAGS})
+set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX} 
+                --exec-prefix=${CMAKE_INSTALL_PREFIX} 
+                C=${CMAKE_C_COMPILER} 
+                CXX=${CMAKE_CXX_COMPILER} 
+                CFLAGS=${ROS_COMPILE_FLAGS} 
+                CXXFLAGS=${ROS_COMPILE_FLAGS}
+                LDFLAGS=${ROS_LINK_FLAGS}
+                )
 
 if(CMAKE_CROSSCOMPILING)
   if(MINGW)
@@ -76,7 +89,7 @@ add_custom_target(
         rm -f ${CMAKE_INSTALL_PREFIX}/bin/apu-1-config
         COMMAND rm -rf ${CMAKE_INSTALL_PREFIX}/include/apr-1
         COMMAND rm -rf ${CMAKE_INSTALL_PREFIX}/build-1
-        COMMAND rm -f ${CMAKE_INSTALL_PREFIX}/lib/libapr-util-1*
+        COMMAND rm -f ${CMAKE_INSTALL_PREFIX}/lib/libaprutil-1*
         COMMAND rm -f ${CMAKE_INSTALL_PREFIX}/lib/apr.exp
         COMMAND rm -rf ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/apr-util-1.pc
         DEPENDS ${SOURCE_DIR}/compiled

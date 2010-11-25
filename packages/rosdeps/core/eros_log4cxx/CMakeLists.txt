@@ -23,13 +23,6 @@ set(SOURCE_TARBALL_URL "http://pr.willowgarage.com/downloads/${SOURCE_TARBALL}")
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 set(PREFIX ${CMAKE_BINARY_DIR}/fakeroot)
 
-set(PACKAGE_OPTIONS --disable-static
-                    --enable-shared
-                    # --disable-wchar_t Mingw probably needs this disabled
-                    --with-apr=${CMAKE_INSTALL_PREFIX}
-                    --with-apr-util=${CMAKE_INSTALL_PREFIX}
-                    )
-
 if(MINGW)                    
   # Fix a bug in mingw cross compiler not setting this macro for you.
   set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} -D_WIN32_WINNT=0x0500")
@@ -37,25 +30,31 @@ if(MINGW)
   set(ROS_LINK_FLAGS "${ROS_LINK_FLAGS} -no-undefined")
 endif()
 
+if(CMAKE_CROSSCOMPILING)
+  if(MINGW)
+    set(PLATFORM_OPTIONS --disable-shared --enable-static)
+    set(PRESET_VARIABLES ) # Nothing here
+  else() # Arm
+    set(PLATFORM_OPTIONS  --disable-static --enable-shared)
+    # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
+    set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)
+  endif()
+  set(PLATFORM_OPTIONS ${PLATFORM_OPTIONS} --host=${TOOLCHAIN_TUPLE} --target=${TOOLCHAIN_TUPLE}) 
+else()
+  set(PLATFORM_OPTIONS --disable-static --enable-shared)
+endif()
+
 set(COMMON_ARGS --prefix=${PREFIX} 
                 --exec-prefix=${PREFIX} 
+                --with-apr=${CMAKE_INSTALL_PREFIX}
+                --with-apr-util=${CMAKE_INSTALL_PREFIX}
                 C=${CMAKE_C_COMPILER} 
                 CXX=${CMAKE_CXX_COMPILER}
                 CFLAGS=${ROS_COMPILE_FLAGS} 
                 CXXFLAGS=${ROS_COMPILE_FLAGS}
                 LDFLAGS=${ROS_LINK_FLAGS}
                 )
-if(CMAKE_CROSSCOMPILING)
-  if(MINGW)
-      set(PRESET_VARIABLES )
-  else() # Arm
-    # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
-    set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)
-  endif()
-  set(CONFIGURE_COMMAND ./configure  --host=${TOOLCHAIN_TUPLE} --target=${TOOLCHAIN_TUPLE} ${PACKAGE_OPTIONS} ${PRESET_VARIABLES} ${COMMON_ARGS}) 
-else()
-  set(CONFIGURE_COMMAND ./configure ${PACKAGE_OPTIONS} ${COMMON_ARGS})
-endif()
+set(CONFIGURE_COMMAND ./configure  ${PLATFORM_OPTIONS} ${PRESET_VARIABLES} ${COMMON_ARGS}) 
 
 ##############################################################################
 # DOWNLOADING/GENERATING THE SOURCES
@@ -82,7 +81,6 @@ add_custom_command(OUTPUT ${PATCHED_FLAG}
     COMMENT "Patching ${SOURCE_DIR}."
     VERBATIM
     )
-
 
 ##############################################################################
 # Build
