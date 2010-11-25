@@ -29,7 +29,8 @@ clean:
 
 help:
 	@echo "all       : downloads, extracts to /opt/mingw and compiles gcc, qt."
-	@echo "install   : installs links to binaries in /opt/mingw/usr/bin."
+	@echo "links     : installs links to binaries in /opt/mingw/usr/bin."
+	@echo "install   : same as above."
 	@echo "uninstall : uninstalls links and deletes /opt/mingw."
 	@echo "download  : downloads the mingw cross tarball."
 
@@ -44,10 +45,9 @@ links:
 
 compile: extract
 	@if [ ! -f $(PREFIX)/usr/installed/qt ]; then \
-		cd $(PREFIX); \
-		make $(ROS_PARALLEL_JOBS) gcc qt; \
+		cd $(PREFIX); make gcc; \
 	else \
-		echo "There is already an installed gcc/qt in $(PREFIX)."; \
+		echo "There is already an installed gcc in $(PREFIX)."; \
 	fi
 
 extract: download
