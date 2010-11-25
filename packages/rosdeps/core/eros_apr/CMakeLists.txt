@@ -32,7 +32,19 @@ set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX} --exec-prefix=${CMAKE_INSTALL_P
 # Unused? apr_cv_mutex_recurive=yes <- bad spelling?
 if(CMAKE_CROSSCOMPILING)
   if(MINGW)
-    set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no)
+    set(PRESET_VARIABLES 
+        # already in configure.in
+        #ac_cv_file__dev_zero=no   
+        #ac_cv_func_setpgrp_void=no 
+        #apr_cv_tcp_nodelay_with_cork=no
+        #enable_threads="system_threads"
+        #eolstr="\\r\\n" 
+        #file_as_socket=0
+        #proc_mutex_is_global=1
+        # Broken in 1.4.2, defined as 4^M which kill configure, so redefine them here.
+        ac_cv_sizeof_off_t=4
+        ac_cv_sizeof_pid_t=4 
+        )
   else() # Arm
     # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
     set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)

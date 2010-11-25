@@ -24,14 +24,16 @@ set(SOURCE_TARBALL "${SOURCE_NAME}.tar.gz")
 set(SOURCE_TARBALL_URL "http://mirror.apache-kr.org/apr/${SOURCE_TARBALL}")
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 
-#set(PACKAGE_OPTIONS --without-pgsql --without-sqlite2 --without-sqlite3 --with-expat=builtin --with-apr=${CMAKE_INSTALL_PREFIX})
+# maybe need --with-expat=builtin?
 set(PACKAGE_OPTIONS --without-pgsql --without-sqlite2 --without-sqlite3 --with-apr=${CMAKE_INSTALL_PREFIX})
-# The compilers and ros compile flags are all set by rostoolchain.cmake and rosconfig.cmake
+
 set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX} --exec-prefix=${CMAKE_INSTALL_PREFIX} C=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${ROS_COMPILE_FLAGS} CXXFLAGS=${ROS_COMPILE_FLAGS})
 
 if(CMAKE_CROSSCOMPILING)
   if(MINGW)
-    set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no)
+    set(PRESET_VARIABLES
+        # Dont think we need any
+    )
   else() # Arm
     # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec 
     set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)
