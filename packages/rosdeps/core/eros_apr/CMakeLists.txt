@@ -45,17 +45,13 @@ set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX}
 if(CMAKE_CROSSCOMPILING)
   if(MINGW)
     set(PRESET_VARIABLES 
-        # already in configure.in
-        #ac_cv_file__dev_zero=no   
-        #ac_cv_func_setpgrp_void=no 
-        #apr_cv_tcp_nodelay_with_cork=no
-        #enable_threads="system_threads"
-        #eolstr="\\r\\n"
-        #file_as_socket=0
-        #proc_mutex_is_global=1
-        # Broken in 1.4.2 on ubuntu defined as 4^M which kill configure, so redefine them here.
+        # Sometimes wine has an emulation environment which runs conf tests,
+        # unfortunately these return like a 4^M, not 4 which breaks all the 
+        # configure script logic.
         ac_cv_sizeof_off_t=4
         ac_cv_sizeof_pid_t=4 
+        ac_cv_sizeof_size_t=4
+        ac_cv_sizeof_ssize_t=4
         )
     set(PACKAGE_OPTIONS --disable-shared --enable-static)
   else() # Arm
