@@ -19,8 +19,8 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER) # Don't search for programs in sysr
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)  # Headers and libs from sysroot only
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-# Boost needs to be forced to use static libs
-set(ROS_COMPILE_FLAGS ${ROS_COMPILE_FLAGS} "-DBOOST_THREAD_USE_LIB")
+# Boost needs to be forced to use static libs - bad place for this, put in an eros_build macro.
+#set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} -DBOOST_THREAD_USE_LIB")
 
 ###############################
 # Prepare Qt Environment
