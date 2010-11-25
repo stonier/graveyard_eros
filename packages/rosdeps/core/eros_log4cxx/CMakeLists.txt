@@ -23,12 +23,31 @@ set(SOURCE_TARBALL_URL "http://pr.willowgarage.com/downloads/${SOURCE_TARBALL}")
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 set(PREFIX ${CMAKE_BINARY_DIR}/fakeroot)
 
-set(PACKAGE_OPTIONS --with-apr=${CMAKE_INSTALL_PREFIX} --with-apr-util=${CMAKE_INSTALL_PREFIX})
-set(COMMON_ARGS --prefix=${PREFIX} --exec-prefix=${PREFIX} C=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER})
+set(PACKAGE_OPTIONS --disable-static
+                    --enable-shared
+                    # --disable-wchar_t Mingw probably needs this disabled
+                    --with-apr=${CMAKE_INSTALL_PREFIX}
+                    --with-apr-util=${CMAKE_INSTALL_PREFIX}
+                    )
 
+if(MINGW)                    
+  # Fix a bug in mingw cross compiler not setting this macro for you.
+  set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} -D_WIN32_WINNT=0x0500")
+  # This is wierd, i used this to find the bug, but it then fails again if I remove it
+  set(ROS_LINK_FLAGS "${ROS_LINK_FLAGS} -no-undefined")
+endif()
+
+set(COMMON_ARGS --prefix=${PREFIX} 
+                --exec-prefix=${PREFIX} 
+                C=${CMAKE_C_COMPILER} 
+                CXX=${CMAKE_CXX_COMPILER}
+                CFLAGS=${ROS_COMPILE_FLAGS} 
+                CXXFLAGS=${ROS_COMPILE_FLAGS}
+                LDFLAGS=${ROS_LINK_FLAGS}
+                )
 if(CMAKE_CROSSCOMPILING)
   if(MINGW)
-    set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no)
+      set(PRESET_VARIABLES )
   else() # Arm
     # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
     set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)

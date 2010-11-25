@@ -107,7 +107,7 @@ add_custom_command(OUTPUT ${COMPILED_FLAG}
     )
 
 if(MINGW)
-    set(LN_COMMAND ln -s boost_thread_win32.dll ./boost_thread.dll) 
+    set(LN_COMMAND ln -sf boost_thread_win32.dll ./boost_thread.dll) 
 else()
     set(LN_COMMAND echo "Symbolic links automatically made.")
 endif()

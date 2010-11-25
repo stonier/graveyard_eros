@@ -21,6 +21,9 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 # Boost needs to be forced to use static libs - bad place for this, put in an eros_build macro.
 #set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} -DBOOST_THREAD_USE_LIB")
+# Also need this I think - http://lists-archives.org/mingw-users/04689-linking-help.html
+#set(TOOLCHAIN_COMPILE_FLAGS "${TOOLCHAIN_COMPILE_FLAGS} -D_WIN32_WINNT = 0x0500")
+#set(TOOLCHAIN_LINK_FLAGS "${TOOLCHAIN_LINK_FLAGS} -no-undefined")
 
 ###############################
 # Prepare Qt Environment

@@ -73,12 +73,12 @@ add_custom_target(
 # Doesn't have its own uninstall command!
 add_custom_target(
         custom_uninstall
-        rm -f ${CMAKE_INSTALL_PREFIX}/bin/apr-1-config
+        rm -f ${CMAKE_INSTALL_PREFIX}/bin/apu-1-config
         COMMAND rm -rf ${CMAKE_INSTALL_PREFIX}/include/apr-1
         COMMAND rm -rf ${CMAKE_INSTALL_PREFIX}/build-1
-        COMMAND rm -f ${CMAKE_INSTALL_PREFIX}/lib/libapr-1*
+        COMMAND rm -f ${CMAKE_INSTALL_PREFIX}/lib/libapr-util-1*
         COMMAND rm -f ${CMAKE_INSTALL_PREFIX}/lib/apr.exp
-        COMMAND rm -rf ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/apr-1.pc
+        COMMAND rm -rf ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/apr-util-1.pc
         DEPENDS ${SOURCE_DIR}/compiled
         WORKING_DIRECTORY ${SOURCE_DIR}
         COMMENT "Uninstalling ${PROJECT_NAME}."

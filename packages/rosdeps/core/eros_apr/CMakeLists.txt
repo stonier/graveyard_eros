@@ -28,8 +28,21 @@ set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 
 set(PACKAGE_OPTIONS --disable-static --enable-shared)
 # The compilers and ros compile flags are all set by rostoolchain.cmake and rosconfig.cmake
-set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX} --exec-prefix=${CMAKE_INSTALL_PREFIX} C=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} CFLAGS=${ROS_COMPILE_FLAGS} CXXFLAGS=${ROS_COMPILE_FLAGS})
-# Unused? apr_cv_mutex_recurive=yes <- bad spelling?
+if(MINGW)
+  # Fix a bug in mingw cross compiler not setting this macro for you.
+  set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} -D_WIN32_WINNT=0x0500")
+  # This is wierd, i used this to find the bug, but it then fails again if I remove it
+  set(ROS_LINK_FLAGS "${ROS_LINK_FLAGS} -no-undefined")
+endif()
+set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX} 
+                --exec-prefix=${CMAKE_INSTALL_PREFIX} 
+                C=${CMAKE_C_COMPILER} 
+                CXX=${CMAKE_CXX_COMPILER} 
+                CFLAGS=${ROS_COMPILE_FLAGS} 
+                CXXFLAGS=${ROS_COMPILE_FLAGS}
+                LDFLAGS=${ROS_LINK_FLAGS}
+                )
+
 if(CMAKE_CROSSCOMPILING)
   if(MINGW)
     set(PRESET_VARIABLES 

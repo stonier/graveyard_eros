@@ -115,7 +115,7 @@ endmacro()
 macro(eros_autotools_compile configure_command dir depends)
     add_custom_command(OUTPUT ${dir}/compiled
         COMMAND ${${configure_command}}
-        COMMAND make $ENV{ROS_PARALLEL_JOBS} # If not ros, then that is just empty anyway
+        COMMAND make $ENV{ROS_PARALLEL_JOBS}
         COMMAND make install
         COMMAND touch ${dir}/compiled
         DEPENDS ${depends}
@@ -137,7 +137,7 @@ endmacro()
 macro(eros_autotools_compile_only configure_command dir depends)
     add_custom_command(OUTPUT ${dir}/compiled
         COMMAND ${${configure_command}}
-        COMMAND make $ENV{ROS_PARALLEL_JOBS} # If not ros, then that is just empty anyway
+        COMMAND make $ENV{ROS_PARALLEL_JOBS}
         COMMAND touch ${dir}/compiled
         DEPENDS ${depends}
         WORKING_DIRECTORY ${dir}
