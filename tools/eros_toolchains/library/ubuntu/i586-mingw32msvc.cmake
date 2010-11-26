@@ -19,5 +19,13 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER) # Don't search for programs in sysr
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)  # Headers and libs from sysroot only
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
+###############################
+# Mingw Ecosystem is Static
+###############################
+set(ROS_BUILD_STATIC_EXES true)
+set(ROS_BUILD_SHARED_EXES false)
+set(ROS_BUILD_STATIC_LIBS true)
+set(ROS_BUILD_SHARED_LIBS false)
+
 # Hide from cache's front page
 MARK_AS_ADVANCED(CMAKE_GENERATOR CMAKE_FIND_ROOT_PATH CMAKE_TOOLCHAIN_FILE TOOLCHAIN_FAMILY TOOLCHAIN_TUPLE TOOLCHAIN_SYSROOT)

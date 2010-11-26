@@ -1,11 +1,11 @@
 ###############################################################################
-# Family : custom
+# Family : acument
 # Tuple : arm-linux
-# Sysroot : /usr/arm-linux/arm-linux
+# Sysroot : /usr/arm-linux
 ###############################################################################
 
 # Some useful custom variables that uniquely define this toolchain module
-set(TOOLCHAIN_FAMILY "custom")
+set(TOOLCHAIN_FAMILY "acumen")
 set(TOOLCHAIN_TUPLE "arm-linux" CACHE STRING "Toolchain signature identifying cpu-vendor-platform-clibrary.")
 set(TOOLCHAIN_SYSROOT "/usr/arm-linux" CACHE STRING "Root of the target development environment (libraries, headers etc).")
 
