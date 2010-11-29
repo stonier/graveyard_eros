@@ -1,11 +1,11 @@
 ###############################################################################
 # Family : arm
-# Platform : arm1176jzf-s
+# Platform : xscale
 ###############################################################################
 
 # Some useful custom variables that uniquely define this platform module
 set(PLATFORM_FAMILY "arm" CACHE STRING "Platform family, usually referring to intel/arm etc.")
-set(PLATFORM_NAME "armv5te" CACHE STRING "Platform name, usually referring to the cpu architecture.")
+set(PLATFORM_NAME "xscale" CACHE STRING "Platform name, usually referring to the cpu architecture.")
 
 # Flags
 set(PLATFORM_COMPILE_FLAGS "-march=armv5te -mtune=xscale -pipe" CACHE STRING "Compile flags specific to this platform.")
