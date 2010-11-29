@@ -4,7 +4,7 @@
 # Sysroot : /usr/arm-softfloat-linux-gnu
 ###############################################################################
 
-# Some useful custom variables that uniquely define this toolchain module
+# Some useful custom variables that uniquely define this toolchain module.
 set(TOOLCHAIN_FAMILY "generic")
 set(TOOLCHAIN_TUPLE "arm-softfloat-linux-gnu" CACHE STRING "Toolchain signature identifying cpu-vendor-platform-clibrary.")
 set(TOOLCHAIN_SYSROOT "/usr/arm-softfloat-linux-gnu" CACHE STRING "Root of the target development environment (libraries, headers etc).")
