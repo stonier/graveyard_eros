@@ -103,7 +103,8 @@ Description:\n\
   Protect/unprotect ros packages via the ROS_NOBUILD mechanism. Targets can include\n\
   a package list, stack list or one of the preconfigured groups (e.g. --minimal)." 
     parser = OptionParser(usage=usage)
-    parser.add_option("-c","--clean", action="store_true", dest="clean", default=False, help="pre-clean packages before building and protecting them.")
+    parser.add_option("-x","--clean", action="store_true", dest="clean", default=False, help="depracated, use --pre-clean instead.")
+    parser.add_option("-c","--pre-clean", action="store_true", dest="pre_clean", default=False, help="pre-clean packages before building and protecting them.")
     parser.add_option("-m","--minimal", action="store_true", dest="minimal", default=False, help="target a selected minimal set of ros packages necessary for a cross-compile environment.")
     parser.add_option("-r","--rosdeps", action="store_true", dest="rosdeps", default=False, help="pass --rosdep-install and rosdep-yes to rosmake when protecting.")
     parser.add_option("-s","--stacks", action="store_true", dest="stacks", default=False, help="target stacks instead of packages.")
@@ -126,6 +127,12 @@ Description:\n\
         Flags.unprotect = True
     
     if options.clean:
+        print
+        print "Depracated argument, use --pre-clean instead."
+        print
+        return 1
+
+    if options.pre_clean:
         Flags.clean = True
 
     ###################
