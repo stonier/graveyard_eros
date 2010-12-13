@@ -4,9 +4,9 @@
 
 # Set the eros version.
 macro(eros_version)
-    set(PROJECT_VERSION "0.10.0")
+    set(PROJECT_VERSION "0.11.0")
     set(PROJECT_VERSION_MAJOR "0")
-    set(PROJECT_VERSION_MINOR "10")
+    set(PROJECT_VERSION_MINOR "11")
     set(PROJECT_VERSION_PATCH "0")
 endmacro()
 
