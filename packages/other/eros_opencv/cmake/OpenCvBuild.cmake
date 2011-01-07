@@ -8,9 +8,6 @@ set(SVN_DIR ${CMAKE_BINARY_DIR}/opencv-svn)
 #set(SVN_REV 1978) # This is the tagged release number 
 set(PATCH_FILE ${PROJECT_SOURCE_DIR}/build/opencv-svn/src/highgui/cvcap_dshow.cpp)
 set(SRC_FILE ${PROJECT_SOURCE_DIR}/cvcap_dshow.cpp)
-message("yahoo")
-message(${CMAKE_SOURCE_DIR})
-message(${PROJECT_SOURCE_DIR})
 
 ##############################################################################
 # Checkout
