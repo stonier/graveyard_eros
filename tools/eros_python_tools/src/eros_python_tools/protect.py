@@ -34,15 +34,17 @@ class Flags:
 ###############################################################################
 
 def minimal_package_set():
-    ''' Return the minimal set of packages needed for a cross compiled ros runtime. '''
+    ''' Return the minimal set of packages needed for a cross compiled ros runtime that can run ros clients and server. '''
     version = ros_version()
     if ( version == "boxturtle" ):
         packages = ["rospack", "genmsg_cpp", "roslang", "xmlrpcpp", "pycrypto", "paramiko", "roslib", "rospy", "rosconsole", "roscpp", "rosout", "roslaunch", "rostest"]
     elif ( version == "cturtle" ):
         packages = ["rospack", "genmsg_cpp", "rosbag", "rosclean", "rosdoc", "rosgraph", "roslang", "roslib", "rosmaster", "rosmsg", "rospy", "rosconsole", "roscpp", "rosout", "roslaunch", "rostest", "rxdeps", "topic_tools", "xmlrpcpp"]
+    elif ( version == "diamondback" ):
+        packages = ["rospack", "rosbuild", "cpp_common", "roslib", "roslang", "xmlrpcpp", "rosgraph_msgs", "roscpp_traits", "rostime", "std_msgs", "roscpp_serialization", "rosconsole", "roscpp", "rosclean", "rosgraph", "rosmaster", "rosunit", "rospy", "rosout", "roslaunch", "rostest", "topic_tools", "rosbag", "rosmsg" ]
     else:
-        print "Unsupported version - defaulting to build/protect the latest official release's minimal set."
-        packages = ["rospack", "genmsg_cpp", "rosbag", "rosclean", "rosdoc", "rosgraph", "roslang", "roslib", "rosmaster", "rosmsg", "rospy", "rosconsole", "roscpp", "rosout", "roslaunch", "rostest", "rxdeps", "topic_tools", "xmlrpcpp"]
+        print "Unsupported version - defaulting to build/protect the latest official release's minimal set (diamondback)."
+        packages = ["rospack", "rosbuild", "cpp_common", "roslib", "roslang", "xmlrpcpp", "rosgraph_msgs", "roscpp_traits", "rostime", "std_msgs", "roscpp_serialization", "rosconsole", "roscpp", "rosclean", "rosgraph", "rosmaster", "rosunit", "rospy", "rosout", "roslaunch", "rostest", "topic_tools", "rosbag", "rosmsg" ]
     return packages
 
 def stacks_package_set(stacks):

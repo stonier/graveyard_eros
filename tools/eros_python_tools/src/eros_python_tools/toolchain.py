@@ -421,8 +421,34 @@ def patch_ros():
         topic_tools_dir = roslib.packages.get_pkg_dir('topic_tools')
         topic_tools_cmakelists = os.path.join(patches_dir,"topic_tools","CMakeLists.txt")
         shutil.copyfile(topic_tools_cmakelists,os.path.join(topic_tools_dir,'CMakeLists.txt'))
+    elif ( version == 'diamondback' ):
+        print "-- Applied various cross-compiling patches for diamondback."
+        # rosccpp - cedric's patches.
+        roscpp_dir = os.path.join(roslib.packages.get_pkg_dir('roscpp'),'src','libros')
+        roscpp_init = os.path.join(patches_dir,"roscpp","init.cpp")
+        roscpp_spinner = os.path.join(patches_dir,"roscpp","spinner.cpp")
+        roscpp_poll_manager = os.path.join(patches_dir,"roscpp","poll_manager.cpp")
+        roscpp_xmlrpc_manager = os.path.join(patches_dir,"roscpp","xmlrpc_manager.cpp")
+        shutil.copyfile(roscpp_init,os.path.join(roscpp_dir,'init.cpp'))
+        shutil.copyfile(roscpp_spinner,os.path.join(roscpp_dir,'spinner.cpp'))
+        shutil.copyfile(roscpp_poll_manager,os.path.join(roscpp_dir,'poll_manager.cpp'))
+        shutil.copyfile(roscpp_xmlrpc_manager,os.path.join(roscpp_dir,'xmlrpc_manager.cpp'))
+        # rosbuild
+        rosbuild_dir = roslib.packages.get_pkg_dir('rosbuild')
+        private_cmake = os.path.join(patches_dir,"rosbuild","private.cmake")
+        shutil.copyfile(private_cmake,os.path.join(rosbuild_dir,'private.cmake'))
+        # rosboost-cfg
+        rosboost_cfg_dir = os.path.join(roslib.packages.get_pkg_dir('rosboost_cfg'),'src','rosboost_cfg')
+        rosboost_cfg = os.path.join(patches_dir,"rosboost_cfg","rosboost_cfg.py")
+        shutil.copyfile(rosboost_cfg,os.path.join(rosboost_cfg_dir,'rosboost_cfg.py'))
+        # rospack
+        rospack_dir = roslib.packages.get_pkg_dir('rospack')
+        rospack_cmakelists = os.path.join(patches_dir,"rospack","CMakeLists.txt")
+        rospack_makefile = os.path.join(patches_dir,"rospack","Makefile")
+        shutil.copyfile(rospack_cmakelists,os.path.join(rospack_dir,'CMakeLists.txt'))
+        shutil.copyfile(rospack_makefile,os.path.join(rospack_dir,'Makefile'))
     else:
-        print "At this time, only cturtle is supported for patching."
+        print "At this time, only cturtle/diamondback is supported for patching."
         print "Contact the eros developers if you require support for"
         print "another type of installation."
 

@@ -1,0 +1,11 @@
+180,181c180,184
+<     _search_paths = [(None if 'ROS_BOOST_ROOT' not in os.environ else os.environ['ROS_BOOST_ROOT'], False),
+<                  (None if 'INCLUDE_DIRS' not in os.environ else os.environ['INCLUDE_DIRS'], True), 
+---
+>     # If defined, only search the ros root (specially for use with toolchains).
+>     if ('ROS_BOOST_ROOT' in os.environ):
+>         _search_paths = [(None if 'ROS_BOOST_ROOT' not in os.environ else os.environ['ROS_BOOST_ROOT'], False)]
+>     else: # general search.
+>         _search_paths = [(None if 'INCLUDE_DIRS' not in os.environ else os.environ['INCLUDE_DIRS'], True), 
+326d328
+<     

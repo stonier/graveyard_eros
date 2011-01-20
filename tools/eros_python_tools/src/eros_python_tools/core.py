@@ -36,6 +36,8 @@ def ros_version():
         version = "boxturtle"
     elif ( re.match(r"1\.2.*", version) ): # Cturtle
         version = "cturtle"
+    elif ( re.match(r"1\.4.*", version) ): # Cturtle
+        version = "diamondback"
     else: 
         version = "unknown"
     return version
