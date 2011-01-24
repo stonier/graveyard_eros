@@ -30,7 +30,11 @@ if(MINGW)
   # Fix a bug in mingw cross compiler not setting this macro for you.
   set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} -D_WIN32_WINNT=0x0500")
   # This is wierd, i used this to find the bug, but it then fails again if I remove it
-  set(ROS_LINK_FLAGS "${ROS_LINK_FLAGS} -no-undefined")
+  if(ROS_LINK_FLAGS)
+    set(ROS_LINK_FLAGS "-Wl,--no-undefined ${ROS_LINK_FLAGS}")
+  else()
+    set(ROS_LINK_FLAGS "-Wl,--no-undefined")
+  endif()
 endif()
 
 set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX} 
@@ -96,4 +100,5 @@ add_custom_target(
         WORKING_DIRECTORY ${SOURCE_DIR}
         COMMENT "Uninstalling ${PROJECT_NAME}."
         )
-        
+       
+
