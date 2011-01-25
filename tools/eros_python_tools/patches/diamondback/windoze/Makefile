@@ -1,3 +1,3 @@
 
 windoze:
-	rsync -a ./ros/ ${ROS_ROOT}
+	rsync -a --exclude=".svn" ./ros/ ${ROS_ROOT}

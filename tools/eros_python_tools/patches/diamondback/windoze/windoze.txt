@@ -1,3 +1,4 @@
+===== Background =====
 
 Geoffrey Big's efforts
 
@@ -15,16 +16,21 @@ To download their svn tree:
 
 svn co http://ros-win32.servicerobotics.eu/trunk/cturtle/ ./msvc
 
-===== Patches =====
+===== Rospack =====
 
-== Rospack ==
+== Against ==
+
+- Last Changed Rev: 12709
+- Last Changed Date: 2011-01-01 03:36:33 +0900 (Sat, 01 Jan 2011)
+
+== Summary ==
 
 These contain alot of filesystem functions that may be better off moved to
 something portable like boost::filesystem rather than maintaining it ourselves.
 However, that's not so practical right now as boost::filesystem is transitioning from
 version 2 to version 3 over boost versions 1.44 -> 1.47. Maybe later?
 
-Mingw fixes,
+== Mingw Fixes ==
 
 - rospack.cpp and rosstack.cpp
   - added definition for PATH_MAX.
