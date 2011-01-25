@@ -1,3 +1,3 @@
 
 windoze:
-	rsync -a ./windoze/ $ROS_ROOT
+	rsync -a ./ros/ ${ROS_ROOT}

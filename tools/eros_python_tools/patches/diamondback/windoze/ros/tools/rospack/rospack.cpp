@@ -53,10 +53,6 @@
 #if defined(WIN32)
   #include <windows.h>
   #include <stdlib.h>
-//  #include <direct.h>
-//  #include <Winsock2.h>
-//  #include <io.h>
-//  #include <fcntl.h>
   #define mkdir(a,b) _mkdir(a)
   #define PATH_MAX MAX_PATH // Also including <limits.h> works for mingw32
 #endif
@@ -1773,20 +1769,15 @@ void ROSPack::crawl_for_packages(bool force_crawl)
     char tmp_cache_path[PATH_MAX];
     strncpy(tmp_cache_dir, cache_path.c_str(), sizeof(tmp_cache_dir));
     snprintf(tmp_cache_path, sizeof(tmp_cache_path), "%s/.rospack_cache.XXXXXX", dirname(tmp_cache_dir));
-#if defined(WIN32)
-    // This one is particularly nasty: on Windows, there is no equivalent of
-    // mkstemp, so we're stuck with the security risks of mktemp. Hopefully not a
-    // problem in our use cases.
-//    if (_mktemp_s(tmp_cache_path, PATH_MAX) != 0)
-    if (mkstemps(tmp_cache_path, PATH_MAX) != 0)
+#if defined(__MINGW32__)
+    // There is no equivalent of mkstemp on mingw, so we resort to a slightly less secure
+    // method. Could use mktemp, but as we're just redirecting to FILE anyway, tmpfile() works
+    // for us.
+    //
+    // After boost 1.44 becomes standard for ros, we can use unique_path in boost
+    // filesystem version 3 (currently doesn't exist in filesystem version 2).
     {
-      fprintf(stderr,
-              "[rospack] Unable to generate temporary cache file name: %u",
-              GetLastError());
-    }
-    else
-    {
-      FILE *cache = fopen(tmp_cache_path, "w");
+    	FILE *cache = tmpfile();
 #else
     int fd = mkstemp(tmp_cache_path);
     if (fd < 0)

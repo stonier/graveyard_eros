@@ -1,0 +1,34 @@
+
+Geoffrey Big's efforts
+
+For his original effort at converting to python and also including some patches:
+
+- https://code.ros.org/gf/project/ros/scmsvn/?action=browse&path=%2Fstacks%2Fros%2Fbranches%2Fwindows%2F
+
+Robotics Equipments Corporation
+
+A port of comms to windows via msvc.
+
+http://www.servicerobotics.eu/index.php?id=37
+
+To download their svn tree:
+
+svn co http://ros-win32.servicerobotics.eu/trunk/cturtle/ ./msvc
+
+===== Patches =====
+
+== Rospack ==
+
+These contain alot of filesystem functions that may be better off moved to
+something portable like boost::filesystem rather than maintaining it ourselves.
+However, that's not so practical right now as boost::filesystem is transitioning from
+version 2 to version 3 over boost versions 1.44 -> 1.47. Maybe later?
+
+Mingw fixes,
+
+- rospack.cpp and rosstack.cpp
+  - added definition for PATH_MAX.
+  - no mkstemp, so just dropping back to calling tmpfile(), can we use this for 
+    both mingw and unix rather than the secure version?
+- main.cpp
+  - skip the sudo check for win32 systems.
