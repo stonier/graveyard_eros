@@ -437,6 +437,8 @@ def patch_ros():
         rosbuild_dir = roslib.packages.get_pkg_dir('rosbuild')
         private_cmake = os.path.join(patches_dir,"rosbuild","private.cmake")
         shutil.copyfile(private_cmake,os.path.join(rosbuild_dir,'private.cmake'))
+        public_cmake = os.path.join(patches_dir,"rosbuild","public.cmake")
+        shutil.copyfile(public_cmake,os.path.join(rosbuild_dir,'public.cmake'))
         # rosboost-cfg
         rosboost_cfg_dir = os.path.join(roslib.packages.get_pkg_dir('rosboost_cfg'),'src','rosboost_cfg')
         rosboost_cfg = os.path.join(patches_dir,"rosboost_cfg","rosboost_cfg.py")

@@ -22,6 +22,7 @@ svn co http://ros-win32.servicerobotics.eu/trunk/cturtle/ ./msvc
 
 - Last Changed Rev: 12709
 - Last Changed Date: 2011-01-01 03:36:33 +0900 (Sat, 01 Jan 2011)
+- Geoff's patch: https://code.ros.org/trac/ros/ticket/3274
 
 == Summary ==
 
