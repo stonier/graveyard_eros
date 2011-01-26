@@ -21,7 +21,6 @@ set(SOURCE_NAME "apache-log4cxx-0.10.0")
 set(SOURCE_TARBALL "apache-log4cxx-0.10.0-wg_patched.tar.gz")
 set(SOURCE_TARBALL_URL "http://pr.willowgarage.com/downloads/${SOURCE_TARBALL}")
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
-set(PREFIX ${CMAKE_BINARY_DIR}/fakeroot)
 
 if(MINGW)                    
   # Fix a bug in mingw cross compiler not setting this macro for you.
@@ -44,8 +43,8 @@ else()
   set(PLATFORM_OPTIONS --disable-static --enable-shared)
 endif()
 
-set(COMMON_ARGS --prefix=${PREFIX} 
-                --exec-prefix=${PREFIX} 
+set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX} 
+                --exec-prefix=${CMAKE_INSTALL_PREFIX} 
                 --with-apr=${CMAKE_INSTALL_PREFIX}
                 --with-apr-util=${CMAKE_INSTALL_PREFIX}
                 C=${CMAKE_C_COMPILER} 
@@ -86,7 +85,7 @@ add_custom_command(OUTPUT ${PATCHED_FLAG}
 # Build
 ##############################################################################
 
-eros_autotools_compile(CONFIGURE_COMMAND ${SOURCE_DIR} ${PATCHED_FLAG})
+eros_autotools_compile_only(CONFIGURE_COMMAND ${SOURCE_DIR} ${PATCHED_FLAG})
 
 # By adding ALL here, it automatically gets built before the packaging command.
 add_custom_target(
@@ -99,18 +98,20 @@ add_custom_target(
 # Install
 ##############################################################################
 
-install(DIRECTORY ${PREFIX}/include/
-        DESTINATION include
-        USE_SOURCE_PERMISSIONS
+add_custom_target(
+        custom_install
+        make install
+        DEPENDS ${SOURCE_DIR}/compiled
+        WORKING_DIRECTORY ${SOURCE_DIR}
+        COMMENT "Installing ${PROJECT_NAME}."
         )
 
-install(DIRECTORY ${PREFIX}/lib/
-        DESTINATION lib
-        USE_SOURCE_PERMISSIONS
+add_custom_target(
+        custom_uninstall
+        make install
+        DEPENDS ${SOURCE_DIR}/compiled
+        WORKING_DIRECTORY ${SOURCE_DIR}
+        COMMENT "Uninstalling ${PROJECT_NAME}."
         )
-
-install(DIRECTORY ${PREFIX}/share/
-        DESTINATION share
-        USE_SOURCE_PERMISSIONS
-        )
+       
 
