@@ -8,7 +8,7 @@
 set(TOOLCHAIN_FAMILY "ubuntu")
 set(TOOLCHAIN_TUPLE "i586-mingw32msvc" CACHE STRING "Toolchain signature identifying cpu-vendor-platform-clibrary.")
 set(TOOLCHAIN_SYSROOT "/usr/${TOOLCHAIN_TUPLE}" CACHE STRING "Root of the target development environment (libraries, headers etc).")
-set(TOOLCHAIN_INSTALL_PREFIX "${TOOLCHAIN_SYSROOT}/usr" CACHE STRING "Preferred install location when using the toolchain.")
+set(TOOLCHAIN_INSTALL_PREFIX "${TOOLCHAIN_SYSROOT}" CACHE STRING "Preferred install location when using the toolchain.")
 
 # Now the cmake variables
 set(CMAKE_SYSTEM_NAME Windows)
