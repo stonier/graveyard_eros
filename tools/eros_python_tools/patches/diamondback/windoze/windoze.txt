@@ -39,3 +39,17 @@ version 2 to version 3 over boost versions 1.44 -> 1.47. Maybe later?
     both mingw and unix rather than the secure version?
 - main.cpp
   - skip the sudo check for win32 systems.
+
+===== RosTime =====
+  
+== Against ==
+
+Files: include/ros/time.h  src/ros/time.cpp
+  Last Changed Author: jfaust
+  Last Changed Rev: 12080
+
+== Summary ==
+
+Windows code for catching the time (already there, just needed to edit out the 
+ROS_INFO) and nanosleep (provided by Geoff Biggs).
+

@@ -1,5 +1,3 @@
-Two patches here.
-
 ===== private.cmake =====
 
 URL: https://code.ros.org/svn/ros/stacks/ros/trunk/core/rosbuild/private.cmake
