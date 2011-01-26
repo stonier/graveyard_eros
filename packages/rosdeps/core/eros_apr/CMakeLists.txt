@@ -42,6 +42,12 @@ set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX}
                 LDFLAGS=${ROS_LINK_FLAGS}
                 )
 
+if(ROS_BUILD_STATIC_LIBS)
+  set(PACKAGE_OPTIONS --disable-shared --enable-static)
+else()
+  set(PACKAGE_OPTIONS --disable-static --enable-shared)
+endif()
+
 if(CMAKE_CROSSCOMPILING)
   if(MINGW)
     set(PRESET_VARIABLES 
@@ -53,7 +59,6 @@ if(CMAKE_CROSSCOMPILING)
         ac_cv_sizeof_size_t=4
         ac_cv_sizeof_ssize_t=4
         )
-    set(PACKAGE_OPTIONS --disable-shared --enable-static)
   else() # Arm
     # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
     set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)
@@ -61,7 +66,6 @@ if(CMAKE_CROSSCOMPILING)
   endif()
   set(CONFIGURE_COMMAND ./configure  --host=${TOOLCHAIN_TUPLE} --target=${TOOLCHAIN_TUPLE} ${PACKAGE_OPTIONS} ${PRESET_VARIABLES} ${COMMON_ARGS}) 
 else()
-  set(PACKAGE_OPTIONS --disable-static --enable-shared)
   set(CONFIGURE_COMMAND ./configure ${PACKAGE_OPTIONS} ${COMMON_ARGS})
 endif()
 
