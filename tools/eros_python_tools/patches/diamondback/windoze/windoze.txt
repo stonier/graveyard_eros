@@ -35,11 +35,14 @@ version 2 to version 3 over boost versions 1.44 -> 1.47. Maybe later?
 
 - rospack.cpp and rosstack.cpp
   - added definition for PATH_MAX.
-  - no mkstemp, so just dropping back to calling tmpfile(), can we use this for 
-    both mingw and unix rather than the secure version?
+  - no mkstemp, so just dropping back to calling tmpfile()
 - main.cpp
   - skip the sudo check for win32 systems.
 
+== ToDo ==
+
+Is it safe to use the insecure version for both mingw and unix?
+    
 ===== RosTime =====
   
 == Against ==
@@ -50,6 +53,17 @@ Files: include/ros/time.h  src/ros/time.cpp
 
 == Summary ==
 
-Windows code for catching the time (already there, just needed to edit out the 
+Windows dropins for getting the time and sleeping.
+code for catching the time (already there, just needed to edit out the 
 ROS_INFO) and nanosleep (provided by Geoff Biggs).
 
+== Mingw Fixes ==
+
+- time.cpp
+  - drop out now broken ROS_INFO calls.
+  - drop in Geoffrey Biggs nanosleep replacement.
+  
+== ToDo ==
+
+clock_gettime and nanosleep could probably be set up with their own proper cross platform
+function definitions rather than having a scattering of ifdefs.
