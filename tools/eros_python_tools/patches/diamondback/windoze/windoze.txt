@@ -67,3 +67,21 @@ ROS_INFO) and nanosleep (provided by Geoff Biggs).
 
 clock_gettime and nanosleep could probably be set up with their own proper cross platform
 function definitions rather than having a scattering of ifdefs.
+
+===== RosConsole =====
+
+== Against ==
+
+File : rosconsole/include/ros/assert.h
+  Last Changed Author: jfaust
+  Last Changed Rev: 8377
+  
+== Summary ==
+
+Just put in a special case for mingw, not windows debug breaks.
+
+== Mingw ==
+
+- assert.h
+  - ifdef for mingw using DebugBreak instead of msvc's __debugbreak().
+
