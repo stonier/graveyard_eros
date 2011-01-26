@@ -24,15 +24,23 @@ set(SOURCE_TARBALL "${SOURCE_NAME}.tar.gz")
 # Use ecl's repo, mirrors at apache keep bloody changing and they don't have a constant alias to use!
 set(SOURCE_TARBALL_URL "http://mirror.apache-kr.org/apr/${SOURCE_TARBALL}")
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
-#set(PREFIX ${CMAKE_BINARY_DIR}/fakeroot)
 
 # The compilers and ros compile flags are all set by rostoolchain.cmake and rosconfig.cmake
 if(MINGW)
   # Fix a bug in mingw cross compiler not setting this macro for you.
   set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} -D_WIN32_WINNT=0x0500")
-  # This is wierd, i used this to find the bug, but it then fails again if I remove it
-  #set(ROS_LINK_FLAGS "${ROS_LINK_FLAGS} -no-undefined")
+  # Can't find any documentation on this option (--no-undefined is there, but this aint!)
+  # Anyway, it bombs when gcc tries to use it, but seems to help libtool at the final
+  # linking stage. If its not there, then mingw aborts with unfound symbol errors.
+  # That too is a problem, and maybe should be resolved better than just by saying
+  # -no-undefined.
+  if(ROS_LINK_FLAGS)
+    set(ROS_LINK_FLAGS "-no-undefined ${ROS_LINK_FLAGS}")
+  else()
+    set(ROS_LINK_FLAGS "-no-undefined")
+  endif()
 endif()
+
 set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX} 
                 --exec-prefix=${CMAKE_INSTALL_PREFIX} 
                 C=${CMAKE_C_COMPILER} 
@@ -62,9 +70,8 @@ if(CMAKE_CROSSCOMPILING)
   else() # Arm
     # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
     set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)
-    set(PACKAGE_OPTIONS --disable-static --enable-shared)
   endif()
-  set(CONFIGURE_COMMAND ./configure  --host=${TOOLCHAIN_TUPLE} --target=${TOOLCHAIN_TUPLE} ${PACKAGE_OPTIONS} ${PRESET_VARIABLES} ${COMMON_ARGS}) 
+  set(CONFIGURE_COMMAND ./configure --host=${TOOLCHAIN_TUPLE} --target=${TOOLCHAIN_TUPLE} ${PACKAGE_OPTIONS} ${PRESET_VARIABLES} ${COMMON_ARGS}) 
 else()
   set(CONFIGURE_COMMAND ./configure ${PACKAGE_OPTIONS} ${COMMON_ARGS})
 endif()
