@@ -4,9 +4,6 @@ roslib.load_manifest('eros_python_tools')
 
 # This sets up a typical qt-based ros package.
 
-# This should be the name of the python binary that gets called.
-NAME='roscreate-qt-pkg'
-
 import os
 import sys
 import shutil
@@ -57,7 +54,7 @@ def create_qt_package(package, depends):
 
 def main():
     from optparse import OptionParser
-    parser = OptionParser(usage="usage: %prog <package-name> [dependencies...]", prog=NAME)
+    parser = OptionParser(usage="usage: %prog <package-name> [dependencies...]")
     options, args = parser.parse_args()
     if not args:
         parser.error("you must specify a package name and optionally also list package dependencies")
