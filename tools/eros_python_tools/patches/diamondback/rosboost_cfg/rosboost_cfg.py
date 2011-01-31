@@ -132,8 +132,8 @@ def check_for_link_static():
     result = subprocess.Popen(['cmake', '-P', cmake_script.name], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
     cmake_script.close()
     # no idea why cmake makes this come out on stderr, but its fine
-    print "Result: " + result[0].rstrip()
-    print "Error: " + result[1].rstrip()
+    # print "Result: " + result[0].rstrip()
+    # print "Error: " + result[1].rstrip()
     if ( result[1].rstrip() == "static" ):
         lib_suffix = "a"
         return True
