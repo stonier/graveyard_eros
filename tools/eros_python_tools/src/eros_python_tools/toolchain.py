@@ -512,7 +512,7 @@ Description: \n\
             os.remove(core.rostoolchain_cmake())
             print
             print "-- Toolchain configuration cleared."
-            print "-- Remember to reconfigure ROS_BOOST_ROOT if necessary."
+            # print "-- Remember to reconfigure ROS_BOOST_ROOT if necessary."
             print
         else:
             print
@@ -545,10 +545,10 @@ Description: \n\
         print "-- Toolchain copied to rostoolchain.cmake."
         patch_ros()
         check_platform()
-        print "-- You need to manually export a root for the boost in your toolchain in setup.sh."
-        print "  -- (typically the same as the TOOLCHAIN_INSTALL_PREFIX), e.g."
-        print
-        print "          export ROS_BOOST_ROOT=\"/usr/my_toolchain_tuple/usr/local\""
+        #print "-- You need to manually export a root for the boost in your toolchain in setup.sh."
+        #print "  -- (typically the same as the TOOLCHAIN_INSTALL_PREFIX), e.g."
+        #print
+        #print "          export ROS_BOOST_ROOT=\"/usr/my_toolchain_tuple/usr/local\""
         print 
         return 0
     

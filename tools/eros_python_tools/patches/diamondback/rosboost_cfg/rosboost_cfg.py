@@ -39,14 +39,12 @@ import subprocess
 import platform
 from optparse import OptionParser
 from cStringIO import StringIO
+import tempfile
+import roslib
 
 lib_suffix = "so"
 if (sys.platform == "darwin"):
   lib_suffix = "dylib"
-
-link_static = 'ROS_BOOST_LINK' in os.environ and os.environ['ROS_BOOST_LINK'] == "static"
-if (link_static):
-  lib_suffix = "a"
 
 no_L_or_I = 'ROS_BOOST_NO_L_OR_I' in os.environ
 
@@ -105,6 +103,41 @@ class Version(object):
         return 0
     def __repr__(self):
         return repr((self.major, self.minor, self.patch, self.root, self.include_dir, self.is_default_search_location, self.is_system_install))
+
+def check_for_toolchain_sysroot():
+    cmake_script = tempfile.NamedTemporaryFile(mode='w+t')
+    cmake_script.write("include($ENV{ROS_ROOT}/rostoolchain.cmake)\n")
+    cmake_script.write("message(${CMAKE_FIND_ROOT_PATH})\n")
+    cmake_script.seek(0)
+    result = subprocess.Popen(['cmake', '-P', cmake_script.name], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    cmake_script.close()
+    # no idea why cmake makes this come out on stderr, but its fine
+    return result[1].rstrip()
+
+def check_for_link_static():
+    global lib_suffix
+    # Check for overriding environment variable
+    env_link_static = 'ROS_BOOST_LINK' in os.environ and os.environ['ROS_BOOST_LINK'] == "static"
+    if (env_link_static):
+        lib_suffix = "a"
+        return True
+    # Check for global configuration settings
+    cmake_script = tempfile.NamedTemporaryFile(mode='w+t') 
+    cmake_script.write("include($ENV{ROS_ROOT}/rostoolchain.cmake)\n")
+    cmake_script.write("include($ENV{ROS_ROOT}/rosconfig.cmake)\n")
+    cmake_script.write("if(ROS_BUILD_STATIC_LIBS)\n")
+    cmake_script.write("  message(static)\n")
+    cmake_script.write("endif(ROS_BUILD_STATIC_LIBS)\n")
+    cmake_script.seek(0)
+    result = subprocess.Popen(['cmake', '-P', cmake_script.name], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    cmake_script.close()
+    # no idea why cmake makes this come out on stderr, but its fine
+    print "Result: " + result[0].rstrip()
+    print "Error: " + result[1].rstrip()
+    if ( result[1].rstrip() == "static" ):
+        lib_suffix = "a"
+        return True
+    return False
 
 def find_lib_dir(root_dir):
   # prefer lib64 unless explicitly specified in the environment
@@ -177,13 +210,17 @@ def find_boost(search_paths):
     return result[-1]
 
 def search_paths(sysroot):
-    _search_paths = [(None if 'INCLUDE_DIRS' not in os.environ else os.environ['INCLUDE_DIRS'], True), 
+    if ('ROS_BOOST_ROOT' in os.environ):
+        _search_paths = [(os.environ['ROS_BOOST_ROOT'], False)]
+    else:
+        _search_paths = [
+             (None if 'INCLUDE_DIRS' not in os.environ else os.environ['INCLUDE_DIRS'], True), 
              (None if 'CPATH' not in os.environ else os.environ['CPATH'], True),
              (None if 'C_INCLUDE_PATH' not in os.environ else os.environ['C_INCLUDE_PATH'], True),
              (None if 'CPLUS_INCLUDE_PATH' not in os.environ else os.environ['CPLUS_INCLUDE_PATH'], True),
-             (sysroot+'/usr', True), 
-             (sysroot+'/usr/local', True),
-             (None if 'ROS_BOOST_ROOT' not in os.environ else os.environ['ROS_BOOST_ROOT'], False)]
+             (sysroot, True),
+             (sysroot+'/usr', True),
+             (sysroot+'/usr/local', True)]
 
     search_paths = []
     for (str, system) in _search_paths:
@@ -199,9 +236,8 @@ def search_paths(sysroot):
 def lib_dir(ver):
     return ver.lib_dir
 
-def find_lib(ver, name, full_lib = link_static):
+def find_lib(ver, name, full_lib = check_for_link_static()):
     global lib_suffix
-    global link_static
     
     dynamic_search_paths = []
     static_search_paths = []
@@ -227,7 +263,7 @@ def find_lib(ver, name, full_lib = link_static):
         static_search_paths = ["libboost_%s-mt-py%s%s.a"%(name, python_ver[0], python_ver[1]),
                                "libboost_%s-py%s%s.a"%(name, python_ver[0], python_ver[1])] + static_search_paths
     
-    search_paths = static_search_paths if link_static else dynamic_search_paths
+    search_paths = static_search_paths if check_for_link_static() else dynamic_search_paths
     
     dir = lib_dir(ver)
 
@@ -263,7 +299,7 @@ def lib_dir_flags(ver):
 
 def lib_flags(ver, name):
     lib = find_lib(ver, name)
-    if (link_static):
+    if (check_for_link_static()):
         return ' %s'%(lib)
     else:
         # Cut off "lib" and extension (.so/.a/.dylib/etc.)
@@ -299,6 +335,7 @@ def check_one_option(options, key):
             if (k != key and v):
                 raise BoostError("Only one option (excepting sysroot) is allowed at a time")
 
+        
 def main():
     if (len(sys.argv) < 2):
       print_usage_and_exit()
@@ -321,7 +358,10 @@ def main():
         for ver in find_versions(search_paths(options.sysroot)):
             print '%s.%s.%s root=%s include_dir=%s'%(ver.major, ver.minor, ver.patch, ver.root, ver.include_dir)
         return
-       
+    
+    if ( not options.sysroot ):
+        options.sysroot = check_for_toolchain_sysroot()
+              
     ver = find_boost(search_paths(options.sysroot))
     if (ver is None):
         raise BoostError("Cannot find boost in any of %s"%search_paths(options.sysroot))
