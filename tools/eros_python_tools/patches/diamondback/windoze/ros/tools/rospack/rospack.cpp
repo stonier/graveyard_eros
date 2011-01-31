@@ -37,25 +37,44 @@
 #include <stack>
 #include <queue>
 #include <cassert>
-#include <unistd.h>
-#include <dirent.h>
+#if !defined(WIN32)
+  #include <unistd.h>
+  #include <dirent.h>
+  #include <sys/time.h>
+  #include <sys/file.h>
+#endif
 #include <stdexcept>
-#include <sys/time.h>
-#include <sys/file.h>
 #include <time.h>
 #include <sstream>
 #include <iterator>
-#include <libgen.h>
+
+
+#if defined(_MSC_VER) // msvc only
+  #define F_OK 0x00
+#else                // non msvc only
+  #include <libgen.h>
+#endif
+
+#if defined(WIN32) //
+  #include <direct.h>
+  #include <winsock2.h> // For struct timeval (that's awful)
+  #include <time.h>
+  #include <windows.h>
+  #include <io.h>
+  #include <fcntl.h>
+  #define PATH_MAX MAX_PATH
+  #define snprintf _snprintf
+  #define popen _popen
+  #define pclose _pclose
+  #define getcwd _getcwd
+  #define mkdir(a,b) _mkdir(a)
+  #define fdopen _fdopen
+  #define access _access
+#endif
+
 
 #include "tinyxml-2.5.3/tinyxml.h"
 #include "rospack/rospack.h"
-
-#if defined(WIN32)
-  #include <windows.h>
-  #include <stdlib.h>
-  #define mkdir(a,b) _mkdir(a)
-  #define PATH_MAX MAX_PATH // Also including <limits.h> works for mingw32
-#endif
 using namespace std;
 
 //#define VERBOSE_DEBUG
@@ -66,7 +85,11 @@ const int MAX_DIRECTORY_DEPTH = 1000; // used to detect self-referencing symlink
 
 #include <sys/stat.h>
 #ifndef S_ISDIR 
-#define S_ISDIR(x) (((x) & S_IFMT) == S_IFDIR) 
+  #if defined(WIN32)
+    #define S_ISDIR(x) (((x) & FILE_ATTRIBUTE_DIRECTORY) != 0)
+  #else
+    #define S_ISDIR(x) (((x) & S_IFMT) == S_IFDIR)
+  #endif
 #endif
 
 namespace rospack
@@ -75,12 +98,41 @@ namespace rospack
 ROSPack *g_rospack = NULL; // singleton
 
 #ifdef __APPLE__
-const string g_ros_os("osx");
+  const string g_ros_os("osx");
 #else
-const string g_ros_os("linux");
+  #if defined(WIN32)
+    const string g_ros_os("win32");
+  #else
+    const string g_ros_os("linux");
+  #endif
 #endif
 
-const char *fs_delim = "/"; // ifdef this for windows
+#if defined(WIN32)
+  // This isn't entirely necessary - the Win32 API functions handle / just as
+  // well as \ for paths, and CMake chokes if we output paths with \ in them
+  // anyway.
+  const char *fs_delim = "\\";
+  const char *path_delim = ";";
+#else
+  const char *fs_delim = "/";
+  const char *path_delim = ":";
+#endif
+
+inline string ToUnixPathDelim(string path)
+{
+#if defined(WIN32)
+  // CMake chokes on Windows-style path separators (it thinks they're
+  // escapes), so either they must be escaped or replaced with UNIX-style
+  // separators. (If there are any real escapes in s, this will go boom.)
+  string token("\\");
+  for (string::size_type ii = path.find(token); ii != string::npos;
+       ii = path.find(token, ii))
+  {
+    path.replace(ii, token.length(), string("/"));
+  }
+#endif
+  return path;
+}
 
 Package::Package(string _path) : path(_path), 
         deps_calculated(false), direct_deps_calculated(false),
@@ -343,7 +395,7 @@ const vector<Package *> &Package::direct_deps(bool missing_package_as_warning)
   if (direct_deps_calculated)
     return _direct_deps;
 #ifdef VERBOSE_DEBUG
-  printf("calculating direct deps for package [%s]\n", name.c_str());
+  fprintf(stderr, "calculating direct deps for package [%s]\n", name.c_str());
 #endif
   TiXmlElement *mroot = manifest_root();
   TiXmlNode *dep_node = 0;
@@ -362,7 +414,7 @@ const vector<Package *> &Package::direct_deps(bool missing_package_as_warning)
     // cause a recrawl, which blows aways the accumulated data structure.
     char* dep_pkgname_copy = strdup(dep_pkgname);
 #ifdef VERBOSE_DEBUG
-    printf("direct_deps: pkg %s has dep %s\n", name.c_str(), dep_pkgname_copy);
+    fprintf(stderr, "direct_deps: pkg %s has dep %s\n", name.c_str(), dep_pkgname_copy);
 #endif 
     try
     {
@@ -839,7 +891,7 @@ int ROSPack::cmd_find()
   // todo: obey the search order
   Package *p = get_pkg(opt_package);
   //printf("%s\n", p->path.c_str());
-  output_acc += p->path + "\n";
+  output_acc += ToUnixPathDelim(p->path) + "\n";
   return 0;
 }
 
@@ -849,7 +901,7 @@ int ROSPack::cmd_deps()
   for (VecPkg::iterator i = d.begin(); i != d.end(); ++i)
   {
     //printf("%s\n", (*i)->name.c_str());
-    output_acc += (*i)->name + "\n";
+    output_acc += ToUnixPathDelim((*i)->name) + "\n";
   }
   return 0;
 }
@@ -860,7 +912,7 @@ int ROSPack::cmd_deps_manifests()
   for (VecPkg::iterator i = d.begin(); i != d.end(); ++i)
   {
     //printf("%s/manifest.xml ", (*i)->path.c_str());
-    output_acc += (*i)->path + "/manifest.xml ";
+    output_acc += ToUnixPathDelim((*i)->path + "/manifest.xml ");
   }
   //puts("");
   output_acc += "\n";
@@ -873,17 +925,17 @@ int ROSPack::cmd_deps_msgsrv()
   for (VecPkg::iterator i = d.begin(); i != d.end(); ++i)
   {
     Package* p = *i;
-    bool msg_exists = file_exists((p->path + "/msg_gen/generated").c_str());
-    bool srv_exists = file_exists((p->path + "/srv_gen/generated").c_str());
+    bool msg_exists = file_exists(ToUnixPathDelim(p->path + "/msg_gen/generated").c_str());
+    bool srv_exists = file_exists(ToUnixPathDelim(p->path + "/srv_gen/generated").c_str());
 
     if (msg_exists)
     {
-      output_acc += p->path + "/msg_gen/generated ";
+      output_acc += ToUnixPathDelim(p->path + "/msg_gen/generated ");
     }
 
     if (srv_exists)
     {
-      output_acc += p->path + "/srv_gen/generated ";
+      output_acc += ToUnixPathDelim(p->path + "/srv_gen/generated ");
     }
   }
   output_acc += "\n";
@@ -896,7 +948,7 @@ int ROSPack::cmd_deps1()
   for (VecPkg::iterator i = d.begin(); i != d.end(); ++i)
   {
     //printf("%s\n", (*i)->name.c_str());
-    output_acc += (*i)->name + "\n";
+    output_acc += ToUnixPathDelim((*i)->name) + "\n";
   }
   return 0;
 }
@@ -913,7 +965,7 @@ int ROSPack::cmd_depsindent(Package* pkg, int indent)
       output_acc += " ";
     }
     //printf("%s\n", (*i)->name.c_str());
-    output_acc += (*i)->name + "\n";
+    output_acc += ToUnixPathDelim((*i)->name) + "\n";
     cmd_depsindent(*i, indent+2);
   }
   return 0;
@@ -1010,7 +1062,7 @@ int ROSPack::cmd_libs_only(string token)
     lflags = deduplicate_tokens(lflags);
   }
   //printf("%s\n", lflags.c_str());
-  output_acc += lflags + "\n";
+  output_acc += ToUnixPathDelim(lflags) + "\n";
   return 0;
 }
 
@@ -1025,7 +1077,7 @@ int ROSPack::cmd_cflags_only(string token)
     cflags = deduplicate_tokens(cflags);
   }
   //printf("%s\n", cflags.c_str());
-  output_acc += cflags + "\n";
+  output_acc += ToUnixPathDelim(cflags) + "\n";
   return 0;
 }
 
@@ -1033,7 +1085,7 @@ void ROSPack::export_flags(string pkg, string lang, string attrib)
 {
   string flags = get_pkg(pkg)->flags(lang, attrib);
   //printf("%s\n", flags.c_str());
-  output_acc += flags + "\n";
+  output_acc += ToUnixPathDelim(flags) + "\n";
 }
 
 int ROSPack::cmd_versioncontrol(int depth)
@@ -1291,7 +1343,24 @@ int ROSPack::run(int argc, char **argv)
     if(getcwd(buf,sizeof(buf)))
     {
       if(Package::is_package("."))
+      {
+#if defined(_MSC_VER)
+        // No basename on Windows; use _splitpath_s instead
+        char drive[_MAX_DRIVE], dir[_MAX_DIR], fname[_MAX_FNAME], ext[_MAX_EXT];
+        _splitpath_s(buf, drive, _MAX_DRIVE, dir, _MAX_DIR, fname, _MAX_FNAME,
+                     ext, _MAX_EXT);
+        char filename[_MAX_FNAME + _MAX_EXT];
+        if (ext[0] != '\0')
+        {
+          _makepath_s(filename, _MAX_FNAME + _MAX_EXT, NULL, NULL, fname, ext);
+          opt_package = string(filename);
+        }
+        else
+          opt_package = string(fname);
+#else
         opt_package = string(basename(buf));
+#endif
+      }
     }
   }
 
@@ -1310,7 +1379,7 @@ int ROSPack::run(int argc, char **argv)
         opt_profile_length = 20; // default is about a screenful or so
     }
 #ifdef VERBOSE_DEBUG
-    printf("profile_length = %d\n", opt_profile_length);
+    fprintf(stderr, "profile_length = %d\n", opt_profile_length);
 #endif
     // re-crawl with profiling enabled
     crawl_for_packages(true);
@@ -1461,7 +1530,11 @@ string ROSPack::getCachePath()
     //
     // By providing the trailing slash, stat() will only succeed if the
     // path exists AND is a directory.
+#if defined(WIN32)
+    std::string ros_home_slash = ros_home + std::string("\\");
+#else
     std::string ros_home_slash = ros_home + std::string("/");
+#endif
     struct stat s;
     if(stat(ros_home_slash.c_str(), &s))
     {
@@ -1474,6 +1547,7 @@ string ROSPack::getCachePath()
   }
   else
   {
+    // UNIXONLY
     // Not cross-platform?
     ros_home = getenv("HOME");
     if (ros_home)
@@ -1508,7 +1582,7 @@ bool ROSPack::cache_is_good()
   {
     double dt = difftime(time(NULL), s.st_mtime);
 #ifdef VERBOSE_DEBUG
-    printf("cache age: %f\n", dt);
+    fprintf(stderr, "cache age: %f\n", dt);
 #endif
     // Negative cache_max_age means it's always new enough.  It's dangerous
     // for the user to set this, but rosbash uses it.
@@ -1572,9 +1646,27 @@ public:
   
 double ROSPack::time_since_epoch()
 {
+#if defined(WIN32)
+  #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
+    #define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
+  #else
+    #define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
+  #endif
+  FILETIME ft;
+  unsigned __int64 tmpres = 0;
+
+  GetSystemTimeAsFileTime(&ft);
+  tmpres |= ft.dwHighDateTime;
+  tmpres <<= 32;
+  tmpres |= ft.dwLowDateTime;
+  tmpres /= 10;
+  tmpres -= DELTA_EPOCH_IN_MICROSECS;
+  return static_cast<double>(tmpres) / 1e6;
+#else
   struct timeval tod;
   gettimeofday(&tod, NULL);
   return tod.tv_sec + 1e-6 * tod.tv_usec;
+#endif
 }
 
 // Add package, filtering out duplicates.
@@ -1623,7 +1715,7 @@ void ROSPack::crawl_for_packages(bool force_crawl)
     if (cache) // one last check just in case nutty stuff happened in between
     {
 #ifdef VERBOSE_DEBUG
-      printf("trying to use cache...\n");
+      fprintf(stderr, "trying to use cache...\n");
 #endif
       char linebuf[30000];
       for(;;)
@@ -1645,14 +1737,14 @@ void ROSPack::crawl_for_packages(bool force_crawl)
   // if we get here, this means the cache either bogus or we've been
   // instructed to rebuild it.
 #ifdef VERBOSE_DEBUG
-  printf("building cache\n");
+  fprintf(stderr, "building cache\n");
 #endif
   deque<CrawlQueueEntry> q;
   q.push_back(CrawlQueueEntry(ros_root));
   if (char *rpp = getenv("ROS_PACKAGE_PATH"))
   {
     vector<string> rppvec;
-    string_split(rpp, rppvec, ":");
+    string_split(rpp, rppvec, path_delim);
     sanitize_rppvec(rppvec);
     for (vector<string>::iterator i = rppvec.begin(); i != rppvec.end(); ++i)
     {
@@ -1722,6 +1814,62 @@ void ROSPack::crawl_for_packages(bool force_crawl)
       cqe.start_num_pkgs = total_num_pkgs;
       q.push_front(cqe);
     }
+#if defined(WIN32)
+    WIN32_FIND_DATA find_file_data;
+    HANDLE hfind = INVALID_HANDLE_VALUE;
+    if ((hfind = FindFirstFile((cqe.path + "\\*").c_str(),
+                               &find_file_data)) == INVALID_HANDLE_VALUE)
+    {
+      fprintf(stderr, "[rospack] FindFirstFile error %u while crawling %s\n",
+              GetLastError(), cqe.path.c_str());
+      continue;
+    }
+
+    do
+    {
+      if (!S_ISDIR(find_file_data.dwFileAttributes))
+        continue; // Ignore non-directories
+      if (find_file_data.cFileName[0] == '.')
+        continue; // Ignore hidden directories
+      string child_path = cqe.path + fs_delim + string(find_file_data.cFileName);
+      if (Package::is_package(child_path))
+      {
+        total_num_pkgs++;
+        // Filter out duplicates; first encountered takes precedence
+        Package* newp = new Package(child_path);
+        // TODO: make this check more efficient
+        bool dup = false;
+        for(std::vector<Package *>::const_iterator it = Package::pkgs.begin();
+            it != Package::pkgs.end();
+            it++)
+        {
+          if((*it)->name == newp->name)
+          {
+            dup=true;
+            break;
+          }
+        }
+        if(dup)
+          delete newp;
+        else
+        {
+          Package::pkgs.push_back(newp);
+        }
+      }
+      //check to make sure we're allowed to descend
+      else if (!Package::is_no_subdirs(child_path))
+        q.push_front(CrawlQueueEntry(child_path));
+    }
+    while (FindNextFile(hfind, &find_file_data) != 0);
+    DWORD last_error = GetLastError();
+    FindClose(hfind);
+    if (last_error != ERROR_NO_MORE_FILES)
+    {
+      fprintf(stderr, "[rospack] FindNextFile error %u while crawling %s\n",
+              GetLastError(), cqe.path.c_str());
+      continue;
+    }
+#else
     DIR *d = opendir(cqe.path.c_str());
     if (!d)
     {
@@ -1753,6 +1901,7 @@ void ROSPack::crawl_for_packages(bool force_crawl)
         q.push_front(CrawlQueueEntry(child_path));
     }
     closedir(d);
+#endif
   }
   crawled = true; // don't try to re-crawl if we can't find something
   const double crawl_elapsed_time = time_since_epoch() - crawl_start_time;
@@ -1768,21 +1917,47 @@ void ROSPack::crawl_for_packages(bool force_crawl)
     char tmp_cache_dir[PATH_MAX];
     char tmp_cache_path[PATH_MAX];
     strncpy(tmp_cache_dir, cache_path.c_str(), sizeof(tmp_cache_dir));
+#if defined(_MSC_VER)
+    // No dirname on Windows; use _splitpath_s instead
+    char drive[_MAX_DRIVE], dir[_MAX_DIR], fname[_MAX_FNAME], ext[_MAX_EXT];
+    _splitpath_s(tmp_cache_dir, drive, _MAX_DRIVE, dir, _MAX_DIR, fname, _MAX_FNAME,
+                 ext, _MAX_EXT);
+    char full_dir[_MAX_DRIVE + _MAX_DIR];
+    _makepath_s(full_dir, _MAX_DRIVE + _MAX_DIR, drive, dir, NULL, NULL);
+    snprintf(tmp_cache_path, sizeof(tmp_cache_path), "%s\\.rospack_cache.XXXXXX", full_dir);
+#else
     snprintf(tmp_cache_path, sizeof(tmp_cache_path), "%s/.rospack_cache.XXXXXX", dirname(tmp_cache_dir));
+#endif
 #if defined(__MINGW32__)
-    // There is no equivalent of mkstemp on mingw, so we resort to a slightly less secure
+    // There is no equivalent of mkstemp or _mktemp_s on mingw, so we resort to a slightly less secure
     // method. Could use mktemp, but as we're just redirecting to FILE anyway, tmpfile() works
     // for us.
-    //
-    // After boost 1.44 becomes standard for ros, we can use unique_path in boost
-    // filesystem version 3 (currently doesn't exist in filesystem version 2).
+    FILE *cache = tmpfile();
+    if ( cache == NULL ) {
+        fprintf(stderr,
+                "[rospack] Unable to generate temporary cache file name: %u",
+                errno);
+    }
+    else
     {
-    	FILE *cache = tmpfile();
+#elif defined(WIN32)
+    // This one is particularly nasty: on Windows, there is no equivalent of
+    // mkstemp, so we're stuck with the security risks of mktemp. Hopefully not a
+    // problem in our use cases.
+    if (_mktemp_s(tmp_cache_path, PATH_MAX) != 0)
+    {
+      fprintf(stderr,
+              "[rospack] Unable to generate temporary cache file name: %u",
+              GetLastError());
+    }
+    else
+    {
+      FILE *cache = fopen(tmp_cache_path, "w");
 #else
     int fd = mkstemp(tmp_cache_path);
     if (fd < 0)
     {
-      fprintf(stderr, "[rospack] Unable to create temporary cache file %s: %s\n",
+      fprintf(stderr, "[rospack] Unable to create temporary cache file %s: %s\n", 
               tmp_cache_path, strerror(errno));
     }
     else
@@ -1803,6 +1978,8 @@ void ROSPack::crawl_for_packages(bool force_crawl)
              pkg != Package::pkgs.end(); ++pkg)
           fprintf(cache, "%s\n", (*pkg)->path.c_str());
         fclose(cache);
+        if(file_exists(cache_path.c_str()))
+          remove(cache_path.c_str());
         if(rename(tmp_cache_path, cache_path.c_str()) < 0)
         {
           fprintf(stderr, "[rospack] Error: failed to rename cache file %s to %s: %s\n", 
@@ -1911,6 +2088,59 @@ VecPkg ROSPack::partial_crawl(const string &path)
     CrawlQueueEntry cqe = q.front();
     //printf("crawling %s\n", cqe.path.c_str());
     q.pop_front();
+#if defined(WIN32)
+    WIN32_FIND_DATA find_file_data;
+    HANDLE hfind = INVALID_HANDLE_VALUE;
+    if ((hfind = FindFirstFile((cqe.path + "\\*").c_str(),
+                               &find_file_data)) == INVALID_HANDLE_VALUE)
+    {
+      fprintf(stderr, "[rospack] FindFirstFile error %u while crawling %s\n",
+              GetLastError(), cqe.path.c_str());
+      continue;
+    }
+
+    do
+    {
+      if (!S_ISDIR(find_file_data.dwFileAttributes))
+        continue; // Ignore non-directories
+      if (find_file_data.cFileName[0] == '.')
+        continue; // Ignore hidden directories
+      string child_path = cqe.path + fs_delim + string(find_file_data.cFileName);
+      if (Package::is_package(child_path))
+      {
+        // Filter out duplicates; first encountered takes precedence
+        Package* newp = new Package(child_path);
+        // TODO: make this check more efficient
+        bool dup = false;
+        for(std::vector<Package *>::const_iterator it = partial_pkgs.begin();
+            it != partial_pkgs.end();
+            it++)
+        {
+          if((*it)->name == newp->name)
+          {
+            dup=true;
+            break;
+          }
+        }
+        if(dup)
+          delete newp;
+        else
+          partial_pkgs.push_back(newp);
+      }
+      //check to make sure we're allowed to descend
+      else if (!Package::is_no_subdirs(child_path)) 
+        q.push_front(CrawlQueueEntry(child_path));
+    }
+    while (FindNextFile(hfind, &find_file_data) != 0);
+    DWORD last_error = GetLastError();
+    FindClose(hfind);
+    if (last_error != ERROR_NO_MORE_FILES)
+    {
+      fprintf(stderr, "[rospack] FindNextFile error %u while crawling %s\n",
+              GetLastError(), cqe.path.c_str());
+      continue;
+    }
+#else
     DIR *d = opendir(cqe.path.c_str());
     if (!d)
     {
@@ -1958,6 +2188,7 @@ VecPkg ROSPack::partial_crawl(const string &path)
         q.push_front(CrawlQueueEntry(child_path));
     }
     closedir(d);
+#endif
   }
   return partial_pkgs; 
 }
@@ -2016,6 +2247,7 @@ string ROSPack::deduplicate_tokens(const string& s)
 bool file_exists(const string &fname)
 {
   // this will be different in windows
+  // ^^ For once, it's actually _not_ that different
   return (access(fname.c_str(), F_OK) == 0);
 }
 

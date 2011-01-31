@@ -1,6 +1,14 @@
---- CMakeLists.txt	2011-01-20 08:08:47.807111285 +0900
-+++ ../CMakeLists.txt	2011-01-19 18:19:46.088463919 +0900
-@@ -41,6 +41,12 @@
+--- CMakeLists.txt	2011-01-23 19:10:40.603603607 +0900
++++ ../CMakeLists.txt	2011-01-31 23:57:13.560661475 +0900
+@@ -2,6 +2,7 @@
+ # requires rospack, and we're in the process of building rospack.
+ cmake_minimum_required(VERSION 2.4.6)
+ set(CMAKE_BUILD_TYPE Release)
++set(CMAKE_VERBOSE_MAKEFILE TRUE)
+ 
+ set(CMAKE_INSTALL_PREFIX /tmp/rospack)
+ #set(CMAKE_INSTALL_RPATH_USE_LINK_RPATH true)
+@@ -41,9 +42,16 @@
    # Prevent deletion of existing lib of same name
    set_target_properties(rospack PROPERTIES CLEAN_DIRECT_OUTPUT 1)
    set_target_properties(rosstack PROPERTIES CLEAN_DIRECT_OUTPUT 1)
@@ -13,7 +21,11 @@
  endif(ROS_BUILD_SHARED_LIBS)
  
  if(ROS_BUILD_STATIC_LIBS)
-@@ -58,8 +64,14 @@
++  add_definitions("-DROS_STATIC")
+   # If we're only building static libs, then they get the default CMake
+   # target name.
+   if(NOT ROS_BUILD_SHARED_LIBS)
+@@ -58,8 +66,14 @@
    add_library(${static_rosstack} STATIC ${rosstack_sources})
  
    # Set output name to be the same as shared lib (may not work on Windows)
@@ -30,7 +42,7 @@
    # Also add -fPIC, because CMake leaves it out when building static
    # libs, even though it's necessary on 64-bit machines for linking this
    # lib against shared libs downstream.
-@@ -71,15 +83,20 @@
+@@ -71,15 +85,20 @@
    set_target_properties(${static_rosstack} PROPERTIES CLEAN_DIRECT_OUTPUT 1)
  endif(ROS_BUILD_STATIC_LIBS)
  

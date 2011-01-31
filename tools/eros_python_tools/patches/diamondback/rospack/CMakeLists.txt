@@ -2,6 +2,7 @@
 # requires rospack, and we're in the process of building rospack.
 cmake_minimum_required(VERSION 2.4.6)
 set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
 set(CMAKE_INSTALL_PREFIX /tmp/rospack)
 #set(CMAKE_INSTALL_RPATH_USE_LINK_RPATH true)
@@ -50,6 +51,7 @@ if(ROS_BUILD_SHARED_LIBS)
 endif(ROS_BUILD_SHARED_LIBS)
 
 if(ROS_BUILD_STATIC_LIBS)
+  add_definitions("-DROS_STATIC")
   # If we're only building static libs, then they get the default CMake
   # target name.
   if(NOT ROS_BUILD_SHARED_LIBS)
