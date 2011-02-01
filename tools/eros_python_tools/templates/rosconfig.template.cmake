@@ -4,7 +4,7 @@
 ###############################################################################
 
 # Some useful custom variables that uniquely define this platform module
-set(PLATFORM_FAMILY "{platform_family}" CACHE STRING "Platform family, usually referring to intel/arm etc.")
+set(PLATFORM_FAMILY "${platform_family}" CACHE STRING "Platform family, usually referring to intel/arm etc.")
 set(PLATFORM_NAME "${platform_name}" CACHE STRING "Platform name, usually referring to the cpu architecture.")
 
 # Flags
