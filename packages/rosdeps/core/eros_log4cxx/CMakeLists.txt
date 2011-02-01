@@ -25,22 +25,33 @@ set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 if(MINGW)                    
   # Fix a bug in mingw cross compiler not setting this macro for you.
   set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} -D_WIN32_WINNT=0x0500")
-  # This is wierd, i used this to find the bug, but it then fails again if I remove it
-  set(ROS_LINK_FLAGS "${ROS_LINK_FLAGS} -no-undefined")
+  # Can't find any documentation on this option (--no-undefined is there, but this aint!)
+  # Anyway, it bombs when gcc tries to use it, but seems to help libtool at the final
+  # linking stage. If its not there, then mingw aborts with unfound symbol errors.
+  # That too is a problem, and maybe should be resolved better than just by saying
+  # -no-undefined.
+  if(ROS_LINK_FLAGS)
+    #set(ROS_LINK_FLAGS "-no-undefined ${ROS_LINK_FLAGS}")
+  else()
+    #set(ROS_LINK_FLAGS "-no-undefined")
+  endif()
+endif()
+
+if(ROS_BUILD_STATIC_LIBS)
+  set(PLATFORM_OPTIONS --disable-shared --enable-static)
+else()
+  set(PLATFORM_OPTIONS --disable-static --enable-shared)
 endif()
 
 if(CMAKE_CROSSCOMPILING)
   if(MINGW)
-    set(PLATFORM_OPTIONS --disable-shared --enable-static)
     set(PRESET_VARIABLES ) # Nothing here
   else() # Arm
-    set(PLATFORM_OPTIONS  --disable-static --enable-shared)
     # Might need a check to properly evaluate ac_cv_sizeof_struct_iovec
     set(PRESET_VARIABLES ac_cv_file__dev_zero=yes ac_cv_func_setpgrp_void=yes apr_cv_tcp_nodelay_with_cork=no apr_cv_process_shared_works=no apr_cv_mutex_robust_shared=no ac_cv_sizeof_struct_iovec=8)
   endif()
   set(PLATFORM_OPTIONS ${PLATFORM_OPTIONS} --host=${TOOLCHAIN_TUPLE} --target=${TOOLCHAIN_TUPLE}) 
 else()
-  set(PLATFORM_OPTIONS --disable-static --enable-shared)
 endif()
 
 set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX} 
