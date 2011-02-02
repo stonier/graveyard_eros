@@ -105,16 +105,22 @@ class Version(object):
         return repr((self.major, self.minor, self.patch, self.root, self.include_dir, self.is_default_search_location, self.is_system_install))
 
 def check_for_toolchain_sysroot():
+    if ( not os.path.exists(os.path.join(roslib.rosenv.get_ros_root(),"rostoolchain.cmake"))):
+        return ''
     cmake_script = tempfile.NamedTemporaryFile(mode='w+t')
     cmake_script.write("include($ENV{ROS_ROOT}/rostoolchain.cmake)\n")
     cmake_script.write("message(${CMAKE_FIND_ROOT_PATH})\n")
     cmake_script.seek(0)
     result = subprocess.Popen(['cmake', '-P', cmake_script.name], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    # print "Result: " + result[0].rstrip()
+    # print "Error: " + result[1].rstrip()
     cmake_script.close()
     # no idea why cmake makes this come out on stderr, but its fine
     return result[1].rstrip()
 
 def check_for_link_static():
+    if ( not os.path.exists(os.path.join(roslib.rosenv.get_ros_root(),"rostoolchain.cmake"))):
+        return False
     global lib_suffix
     # Check for overriding environment variable
     env_link_static = 'ROS_BOOST_LINK' in os.environ and os.environ['ROS_BOOST_LINK'] == "static"
