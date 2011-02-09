@@ -48,8 +48,8 @@
   #include <sys/time.h>
   #endif
 #else
+  #include <windows.h>
   #include <sys/timeb.h>
-  //ros::Time ros::Time::start_time;
 #endif
 
 namespace ros
@@ -254,7 +254,6 @@ bool Time::sleepUntil(const Time& end)
     while (!g_stopped && (Time::now() < end))
     {
     #if defined(_WIN32)
-      // Todo: Figure out what the proper error message display method is here.
       HANDLE timer = NULL;
       LARGE_INTEGER sleepTime;
 
@@ -267,24 +266,12 @@ bool Time::sleepUntil(const Time& end)
 
       if (!SetWaitableTimer (timer, &sleepTime, 0, NULL, NULL, 0))
       {
-        LPVOID buffer = NULL;
-        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
-                GetLastError(), 0, (LPTSTR) &buffer, 0, NULL);
-        fprintf(stderr, "nanosleep: SetWaitableTimer failed: (%ld) %s\n",
-                GetLastError(), (LPTSTR) buffer);
-        LocalFree(buffer);
-        abort();
+    	  return false;
       }
 
       if (WaitForSingleObject (timer, INFINITE) != WAIT_OBJECT_0)
       {
-        LPVOID buffer = NULL;
-        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
-                GetLastError(), 0, (LPTSTR) &buffer, 0, NULL);
-        fprintf(stderr, "nanosleep: WaitForSingleObject failed: (%ld) %s\n",
-                GetLastError(), (LPTSTR) buffer);
-        LocalFree(buffer);
-        abort();
+    	  return false;
       }
     #else
       struct timespec ts = {0, 1000000};
@@ -316,7 +303,6 @@ bool WallTime::sleepUntil(const WallTime& end)
 bool wallSleep(uint32_t sec, uint32_t nsec)
 {
 #if defined(_WIN32)
-	// TODO: Figure out what the proper error message display method is here.
 	HANDLE timer = NULL;
 	LARGE_INTEGER sleepTime;
 
@@ -327,35 +313,17 @@ bool wallSleep(uint32_t sec, uint32_t nsec)
       timer = CreateWaitableTimer(NULL, TRUE, NULL);
       if (timer == NULL)
       {
-        LPVOID buffer = NULL;
-        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
-                GetLastError(), 0, (LPTSTR) &buffer, 0, NULL);
-        fprintf(stderr, "nanosleep: CreateWaitableTimer failed: (%ld) %s\n",
-                GetLastError(), (LPTSTR) buffer);
-        LocalFree(buffer);
-        abort();
+    	  return false;
       }
 
       if (!SetWaitableTimer (timer, &sleepTime, 0, NULL, NULL, 0))
       {
-        LPVOID buffer = NULL;
-        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
-                GetLastError(), 0, (LPTSTR) &buffer, 0, NULL);
-        fprintf(stderr, "nanosleep: SetWaitableTimer failed: (%ld) %s\n",
-                GetLastError(), (LPTSTR) buffer);
-        LocalFree(buffer);
-        abort();
+    	  return false;
       }
 
       if (WaitForSingleObject (timer, INFINITE) != WAIT_OBJECT_0)
       {
-        LPVOID buffer = NULL;
-        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
-                GetLastError(), 0, (LPTSTR) &buffer, 0, NULL);
-        fprintf(stderr, "nanosleep: WaitForSingleObject failed: (%ld) %s\n",
-                GetLastError(), (LPTSTR) buffer);
-        LocalFree(buffer);
-        abort();
+    	  return false;
       }
 #else
   struct timespec ts = {sec, nsec};

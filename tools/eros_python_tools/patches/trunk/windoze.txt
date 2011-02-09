@@ -20,7 +20,7 @@ svn co http://ros-win32.servicerobotics.eu/trunk/cturtle/ ./msvc
   
 == Against ==
 
-Files: include/ros/time.h  src/ros/time.cpp
+Files: include/ros/time.h include/ros/duration.h src/ros/time.cpp
   Last Changed Author: jfaust
   Last Changed Rev: 12080
 
@@ -32,9 +32,14 @@ ROS_INFO) and nanosleep (provided by Geoff Biggs).
 
 == Mingw Fixes ==
 
+- duration.h, ros.h
+  - remove the #include <windows.h>, doesn't seem to need it.
+  
 - time.cpp
   - drop out now broken ROS_INFO calls.
   - drop in Geoffrey Biggs nanosleep replacement.
+  - fix Geoffrey's bugs in the sleep code.
+  - convert WIN32 to _WIN32 macros (ms visual express 2010 doesn't define WIN32).
   
 == ToDo ==
 

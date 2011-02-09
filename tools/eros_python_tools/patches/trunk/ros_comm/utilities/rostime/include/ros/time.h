@@ -44,11 +44,6 @@
 //Ros types also needs to be moved out of roscpp...
 //#include "ros/types.h"
 
-#ifdef WIN32
-  #include <windows.h>
-  #include <cstdio>
-#endif
-
 namespace ros
 {
 
