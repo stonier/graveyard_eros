@@ -43,7 +43,7 @@
 
 #define HAS_CLOCK_GETTIME (_POSIX_C_SOURCE >= 199309L)
 
-#ifndef WIN32
+#ifndef _WIN32
   #if !HAS_CLOCK_GETTIME
   #include <sys/time.h>
   #endif
@@ -75,7 +75,7 @@ static Time g_sim_time(0, 0);
 
 void getWallTime(uint32_t& sec, uint32_t& nsec)
 {
-#ifndef WIN32
+#ifndef _WIN32
 #if HAS_CLOCK_GETTIME
   struct timespec start;
   clock_gettime(CLOCK_REALTIME, &start);
@@ -253,24 +253,16 @@ bool Time::sleepUntil(const Time& end)
     Time start = Time::now();
     while (!g_stopped && (Time::now() < end))
     {
-    #if defined(WIN32)
-      // Taken from Player's libreplace, which I wrote - Geoff.
-      // Figure out what the proper error message display method is here.
+    #if defined(_WIN32)
+      // Todo: Figure out what the proper error message display method is here.
       HANDLE timer = NULL;
       LARGE_INTEGER sleepTime;
 
-      sleepTime.QuadPart = 1000000 / 100;
+      sleepTime.QuadPart = -1000000LL / 100LL;
 
       timer = CreateWaitableTimer(NULL, TRUE, NULL);
-      if (timer == NULL)
-      {
-        LPVOID buffer = NULL;
-        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
-                GetLastError(), 0, (LPTSTR) &buffer, 0, NULL);
-        fprintf(stderr, "nanosleep: CreateWaitableTimer failed: (%ld) %s\n",
-                GetLastError(), (LPTSTR) buffer);
-        LocalFree(buffer);
-        abort();
+      if (timer == NULL) {
+    	  return false;
       }
 
       if (!SetWaitableTimer (timer, &sleepTime, 0, NULL, NULL, 0))
@@ -323,16 +315,14 @@ bool WallTime::sleepUntil(const WallTime& end)
 
 bool wallSleep(uint32_t sec, uint32_t nsec)
 {
-#if defined(WIN32)
-      // Taken from Player's libreplace, which I wrote - Geoff.
-      // There is no way to tell if the sleep was interrupted.
-      // The resolution of this is 100 nanoseconds, despite the argument being
-      // seconds and nanoseconds.
-      // TODO: Figure out what the proper error message display method is here.
-      HANDLE timer = NULL;
-      LARGE_INTEGER sleepTime;
+#if defined(_WIN32)
+	// TODO: Figure out what the proper error message display method is here.
+	HANDLE timer = NULL;
+	LARGE_INTEGER sleepTime;
 
-      sleepTime.QuadPart = sec * 1000000000 + nsec / 100;
+  	sleepTime.QuadPart = -
+  			static_cast<uint64_t>(sec)*10000000LL -
+  			static_cast<uint64_t>(nsec) / 100LL;
 
       timer = CreateWaitableTimer(NULL, TRUE, NULL);
       if (timer == NULL)
@@ -375,7 +365,7 @@ bool wallSleep(uint32_t sec, uint32_t nsec)
   {
     ts = rem;
   }
-#endif // defined(WIN32)
+#endif // defined(_WIN32)
 
   return !g_stopped;
 }
