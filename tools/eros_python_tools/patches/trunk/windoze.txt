@@ -50,11 +50,11 @@ function definitions rather than having a scattering of ifdefs.
 == Against ==
 
 File : CMakeLists.txt, include/ros/assert.h, include/ros/console.h
-Last Changed Revisions: 12943, 8377, 12775
+Revisions: 12943, 8377, 12775
   
 == Summary ==
 
-Just put in a special case for mingw, not windows debug breaks.
+Just put in a special case for mingw, not windows debug breaks and some cleanup.
 
 == Mingw ==
 
@@ -64,4 +64,22 @@ Just put in a special case for mingw, not windows debug breaks.
   - ifdef for mingw using DebugBreak instead of msvc's __debugbreak().
 - console.h
   - mingw needs to include <cstdarg> in order to find va_list type.
+
+===================== Xmlrpcpp =====================
+
+== Against ==
+
+File: CMakeLists.txt, src/XmlRpcSocket.h
+Revisions: 13154, 13154 
+
+== Summary ==
+
+Funny defines for _WINDOW accomodated for as well as an extra header.
+
+== Mingw ==
+
+- CMakeLists.txt
+  - make sure we define xmlrpc's _WINDOW macro when on WIN systems (let cmake detect for us). 
+- XmlRpcSocket.h
+  - added an include for <ws2tcpip.h> - will be different for other wins?
 

@@ -43,7 +43,7 @@
 
 #define HAS_CLOCK_GETTIME (_POSIX_C_SOURCE >= 199309L)
 
-#ifndef _WIN32
+#ifndef WIN32
   #if !HAS_CLOCK_GETTIME
   #include <sys/time.h>
   #endif
@@ -75,7 +75,7 @@ static Time g_sim_time(0, 0);
 
 void getWallTime(uint32_t& sec, uint32_t& nsec)
 {
-#ifndef _WIN32
+#ifndef WIN32
 #if HAS_CLOCK_GETTIME
   struct timespec start;
   clock_gettime(CLOCK_REALTIME, &start);
@@ -253,7 +253,7 @@ bool Time::sleepUntil(const Time& end)
     Time start = Time::now();
     while (!g_stopped && (Time::now() < end))
     {
-    #if defined(_WIN32)
+    #if defined(WIN32)
       HANDLE timer = NULL;
       LARGE_INTEGER sleepTime;
 
@@ -302,7 +302,7 @@ bool WallTime::sleepUntil(const WallTime& end)
 
 bool wallSleep(uint32_t sec, uint32_t nsec)
 {
-#if defined(_WIN32)
+#if defined(WIN32)
 	HANDLE timer = NULL;
 	LARGE_INTEGER sleepTime;
 
@@ -333,7 +333,7 @@ bool wallSleep(uint32_t sec, uint32_t nsec)
   {
     ts = rem;
   }
-#endif // defined(_WIN32)
+#endif // defined(WIN32)
 
   return !g_stopped;
 }
