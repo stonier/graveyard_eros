@@ -44,6 +44,10 @@ if(DEFINED PLATFORM_COMPILE_FLAGS)
   set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} ${PLATFORM_COMPILE_FLAGS}")
 endif()
 
+if(DEFINED TOOLCHAIN_COMPILE_FLAGS)
+  set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} ${TOOLCHAIN_COMPILE_FLAGS}")
+endif()
+
 # Default link flags for all executables and libraries
 if(NOT DEFINED ROS_LINK_FLAGS)
   set(ROS_LINK_FLAGS "")
@@ -58,6 +62,10 @@ endif(NOT DEFINED ROS_LINK_FLAGS)
 
 if(DEFINED PLATFORM_LINK_FLAGS)
   set(ROS_LINK_FLAGS "${ROS_LINK_FLAGS} ${PLATFORM_LINK_FLAGS}")
+endif()
+
+if(DEFINED TOOLCHAIN_LINK_FLAGS)
+  set(ROS_LINK_FLAGS "${ROS_LINK_FLAGS} ${TOOLCHAIN_LINK_FLAGS}")
 endif()
 
 # Default libraries to link against for all executables and libraries

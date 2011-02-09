@@ -16,13 +16,12 @@ To download their svn tree:
 
 svn co http://ros-win32.servicerobotics.eu/trunk/cturtle/ ./msvc
     
-===== RosTime =====
+==================== RosTime ====================
   
 == Against ==
 
 Files: include/ros/time.h include/ros/duration.h src/ros/time.cpp
-  Last Changed Author: jfaust
-  Last Changed Rev: 12080
+Last Changed Revisions: 12080
 
 == Summary ==
 
@@ -46,13 +45,12 @@ ROS_INFO) and nanosleep (provided by Geoff Biggs).
 clock_gettime and nanosleep could probably be set up with their own proper cross platform
 function definitions rather than having a scattering of ifdefs.
 
-===== RosConsole =====
+==================== RosConsole ====================
 
 == Against ==
 
-File : rosconsole/include/ros/assert.h
-  Last Changed Author: jfaust
-  Last Changed Rev: 8377
+File : CMakeLists.txt, include/ros/assert.h, include/ros/console.h
+Last Changed Revisions: 12943, 8377, 12775
   
 == Summary ==
 
@@ -60,6 +58,10 @@ Just put in a special case for mingw, not windows debug breaks.
 
 == Mingw ==
 
+- CMakeLists.txt
+  - temporary fix to make example.exe build, had to link by hand ach.
 - assert.h
   - ifdef for mingw using DebugBreak instead of msvc's __debugbreak().
+- console.h
+  - mingw needs to include <cstdarg> in order to find va_list type.
 
