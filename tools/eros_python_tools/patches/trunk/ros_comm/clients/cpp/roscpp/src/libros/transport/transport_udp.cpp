@@ -333,6 +333,7 @@ void TransportUDP::close()
 #else
           ROS_ERROR("Error closing socket [%d]: [%s]", sock_, strerror(errno));
 #endif //WIN32
+        }
 
         sock_ = -1;
 
@@ -344,12 +345,6 @@ void TransportUDP::close()
       }
     }
   }
-
-  if (disconnect_cb)
-  {
-    disconnect_cb(shared_from_this());
-  }
-}
 
   if (disconnect_cb)
   {
@@ -629,7 +624,7 @@ void TransportUDP::enableRead()
 {
   {
     boost::mutex::scoped_lock lock(close_mutex_);
-  
+
     if (closed_)
     {
       return;
@@ -702,7 +697,7 @@ void TransportUDP::disableWrite()
 TransportUDPPtr TransportUDP::createOutgoing(std::string host, int port, int connection_id, int max_datagram_size)
 {
   ROS_ASSERT(is_server_);
-  
+
   TransportUDPPtr transport(new TransportUDP(poll_set_, flags_, max_datagram_size));
   if (!transport->connect(host, port, connection_id))
   {
