@@ -49,12 +49,13 @@ function definitions rather than having a scattering of ifdefs.
 
 == Against ==
 
-File : CMakeLists.txt, include/ros/assert.h, include/ros/console.h
-Revisions: 12943, 8377, 12775
+File : CMakeLists.txt, include/ros/assert.h, include/ros/console.h, rosconsole.cpp
+Revisions: 12943, 8377, 12775, 10539
   
 == Summary ==
 
 Just put in a special case for mingw, not windows debug breaks and some cleanup.
+Could update the colouring info for windows.
 
 == Mingw ==
 
@@ -64,6 +65,8 @@ Just put in a special case for mingw, not windows debug breaks and some cleanup.
   - ifdef for mingw using DebugBreak instead of msvc's __debugbreak().
 - console.h
   - mingw needs to include <cstdarg> in order to find va_list type.
+- rosconsole.cpp
+  - remove shell colours in windows (probably has a different notation?)
 
 ===================== Xmlrpcpp =====================
 
