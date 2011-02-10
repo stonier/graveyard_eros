@@ -32,8 +32,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
-
 #include "ros/init.h"
 #include "ros/names.h"
 #include "ros/xmlrpc_manager.h"
@@ -45,8 +43,8 @@
 #include "ros/network.h"
 #include "ros/file_log.h"
 #include "ros/callback_queue.h"
-#include "ros/param.h"
 #include "ros/rosout_appender.h"
+#include "ros/param.h"
 #include "ros/subscribe_options.h"
 #include "ros/transport/transport_tcp.h"
 #include "ros/internal_timer_manager.h"
@@ -60,15 +58,15 @@
 #include <roslib/Clock.h>
 
 #include <algorithm>
-
 #include <signal.h>
-
 #include <cstdlib>
 
-#ifdef WIN32
-#include <process.h>
-#include "log4cxx/helpers/transcoder.h"
-#endif //WIN32
+#if defined(WIN32)
+  #include <process.h>
+  #define getpid _getpid
+  #include <log4cxx/helpers/transcoder.h>
+#else
+#endif
 
 namespace ros
 {
@@ -431,8 +429,8 @@ void init(const M_string& remappings, const std::string& name, uint32_t options)
     g_ok = true;
 
     ROSCONSOLE_AUTOINIT;
+#ifndef WIN32 // No signals in windows.
     // Disable SIGPIPE
-#ifndef WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif //WIN32
     network::init(remappings);
@@ -564,13 +562,13 @@ void shutdown()
   g_rosout_appender = 0;
 
   // reset this so that the logger doesn't get crashily destroyed
-  // again during global destruction.
+  // again during global destruction.  
   //
   // See https://code.ros.org/trac/ros/ticket/3271
   //
   log4cxx::LoggerPtr& fo_logger = ros::file_log::getFileOnlyLogger();
   fo_logger = log4cxx::LoggerPtr();
-
+  
   if (g_started)
   {
     TopicManager::instance()->shutdown();

@@ -129,7 +129,11 @@ the diffs there for details).
   - alot of cludgy hacks from service robotics (jeff's dropped the appender).
 - subscription.cpp 
   - avoid the posix header calls in windows.
-  
+- rosout_appender.cpp
+  - undefine windows.h' ERROR macro (can't live with rosgraph_msgs/Log.h)
+- xmlrpc_manager.cpp
+  - define a macro so getpid can be compiled without hackery.
+
 ================= Roscpp Tutorials =================
   
 == Against ==
