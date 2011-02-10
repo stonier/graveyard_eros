@@ -1,0 +1,3881 @@
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/callback_queue.cpp tmp/old/core/roscpp/src/libros/callback_queue.cpp
+42,43c42
+< : calling_(0)
+< , enabled_(enabled)
+---
+> : enabled_(enabled)
+79c78
+<   return callbacks_.empty() && calling_ == 0;
+---
+>   return callbacks_.empty();
+99,101c98
+<   CallbackInfo info;
+<   info.callback = callback;
+<   info.removal_id = removal_id;
+---
+>   boost::mutex::scoped_lock lock(mutex_);
+102a100
+>   if (!enabled_)
+104c102,103
+<     boost::mutex::scoped_lock lock(mutex_);
+---
+>     return;
+>   }
+106,109c105
+<     if (!enabled_)
+<     {
+<       return;
+<     }
+---
+>   setupTLS();
+111,112c107,110
+<     callbacks_.push_back(info);
+<   }
+---
+>   CallbackInfo info;
+>   info.callback = callback;
+>   info.removal_id = removal_id;
+>   callbacks_.push_back(info);
+113a112,113
+>   M_IDInfo::iterator it = id_info_.find(removal_id);
+>   if (it == id_info_.end())
+115,123c115,117
+<     boost::mutex::scoped_lock lock(id_info_mutex_);
+< 
+<     M_IDInfo::iterator it = id_info_.find(removal_id);
+<     if (it == id_info_.end())
+<     {
+<       IDInfoPtr id_info(new IDInfo);
+<       id_info->id = removal_id;
+<       id_info_.insert(std::make_pair(removal_id, id_info));
+<     }
+---
+>     IDInfoPtr id_info(new IDInfo);
+>     id_info->id = removal_id;
+>     id_info_.insert(std::make_pair(removal_id, id_info));
+170,171c164,166
+<       D_CallbackInfo::iterator it = callbacks_.begin();
+<       for (; it != callbacks_.end();)
+---
+>       L_CallbackInfo::iterator it = callbacks_.begin();
+>       L_CallbackInfo::iterator end = callbacks_.end();
+>       for (; it != end;)
+194,195c189,190
+<     D_CallbackInfo::iterator it = tls_->callbacks.begin();
+<     D_CallbackInfo::iterator end = tls_->callbacks.end();
+---
+>     L_CallbackInfo::iterator it = tls_->callbacks.begin();
+>     L_CallbackInfo::iterator end = tls_->callbacks.end();
+212c207
+< CallbackQueue::CallOneResult CallbackQueue::callOne(ros::WallDuration timeout)
+---
+> void CallbackQueue::callOne(ros::WallDuration timeout)
+215d209
+<   TLS* tls = tls_.get();
+224c218
+<       return Disabled;
+---
+>       return;
+234,239c228
+<       if (callbacks_.empty())
+<       {
+<         return Empty;
+<       }
+< 
+<       if (!enabled_)
+---
+>       if (callbacks_.empty() || !enabled_)
+241c230
+<         return Disabled;
+---
+>         return;
+245,246c234,236
+<     D_CallbackInfo::iterator it = callbacks_.begin();
+<     for (; it != callbacks_.end();)
+---
+>     L_CallbackInfo::iterator it = callbacks_.begin();
+>     L_CallbackInfo::iterator end = callbacks_.end();
+>     for (; it != end;)
+268c258
+<       return TryAgain;
+---
+>       return;
+270,271d259
+< 
+<     ++calling_;
+274,276d261
+<   bool was_empty = tls->callbacks.empty();
+<   tls->callbacks.push_back(cb_info);
+<   if (was_empty)
+278,279c263,270
+<     tls->cb_it = tls->callbacks.begin();
+<   }
+---
+>     IDInfoPtr id_info = getIDInfo(cb_info.removal_id);
+>     if (id_info)
+>     {
+>       boost::shared_lock<boost::shared_mutex> rw_lock(id_info->calling_rw_mutex);
+>       if (!cb_info.marked_for_removal)
+>       {
+>         tls_->calling_in_this_thread = id_info->id;
+>         tls_->callbacks.push_back(cb_info);
+281,285c272,283
+<   CallOneResult res = callOneCB(tls);
+<   if (res != Empty)
+<   {
+<     boost::mutex::scoped_lock lock(mutex_);
+<     --calling_;
+---
+>         CallbackInterface::CallResult result = cb_info.callback->call();
+> 
+>         tls_->calling_in_this_thread = 0xffffffffffffffffULL;
+>         tls_->callbacks.clear();
+> 
+>         if (result == CallbackInterface::TryAgain && !cb_info.marked_for_removal)
+>         {
+>           boost::mutex::scoped_lock lock(mutex_);
+>           callbacks_.push_front(cb_info);
+>         }
+>       }
+>     }
+287d284
+<   return res;
+293d289
+<   TLS* tls = tls_.get();
+316,326c312
+<     bool was_empty = tls->callbacks.empty();
+< 
+<     tls->callbacks.insert(tls->callbacks.end(), callbacks_.begin(), callbacks_.end());
+<     callbacks_.clear();
+< 
+<     calling_ += tls->callbacks.size();
+< 
+<     if (was_empty)
+<     {
+<       tls->cb_it = tls->callbacks.begin();
+<     }
+---
+>     tls_->callbacks.swap(callbacks_);
+329,331d314
+<   size_t called = 0;
+< 
+<   while (!tls->callbacks.empty())
+333c316,318
+<     if (callOneCB(tls) != Empty)
+---
+>     L_CallbackInfo::iterator it = tls_->callbacks.begin();
+>     L_CallbackInfo::iterator end = tls_->callbacks.end();
+>     for (; it != end;)
+335,360c320,321
+<       ++called;
+<     }
+<   }
+< 
+<   {
+<     boost::mutex::scoped_lock lock(mutex_);
+<     calling_ -= called;
+<   }
+< }
+< 
+< CallbackQueue::CallOneResult CallbackQueue::callOneCB(TLS* tls)
+< {
+<   // Check for a recursive call.  If recursive, increment the current iterator.  Otherwise
+<   // set the iterator it the beginning of the thread-local callbacks
+<   if (tls->calling_in_this_thread == 0xffffffffffffffffULL)
+<   {
+<     tls->cb_it = tls->callbacks.begin();
+<   }
+< 
+<   if (tls->cb_it == tls->callbacks.end())
+<   {
+<     return Empty;
+<   }
+< 
+<   ROS_ASSERT(!tls->callbacks.empty());
+<   ROS_ASSERT(tls->cb_it != tls->callbacks.end());
+---
+>       CallbackInfo& info = *it;
+>       CallbackInterfacePtr& cb = info.callback;
+362,363c323,327
+<   CallbackInfo info = *tls->cb_it;
+<   CallbackInterfacePtr& cb = info.callback;
+---
+>       IDInfoPtr id_info = getIDInfo(info.removal_id);
+>       if (id_info)
+>       {
+>         boost::shared_lock<boost::shared_mutex> rw_lock(id_info->calling_rw_mutex);
+>         tls_->calling_in_this_thread = id_info->id;
+365,368c329,333
+<   IDInfoPtr id_info = getIDInfo(info.removal_id);
+<   if (id_info)
+<   {
+<     boost::shared_lock<boost::shared_mutex> rw_lock(id_info->calling_rw_mutex);
+---
+>         CallbackInterface::CallResult result = CallbackInterface::Invalid;
+>         if (!info.marked_for_removal)
+>         {
+>           result = cb->call();
+>         }
+370,371c335
+<     uint64_t last_calling = tls->calling_in_this_thread;
+<     tls->calling_in_this_thread = id_info->id;
+---
+>         tls_->calling_in_this_thread = 0xffffffffffffffffULL;
+373,381c337,349
+<     CallbackInterface::CallResult result = CallbackInterface::Invalid;
+<     if (info.marked_for_removal)
+<     {
+<       tls->cb_it = tls->callbacks.erase(tls->cb_it);
+<     }
+<     else
+<     {
+<       tls->cb_it = tls->callbacks.erase(tls->cb_it);
+<       result = cb->call();
+---
+>         if (info.marked_for_removal || result == CallbackInterface::Success || result == CallbackInterface::Invalid)
+>         {
+>           it = tls_->callbacks.erase(it);
+>         }
+>         else if (result == CallbackInterface::TryAgain)
+>         {
+>           ++it;
+>         }
+>       }
+>       else
+>       {
+>         it = tls_->callbacks.erase(it);
+>       }
+384,387c352,353
+<     tls->calling_in_this_thread = last_calling;
+< 
+<     // Push TryAgain callbacks to the back of the shared queue
+<     if (result == CallbackInterface::TryAgain && !info.marked_for_removal)
+---
+>     // If we had some callbacks that returned TryAgain, push them to the front of the shared queue
+>     if (!tls_->callbacks.empty())
+390,392c356,357
+<       callbacks_.push_back(info);
+< 
+<       return TryAgain;
+---
+>       callbacks_.insert(callbacks_.begin(), tls_->callbacks.begin(), tls_->callbacks.end());
+>       tls_->callbacks.clear();
+394,395d358
+< 
+<     return Called;
+397,402d359
+<   else
+<   {
+<     tls->cb_it = tls->callbacks.erase(tls->cb_it);
+<   }
+< 
+<   return Called;
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/CMakeLists.txt tmp/old/core/roscpp/src/libros/CMakeLists.txt
+19c19
+<                     connection.cpp
+---
+>                     connection.cpp 
+22d21
+<                     internal_timer_manager.cpp
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/common.cpp tmp/old/core/roscpp/src/libros/common.cpp
+35,36d34
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+43,44d40
+< 
+< #ifndef WIN32
+47,48d42
+< #endif //WIN32
+< 
+55d48
+< #ifndef WIN32
+61d53
+< #endif //WIN32
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/connection.cpp tmp/old/core/roscpp/src/libros/connection.cpp
+49a50
+> , fixed_read_filled_(0)
+58d58
+< , sending_header_error_(false)
+66c66
+<   drop(Destructing);
+---
+>   drop();
+89d88
+<   boost::recursive_mutex::scoped_lock lock(drop_mutex_);
+93,98d91
+< void Connection::removeDropListener(const boost::signals::connection& c)
+< {
+<   boost::recursive_mutex::scoped_lock lock(drop_mutex_);
+<   c.disconnect();
+< }
+< 
+117c110
+<   while (!dropped_ && has_read_callback_)
+---
+>   if (fixed_read_filled_ < READ_BUFFER_SIZE)
+119,144c112,120
+<     ROS_ASSERT(read_buffer_);
+<     uint32_t to_read = read_size_ - read_filled_;
+<     if (to_read > 0)
+<     {
+<       int32_t bytes_read = transport_->read(read_buffer_.get() + read_filled_, to_read);
+<       ROS_DEBUG_NAMED("superdebug", "Connection read %d bytes", bytes_read);
+<       if (dropped_)
+<       {
+<         return;
+<       }
+<       else if (bytes_read < 0)
+<       {
+<         // Bad read, throw away results and report error
+<         ReadFinishedFunc callback;
+<         callback = read_callback_;
+<         read_callback_.clear();
+<         read_buffer_.reset();
+<         uint32_t size = read_size_;
+<         read_size_ = 0;
+<         read_filled_ = 0;
+<         has_read_callback_ = 0;
+< 
+<         if (callback)
+<         {
+<           callback(shared_from_this(), read_buffer_, size, false);
+<         }
+---
+>     int32_t bytes_read = transport_->read(fixed_read_buffer_ + fixed_read_filled_, READ_BUFFER_SIZE - fixed_read_filled_);
+>     ROS_DEBUG_NAMED("superdebug", "Connection read %d bytes", bytes_read);
+>     if (dropped_)
+>     {
+>       return;
+>     }
+>     else if (bytes_read < 0)
+>     {
+>       reading_ = false;
+146,147c122,136
+<         break;
+<       }
+---
+>       // Bad read, throw away results and report error
+>       ReadFinishedFunc callback;
+>       callback = read_callback_;
+>       read_callback_ = ReadFinishedFunc();
+>       read_buffer_ = boost::shared_array<uint8_t>();
+>       uint32_t size = read_size_;
+>       read_size_ = 0;
+>       read_filled_ = 0;
+>       has_read_callback_ = 0;
+>       fixed_read_filled_ = 0;
+> 
+>       if (callback)
+>         callback(shared_from_this(), read_buffer_, size, false);
+>       return;
+>     }
+149c138,144
+<       read_filled_ += bytes_read;
+---
+>     fixed_read_filled_ += bytes_read;
+>   }
+>   else
+>   {
+>     if (has_read_callback_)
+>     {
+>       ROS_WARN("Connection read buffer filled with no read callback set");
+150a146,158
+>   }
+> 
+>   while (has_read_callback_ && (fixed_read_filled_ > 0 || read_size_ == 0) && !dropped_)
+>   {
+>     ROS_ASSERT((int)read_size_ >= 0);
+>     ROS_ASSERT((int)read_filled_ >= 0);
+> 
+>     uint32_t write_amount = std::min(read_size_ - read_filled_, fixed_read_filled_);
+>     ROS_DEBUG_NAMED("superdebug", "Copying %d bytes into read buffer", write_amount);
+>     memcpy(read_buffer_.get() + read_filled_, fixed_read_buffer_, write_amount);
+>     memmove(fixed_read_buffer_, fixed_read_buffer_ + write_amount, fixed_read_filled_ - write_amount);
+>     fixed_read_filled_ -= write_amount;
+>     read_filled_ += write_amount;
+152,154c160
+<     ROS_ASSERT((int32_t)read_size_ >= 0);
+<     ROS_ASSERT((int32_t)read_filled_ >= 0);
+<     ROS_ASSERT_MSG(read_filled_ <= read_size_, "read_filled_ = %d, read_size_ = %d", read_filled_, read_size_);
+---
+>     ROS_ASSERT(read_filled_ <= read_size_);
+168,169c174,175
+<       read_callback_.clear();
+<       read_buffer_.reset();
+---
+>       read_callback_ = ReadFinishedFunc();
+>       read_buffer_ = boost::shared_array<uint8_t>();
+177,185d182
+<     else
+<     {
+<       break;
+<     }
+<   }
+< 
+<   if (!has_read_callback_)
+<   {
+<     transport_->disableRead();
+264c261
+<   if (dropped_ || sending_header_error_)
+---
+>   if (dropped_)
+281,282d277
+<   transport_->enableRead();
+< 
+289c284
+<   if (dropped_ || sending_header_error_)
+---
+>   if (dropped_)
+319c314
+<   drop(TransportDisconnect);
+---
+>   drop();
+322c317
+< void Connection::drop(DropReason reason)
+---
+> void Connection::drop()
+332c327
+<       drop_signal_(shared_from_this(), reason);
+---
+>       drop_signal_(shared_from_this());
+368c363
+<   write(full_msg, msg_len, boost::bind(&Connection::onHeaderWritten, this, _1), false);
+---
+>   write(full_msg, msg_len, boost::bind(&Connection::onHeaderWritten, this, _1));
+377d371
+<   sending_header_error_ = true;
+392c386
+<     ROS_ERROR("a header of over a gigabyte was " \
+---
+>     ROS_ERROR("woah! a header of over a gigabyte was " \
+395,396c389,390
+<                 "synchronization is lost.");
+<     conn->drop(HeaderError);
+---
+>                 "synchronization is lost... it's over.");
+>     conn->drop();
+412c406
+<     drop(HeaderError);
+---
+>     drop();
+420c414
+<       drop(HeaderError);
+---
+>       drop();
+428c422,425
+<       header_func_(conn, header_);
+---
+>       if (!header_func_(conn, header_))
+>       {
+>         drop();
+>       }
+445c442
+<   drop(HeaderError);
+---
+>   drop();
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/connection_manager.cpp tmp/old/core/roscpp/src/libros/connection_manager.cpp
+36d35
+< #include "ros/network.h"
+76c75
+<   if (!tcpserver_transport_->listen(network::getTCPROSPort(), MAX_TCPROS_CONN_QUEUE, boost::bind(&ConnectionManager::tcprosAcceptConnection, this, _1)))
+---
+>   if (!tcpserver_transport_->listen(0, MAX_TCPROS_CONN_QUEUE, boost::bind(&ConnectionManager::tcprosAcceptConnection, this, _1)))
+78c77
+<     ROS_FATAL("Listen on port [%d] failed", network::getTCPROSPort());
+---
+>     ROS_FATAL("Listen failed");
+107c106
+<   clear(Connection::Destructing);
+---
+>   clear();
+110c109
+< void ConnectionManager::clear(Connection::DropReason reason)
+---
+> void ConnectionManager::clear()
+112,119c111,113
+<   S_Connection local_connections;
+<   {
+<     boost::mutex::scoped_lock conn_lock(connections_mutex_);
+<     local_connections.swap(connections_);
+<   }
+< 
+<   for(S_Connection::iterator itr = local_connections.begin();
+<       itr != local_connections.end();
+---
+>   boost::mutex::scoped_lock conn_lock(connections_mutex_);
+>   for(S_Connection::iterator itr = connections_.begin();
+>       itr != connections_.end();
+123c117
+<     conn->drop(reason);
+---
+>     conn->drop();
+175a170,171
+> 
+>     size_t prev_size = connections_.size();
+176a173
+>     ROS_ASSERT(connections_.size() == (prev_size - 1));
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/file_log.cpp tmp/old/core/roscpp/src/libros/file_log.cpp
+28,29d27
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+31,36d28
+< 
+< #ifdef WIN32
+< #include <process.h>
+< #include "log4cxx/helpers/transcoder.h"
+< #endif //WIN32
+< 
+95,97d86
+< #ifdef WIN32
+< 	  int pid = _getpid();
+< #else
+99d87
+< #endif //WIN32
+141,143d128
+< #ifdef WIN32
+< 	  sprintf_s(pid_str, sizeof(pid_str), "%d", pid);
+< #else
+145d129
+< #endif //WIN32
+154,159d137
+< #ifdef WIN32
+< 	LOG4CXX_DECODE_CHAR(temp01, std::string("[%c] [%d] [thread %t]: [%p] %m\n"));
+< 	log4cxx::LayoutPtr layout = new log4cxx::PatternLayout(temp01);
+< 	LOG4CXX_DECODE_CHAR(temp02, log_file_name);
+< 	log4cxx::RollingFileAppenderPtr appender = new log4cxx::RollingFileAppender(layout, temp02, false);
+< #else
+162d139
+< #endif //WIN32
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/header.cpp tmp/old/core/roscpp/src/libros/header.cpp
+35,36d34
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+45d42
+< #ifndef WIN32
+47d43
+< #endif //WIN32
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/init.cpp tmp/old/core/roscpp/src/libros/init.cpp
+35,36d34
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+50d47
+< #include "ros/subscribe_options.h"
+52d48
+< #include "ros/internal_timer_manager.h"
+56d51
+< #include "roscpp/Empty.h"
+59a55
+> #include <roslib/Time.h>
+68,72d63
+< #ifdef WIN32
+< #include <process.h>
+< #include "log4cxx/helpers/transcoder.h"
+< #endif //WIN32
+< 
+113c104
+< static boost::recursive_mutex g_shutting_down_mutex;
+---
+> static boost::mutex g_shutting_down_mutex;
+130,143c121
+<     // Since this gets run from within a mutex inside PollManager, we need to prevent ourselves from deadlocking with
+<     // another thread that's already in the middle of shutdown()
+<     boost::recursive_mutex::scoped_try_lock lock(g_shutting_down_mutex, boost::defer_lock);
+<     while (!lock.try_lock() && !g_shutting_down)
+<     {
+<       ros::WallDuration(0.001).sleep();
+<     }
+< 
+<     if (!g_shutting_down)
+<     {
+<       shutdown();
+<     }
+< 
+<     g_shutdown_requested = false;
+---
+>     shutdown();
+187,190d164
+< #ifdef WIN32
+<     LOG4CXX_ENCODE_CHAR(tmpstr, (*it)->getName());
+< 	logger.name = tmpstr;
+< #else
+192d165
+< #endif //WIN32
+196,199d168
+< #ifdef WIN32
+< 	  LOG4CXX_ENCODE_CHAR(tmpstr, level->toString());
+< 	  logger.level = tmpstr;
+< #else
+201d169
+< #endif //WIN32
+247c215
+< bool closeAllConnections(roscpp::Empty::Request&, roscpp::Empty::Response&)
+---
+> void timeCallback(const roslib::Time::ConstPtr& msg)
+249,251c217
+<   ROSCPP_LOG_DEBUG("close_all_connections service called, closing connections");
+<   ConnectionManager::instance()->clear(Connection::TransportDisconnect);
+<   return true;
+---
+>   Time::setNow(msg->rostime);
+304,316d269
+<   bool enable_debug = false;
+<   const char* enable_debug_env = getenv("ROSCPP_ENABLE_DEBUG");
+<   if (enable_debug_env)
+<   {
+<     try
+<     {
+<       enable_debug = boost::lexical_cast<bool>(enable_debug_env);
+<     }
+<     catch (boost::bad_lexical_cast&)
+<     {
+<     }
+<   }
+< 
+322,323d274
+<   initInternalTimerManager();
+< 
+342,362c293
+<   if (g_shutting_down) goto end;
+< 
+<   {
+<     ros::AdvertiseServiceOptions ops;
+<     ops.init<roscpp::GetLoggers>(names::resolve("~get_loggers"), getLoggers);
+<     ops.callback_queue = getInternalCallbackQueue().get();
+<     ServiceManager::instance()->advertiseService(ops);
+<   }
+< 
+<   if (g_shutting_down) goto end;
+< 
+<   {
+<     ros::AdvertiseServiceOptions ops;
+<     ops.init<roscpp::SetLoggerLevel>(names::resolve("~set_logger_level"), setLoggerLevel);
+<     ops.callback_queue = getInternalCallbackQueue().get();
+<     ServiceManager::instance()->advertiseService(ops);
+<   }
+< 
+<   if (g_shutting_down) goto end;
+< 
+<   if (enable_debug)
+---
+>   if (!g_shutting_down)
+364,378d294
+<     ros::AdvertiseServiceOptions ops;
+<     ops.init<roscpp::Empty>(names::resolve("~debug/close_all_connections"), closeAllConnections);
+<     ops.callback_queue = getInternalCallbackQueue().get();
+<     ServiceManager::instance()->advertiseService(ops);
+<   }
+< 
+<   if (g_shutting_down) goto end;
+< 
+<   {
+<     bool use_sim_time = false;
+<     param::param("/use_sim_time", use_sim_time, use_sim_time);
+< 
+<     ros::Time::init();
+< 
+<     if (use_sim_time)
+380c296,299
+<       Time::setNow(ros::Time());
+---
+>       ros::AdvertiseServiceOptions ops;
+>       ops.init<roscpp::GetLoggers>(names::resolve("~get_loggers"), getLoggers);
+>       ops.callback_queue = getInternalCallbackQueue().get();
+>       ServiceManager::instance()->advertiseService(ops);
+383,385c302
+<     if (g_shutting_down) goto end;
+< 
+<     if (use_sim_time)
+---
+>     if (!g_shutting_down)
+387,390c304,341
+<       ros::SubscribeOptions ops;
+<       ops.init<roslib::Clock>("/clock", 1, clockCallback);
+<       ops.callback_queue = getInternalCallbackQueue().get();
+<       TopicManager::instance()->subscribe(ops);
+---
+>       {
+>         ros::AdvertiseServiceOptions ops;
+>         ops.init<roscpp::SetLoggerLevel>(names::resolve("~set_logger_level"), setLoggerLevel);
+>         ops.callback_queue = getInternalCallbackQueue().get();
+>         ServiceManager::instance()->advertiseService(ops);
+>       }
+> 
+>       if (!g_shutting_down)
+>       {
+>         bool use_sim_time = false;
+>         param::param("/use_sim_time", use_sim_time, use_sim_time);
+>         if (use_sim_time)
+>         {
+>           Time::setNow(ros::Time());
+>         }
+> 
+>         if (!g_shutting_down)
+>         {
+>           {
+>             ros::SubscribeOptions ops;
+>             ops.init<roslib::Time>("/time", 1, timeCallback);
+>             ops.callback_queue = getInternalCallbackQueue().get();
+>             TopicManager::instance()->subscribe(ops);
+>           }
+> 
+>           {
+>             ros::SubscribeOptions ops;
+>             ops.init<roslib::Clock>("/clock", 1, clockCallback);
+>             ops.callback_queue = getInternalCallbackQueue().get();
+>             TopicManager::instance()->subscribe(ops);
+>           }
+> 
+>           g_internal_queue_thread = boost::thread(internalCallbackQueueThreadFunc);
+>           getGlobalCallbackQueue()->enable();
+> 
+>           ROSCPP_LOG_DEBUG("Started node [%s], pid [%d], bound on [%s], xmlrpc port [%d], tcpros port [%d], logging to [%s], using [%s] time", this_node::getName().c_str(), getpid(), network::getHost().c_str(), XMLRPCManager::instance()->getServerPort(), ConnectionManager::instance()->getTCPPort(), file_log::getLogFilename().c_str(), Time::useSystemTime() ? "real" : "sim");
+>         }
+>       }
+394,407d344
+<   if (g_shutting_down) goto end;
+< 
+<   g_internal_queue_thread = boost::thread(internalCallbackQueueThreadFunc);
+<   getGlobalCallbackQueue()->enable();
+< 
+< #ifdef WIN32
+<   ROSCPP_LOG_DEBUG("Started node [%s], pid [%d], bound on [%s], xmlrpc port [%d], tcpros port [%d], logging to [%s], using [%s] time", this_node::getName().c_str(), _getpid(), network::getHost().c_str(), XMLRPCManager::instance()->getServerPort(), ConnectionManager::instance()->getTCPPort(), file_log::getLogFilename().c_str(), Time::useSystemTime() ? "real" : "sim");
+< #else
+<   ROSCPP_LOG_DEBUG("Started node [%s], pid [%d], bound on [%s], xmlrpc port [%d], tcpros port [%d], logging to [%s], using [%s] time", this_node::getName().c_str(), getpid(), network::getHost().c_str(), XMLRPCManager::instance()->getServerPort(), ConnectionManager::instance()->getTCPPort(), file_log::getLogFilename().c_str(), Time::useSystemTime() ? "real" : "sim");
+< #endif //WIN32
+< 
+<   // Label used to abort if we've started shutting down in the middle of start(), which can happen in
+<   // threaded code or if Ctrl-C is pressed while we're initializing
+< end:
+411c348
+<     boost::recursive_mutex::scoped_lock lock(g_shutting_down_mutex);
+---
+>     boost::mutex::scoped_lock lock(g_shutting_down_mutex);
+434,437c371
+<     // Disable SIGPIPE
+< #ifndef WIN32
+<     signal(SIGPIPE, SIG_IGN);
+< #endif //WIN32
+---
+>     ros::Time::init();
+495c429
+< void removeROSArgs(int argc, const char* const* argv, V_string& args_out)
+---
+> void removeROSArgs(int argc, const char** argv, V_string& args_out)
+544c478
+<   boost::recursive_mutex::scoped_lock lock(g_shutting_down_mutex);
+---
+>   boost::mutex::scoped_lock lock(g_shutting_down_mutex);
+570d503
+<     PollManager::instance()->shutdown();
+571a505
+>     PollManager::instance()->shutdown();
+Only in tmp/msvc/core/roscpp/src/libros: internal_timer_manager.cpp
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/intraprocess_publisher_link.cpp tmp/old/core/roscpp/src/libros/intraprocess_publisher_link.cpp
+73,75c73,74
+<   (*values)["type"] = publisher->getDataType();
+<   (*values)["md5sum"] = publisher->getMD5Sum();
+<   (*values)["message_definition"] = publisher->getMessageDefinition();
+---
+>   (*values)["type"] = parent->datatype();
+>   (*values)["md5sum"] = parent->md5sum();
+81a81
+>   if (dropped_)
+83,89c83
+<     boost::recursive_mutex::scoped_lock lock(drop_mutex_);
+<     if (dropped_)
+<     {
+<       return;
+<     }
+< 
+<     dropped_ = true;
+---
+>     return;
+91a86,87
+>   dropped_ = true;
+> 
+95d90
+<     publisher_.reset();
+106c101
+< void IntraProcessPublisherLink::handleMessage(const SerializedMessage& m, bool ser, bool nocopy)
+---
+> void IntraProcessPublisherLink::handleMessage(const boost::shared_array<uint8_t>& buffer, size_t num_bytes)
+108,114c103
+<   boost::recursive_mutex::scoped_lock lock(drop_mutex_);
+<   if (dropped_)
+<   {
+<     return;
+<   }
+< 
+<   stats_.bytes_received_ += m.num_bytes;
+---
+>   stats_.bytes_received_ += num_bytes;
+121c110
+<     stats_.drops_ += parent->handleMessage(m, ser, nocopy, header_.getValues(), shared_from_this());
+---
+>     stats_.drops_ += parent->handleMessage(buffer, num_bytes, true, header_.getValues(), shared_from_this());
+130,151d118
+< void IntraProcessPublisherLink::getPublishTypes(bool& ser, bool& nocopy, const std::type_info& ti)
+< {
+<   boost::recursive_mutex::scoped_lock lock(drop_mutex_);
+<   if (dropped_)
+<   {
+<     ser = false;
+<     nocopy = false;
+<     return;
+<   }
+< 
+<   SubscriptionPtr parent = parent_.lock();
+<   if (parent)
+<   {
+<     parent->getPublishTypes(ser, nocopy, ti);
+<   }
+<   else
+<   {
+<     ser = true;
+<     nocopy = false;
+<   }
+< }
+< 
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/intraprocess_subscriber_link.cpp tmp/old/core/roscpp/src/libros/intraprocess_subscriber_link.cpp
+74c74
+< void IntraProcessSubscriberLink::enqueueMessage(const SerializedMessage& m, bool ser, bool nocopy)
+---
+> bool IntraProcessSubscriberLink::publish(const Message& m)
+76,77c76
+<   boost::recursive_mutex::scoped_lock lock(drop_mutex_);
+<   if (dropped_)
+---
+>   if (!verifyDatatype(m.__getDataType()))
+79c78,88
+<     return;
+---
+>     return false;
+>   }
+> 
+>   uint32_t msg_len = m.serializationLength();
+>   boost::shared_array<uint8_t> buf = boost::shared_array<uint8_t>(new uint8_t[msg_len]);
+>   *((uint32_t*)buf.get()) = msg_len;
+> 
+>   int seq = 0;
+>   if (PublicationPtr parent = parent_.lock())
+>   {
+>     seq = parent->getSequence();
+81a91,100
+>   m.serialize(buf.get(), seq);
+> 
+>   ROS_ASSERT(subscriber_);
+>   subscriber_->handleMessage(buf, msg_len);
+> 
+>   return true;
+> }
+> 
+> void IntraProcessSubscriberLink::enqueueMessage(const SerializedMessage& m)
+> {
+83c102
+<   subscriber_->handleMessage(m, ser, nocopy);
+---
+>   subscriber_->handleMessage(m.buf, m.num_bytes);
+92a112
+>   if (dropped_)
+94,100c114
+<     boost::recursive_mutex::scoped_lock lock(drop_mutex_);
+<     if (dropped_)
+<     {
+<       return;
+<     }
+< 
+<     dropped_ = true;
+---
+>     return;
+106d119
+<     subscriber_.reset();
+117,127d129
+< void IntraProcessSubscriberLink::getPublishTypes(bool& ser, bool& nocopy, const std::type_info& ti)
+< {
+<   boost::recursive_mutex::scoped_lock lock(drop_mutex_);
+<   if (dropped_)
+<   {
+<     return;
+<   }
+< 
+<   subscriber_->getPublishTypes(ser, nocopy, ti);
+< }
+< 
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/master.cpp tmp/old/core/roscpp/src/libros/master.cpp
+28,29d27
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+101,116d98
+< #ifdef WIN32
+< void setURI(const std::string uri)
+< {
+< 	g_uri = uri;
+< }
+< 
+< void setHost(const std::string host)
+< {
+< 	g_host = host;
+< }
+< 
+< void setPort(const uint32_t port)
+< {
+< 	g_port = port;
+< }
+< #endif //Win32
+143c125
+<     topics.push_back(TopicInfo(std::string(payload[i][0]), std::string(payload[i][1])));
+---
+>     topics.push_back(TopicInfo(std::string(payload[i][0]), std::string(payload[i][1]), std::string(payload[i][1])));
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/message_deserializer.cpp tmp/old/core/roscpp/src/libros/message_deserializer.cpp
+30d29
+< #include "ros/subscription_callback_helper.h"
+36c35
+< MessageDeserializer::MessageDeserializer(const SubscriptionCallbackHelperPtr& helper, const SerializedMessage& m, const boost::shared_ptr<M_string>& connection_header)
+---
+> MessageDeserializer::MessageDeserializer(const SubscriptionMessageHelperPtr& helper, const boost::shared_array<uint8_t>& buffer, size_t num_bytes, bool buffer_includes_size_header, const boost::shared_ptr<M_string>& connection_header)
+38c37,39
+< , serialized_message_(m)
+---
+> , buffer_(buffer)
+> , num_bytes_(num_bytes)
+> , buffer_includes_size_header_(buffer_includes_size_header)
+41,44c42
+<   if (serialized_message_.message && *serialized_message_.type_info != helper->getTypeInfo())
+<   {
+<     serialized_message_.message.reset();
+<   }
+---
+> 
+47c45
+< VoidConstPtr MessageDeserializer::deserialize()
+---
+> MessagePtr MessageDeserializer::deserialize()
+56c54
+<   if (serialized_message_.message)
+---
+>   if (!buffer_ && num_bytes_ > 0)
+58,59c56,57
+<     msg_ = serialized_message_.message;
+<     return msg_;
+---
+>     // If the buffer has been reset it means we tried to deserialize and failed
+>     return MessagePtr();
+62c60,62
+<   if (!serialized_message_.buf && serialized_message_.num_bytes > 0)
+---
+>   msg_ = helper_->create();
+>   msg_->__serialized_length = num_bytes_;
+>   if (buffer_includes_size_header_)
+64,65c64
+<     // If the buffer has been reset it means we tried to deserialize and failed
+<     return VoidConstPtr();
+---
+>     msg_->__serialized_length -= 4;
+66a66
+>   msg_->__connection_header = connection_header_;
+70,74c70,75
+<     SubscriptionCallbackHelperDeserializeParams params;
+<     params.buffer = serialized_message_.message_start;
+<     params.length = serialized_message_.num_bytes - (serialized_message_.message_start - serialized_message_.buf.get());
+<     params.connection_header = connection_header_;
+<     msg_ = helper_->deserialize(params);
+---
+>     uint8_t* raw_buffer = buffer_.get();
+>     if (buffer_includes_size_header_)
+>     {
+>       raw_buffer += 4;
+>     }
+>     msg_->deserialize(raw_buffer);
+78c79
+<     ROS_ERROR("Exception thrown when deserializing message of length [%d] from [%s]: %s", (uint32_t)serialized_message_.num_bytes, (*connection_header_)["callerid"].c_str(), e.what());
+---
+>     ROS_ERROR("Exception thrown when deserializing message of length [%d] from [%s]: %s", num_bytes_, (*connection_header_)["callerid"].c_str(), e.what());
+81c82
+<   serialized_message_.buf.reset();
+---
+>   buffer_.reset();
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/network.cpp tmp/old/core/roscpp/src/libros/network.cpp
+28,29d27
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+33d30
+< #include "ros/exceptions.h"
+38d34
+< #ifndef WIN32
+42d37
+< #endif //WIN32
+48,49d42
+< #include <boost/lexical_cast.hpp>
+< 
+57d49
+< uint16_t g_tcpros_server_port = 0;
+64,70d55
+< #ifdef WIN32
+< void setHost( const std::string host)
+< {
+<   g_host = host;
+< }
+< #endif //WIN32
+< 
+91,95d75
+< uint16_t getTCPROSPort()
+< {
+<   return g_tcpros_server_port;
+< }
+< 
+213,225d192
+<   it = remappings.find("__tcpros_server_port");
+<   if (it != remappings.end())
+<   {
+<     try
+<     {
+<       g_tcpros_server_port = boost::lexical_cast<uint16_t>(it->second);
+<     }
+<     catch (boost::bad_lexical_cast&)
+<     {
+<       throw ros::InvalidPortException("__tcpros_server_port [" + it->second + "] was not specified as a number within the 0-65535 range");
+<     }
+<   }
+< 
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/node_handle.cpp tmp/old/core/roscpp/src/libros/node_handle.cpp
+87,89d86
+< 
+<   remappings_ = parent.remappings_;
+<   unresolved_remappings_ = parent.unresolved_remappings_;
+109d105
+<   unresolved_remappings_ = rhs.unresolved_remappings_;
+125d120
+<   unresolved_remappings_ = rhs.unresolved_remappings_;
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/param.cpp tmp/old/core/roscpp/src/libros/param.cpp
+173c173
+<       if (it != g_params.end())
+---
+>       if (it != g_params.end() && it->second.valid())
+175,177c175
+<         if (it->second.valid())
+<         {
+<           ROS_DEBUG_NAMED("cached_parameters", "Using cached parameter value for key [%s]", mapped_key.c_str());
+---
+>         ROS_DEBUG_NAMED("cached_parameters", "Using cached parameter value for key [%s]", mapped_key.c_str());
+179,186c177,178
+<           v = it->second;
+<           return true;
+<         }
+<         else
+<         {
+<           ROS_DEBUG_NAMED("cached_parameters", "Cached parameter is invalid for key [%s]", mapped_key.c_str());
+<           return false;
+<         }
+---
+>         v = it->second;
+>         return true;
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/poll_manager.cpp tmp/old/core/roscpp/src/libros/poll_manager.cpp
+82a83,85
+>   // Disable SIGPIPE, period
+>   signal(SIGPIPE, SIG_IGN);
+> 
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/poll_set.cpp tmp/old/core/roscpp/src/libros/poll_set.cpp
+35,41d34
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+< #ifdef WIN32
+< #include <winsock2.h>
+< #include <io.h>
+< #endif //WIN32
+< 
+51d43
+< #ifndef WIN32
+55d46
+< #endif //WIN32
+64,80d54
+< #ifdef WIN32
+<   HANDLE pipe_rd, pipe_wr;
+<   int rc = CreatePipe(&pipe_rd, &pipe_wr, NULL, 0);
+< 
+<   if(!rc)
+<   {
+< 	  ROS_FATAL("CreatePipe() failed");
+< 	  ROS_BREAK();
+<   }
+<   signal_pipe_[0] = _open_osfhandle((intptr_t) pipe_rd, O_RDONLY|O_TEXT) ;
+<   signal_pipe_[1] = _open_osfhandle((intptr_t) pipe_wr, O_WRONLY|O_TEXT) ;
+<   if (0 > signal_pipe_[0] || signal_pipe_[1] < 0)
+<   {
+< 	  ROS_FATAL("_open_osfhandle() failed");
+< 	  ROS_BREAK();
+<   }
+< #else
+100c74
+< #endif //WIN32
+---
+> 
+107,110d80
+< #ifdef WIN32
+<   ::closesocket(signal_pipe_[0]);
+<   ::closesocket(signal_pipe_[1]);
+< #else
+113d82
+< #endif //WIN32
+155,159d123
+<     {
+<       boost::mutex::scoped_lock lock(just_deleted_mutex_);
+<       just_deleted_.push_back(fd);
+<     }
+< 
+218,223d181
+< #ifdef WIN32
+< 	if (_write(signal_pipe_[1], &b, 1) < 0)
+<     {
+<       // do nothing... this prevents warnings on gcc 4.3
+<     }
+< #else
+228d185
+< #endif //WIN32
+238d194
+<   size_t ufds_count = ufds_.size();
+240,250c196
+< #ifdef WIN32
+<   if((ret = WSAPoll(&ufds_.front(), ufds_count, poll_timeout)) < 0)
+<   {
+<     // WSAEINTR means that we got interrupted by a signal, and is not an
+<     // error.
+<     if(WSAGetLastError() != WSAEINTR)
+<     {
+<       ROS_ERROR("poll failed with error [%d]", WSAGetLastError());
+<     }
+<   }
+< #else
+---
+>   size_t ufds_count = ufds_.size();
+260d205
+< #endif //WIN32
+291,298c236
+<       // If these are registered events for this socket, OR the events are ERR/HUP/NVAL,
+<       // call through to the registered function
+<       int revents = ufds_[i].revents;
+<       if (func
+<           && ((events & revents)
+<               || (revents & POLLERR)
+<               || (revents & POLLHUP)
+<               || (revents & POLLNVAL)))
+---
+>       if (func && (events & ufds_[i].revents))
+300,318c238
+<         bool skip = false;
+<         if (revents & (POLLNVAL|POLLERR|POLLHUP))
+<         {
+<           // If a socket was just closed and then the file descriptor immediately reused, we can
+<           // get in here with what we think is a valid socket (since it was just re-added to our set)
+<           // but which is actually referring to the previous fd with the same #.  If this is the case,
+<           // we ignore the first instance of one of these errors.  If it's a real error we'll
+<           // hit it again next time through.
+<           boost::mutex::scoped_lock lock(just_deleted_mutex_);
+<           if (std::find(just_deleted_.begin(), just_deleted_.end(), ufds_[i].fd) != just_deleted_.end())
+<           {
+<             skip = true;
+<           }
+<         }
+< 
+<         if (!skip)
+<         {
+<           func(revents & (events|POLLERR|POLLHUP|POLLNVAL));
+<         }
+---
+>         func(ufds_[i].revents & events);
+323,325d242
+< 
+<     boost::mutex::scoped_lock lock(just_deleted_mutex_);
+<     just_deleted_.clear();
+357,362d273
+< #ifdef WIN32
+< 	while(_read(signal_pipe_[0], &b, 1) > 0)
+<     {
+<       //do nothing keep draining
+<     };
+< #else
+367d277
+< #endif //WIN32
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/publication.cpp tmp/old/core/roscpp/src/libros/publication.cpp
+33,34d32
+< #include "ros/serialization.h"
+< #include <roslib/Header.h>
+39,75d36
+< class PeerConnDisconnCallback : public CallbackInterface
+< {
+< public:
+<   PeerConnDisconnCallback(const SubscriberStatusCallback& callback, const SubscriberLinkPtr& sub_link, bool use_tracked_object, const VoidConstWPtr& tracked_object)
+<   : callback_(callback)
+<   , sub_link_(sub_link)
+<   , use_tracked_object_(use_tracked_object)
+<   , tracked_object_(tracked_object)
+<   {
+<   }
+< 
+<   virtual CallResult call()
+<   {
+<     VoidConstPtr tracker;
+<     if (use_tracked_object_)
+<     {
+<       tracker = tracked_object_.lock();
+< 
+<       if (!tracker)
+<       {
+<         return Invalid;
+<       }
+<     }
+< 
+<     SingleSubscriberPublisher pub(sub_link_);
+<     callback_(pub);
+< 
+<     return Success;
+<   }
+< 
+< private:
+<   SubscriberStatusCallback callback_;
+<   SubscriberLinkPtr sub_link_;
+<   bool use_tracked_object_;
+<   VoidConstWPtr tracked_object_;
+< };
+< 
+81,82c42
+<                          bool latch,
+<                          bool has_header)
+---
+>                          bool latch)
+90,92c50
+<   latch_(latch),
+<   has_header_(has_header),
+<   intraprocess_subscriber_count_(0)
+---
+>   latch_(latch)
+106,119d63
+< 
+<   // Add connect callbacks for all current subscriptions if this publisher wants them
+<   if (callbacks->connect_ && callbacks->callback_queue_)
+<   {
+<     boost::mutex::scoped_lock lock(subscriber_links_mutex_);
+<     V_SubscriberLink::iterator it = subscriber_links_.begin();
+<     V_SubscriberLink::iterator end = subscriber_links_.end();
+<     for (; it != end; ++it)
+<     {
+<       const SubscriberLinkPtr& sub_link = *it;
+<       CallbackInterfacePtr cb(new PeerConnDisconnCallback(callbacks->connect_, sub_link, callbacks->has_tracked_object_, callbacks->tracked_object_));
+<       callbacks->callback_queue_->addCallback(cb, (uint64_t)callbacks.get());
+<     }
+<   }
+143,144c87
+<     boost::mutex::scoped_lock lock(publish_queue_mutex_);
+<     boost::mutex::scoped_lock lock2(subscriber_links_mutex_);
+---
+>     boost::mutex::scoped_lock lock(subscriber_links_mutex_);
+165,180d107
+<   ROS_ASSERT(m.buf);
+< 
+<   uint32_t seq = incrementSequence();
+<   if (has_header_)
+<   {
+<     // If we have a header, we know it's immediately after the message length
+<     // Deserialize it, write the sequence, and then serialize it again.
+<     namespace ser = ros::serialization;
+<     roslib::Header header;
+<     ser::IStream istream(m.buf.get() + 4, m.num_bytes - 4);
+<     ser::deserialize(istream, header);
+<     header.seq = seq;
+<     ser::OStream ostream(m.buf.get() + 4, m.num_bytes - 4);
+<     ser::serialize(ostream, header);
+<   }
+< 
+185c112
+<     sub_link->enqueueMessage(m, true, false);
+---
+>     sub_link->enqueueMessage(m);
+207,211d133
+< 
+<     if (sub_link->isIntraprocess())
+<     {
+<       ++intraprocess_subscriber_count_;
+<     }
+216c138
+<     sub_link->enqueueMessage(last_message_, true, true);
+---
+>     sub_link->enqueueMessage(last_message_);
+236,240d157
+<     if (sub_link->isIntraprocess())
+<     {
+<       --intraprocess_subscriber_count_;
+<     }
+< 
+325a243,279
+> class PeerConnDisconnCallback : public CallbackInterface
+> {
+> public:
+>   PeerConnDisconnCallback(const SubscriberStatusCallback& callback, const SubscriberLinkPtr& sub_link, bool use_tracked_object, const VoidWPtr& tracked_object)
+>   : callback_(callback)
+>   , sub_link_(sub_link)
+>   , use_tracked_object_(use_tracked_object)
+>   , tracked_object_(tracked_object)
+>   {
+>   }
+> 
+>   virtual CallResult call()
+>   {
+>     VoidPtr tracker;
+>     if (use_tracked_object_)
+>     {
+>       tracker = tracked_object_.lock();
+> 
+>       if (!tracker)
+>       {
+>         return Invalid;
+>       }
+>     }
+> 
+>     SingleSubscriberPublisher pub(sub_link_);
+>     callback_(pub);
+> 
+>     return Success;
+>   }
+> 
+> private:
+>   SubscriberStatusCallback callback_;
+>   SubscriberLinkPtr sub_link_;
+>   bool use_tracked_object_;
+>   VoidWPtr tracked_object_;
+> };
+> 
+362,507d315
+< uint32_t Publication::incrementSequence()
+< {
+<   boost::mutex::scoped_lock lock(seq_mutex_);
+<   uint32_t old_seq = seq_;
+<   ++seq_;
+< 
+<   return old_seq;
+< }
+< 
+< uint32_t Publication::getNumSubscribers()
+< {
+<   boost::mutex::scoped_lock lock(subscriber_links_mutex_);
+<   return (uint32_t)subscriber_links_.size();
+< }
+< 
+< void Publication::getPublishTypes(bool& serialize, bool& nocopy, const std::type_info& ti)
+< {
+<   boost::mutex::scoped_lock lock(subscriber_links_mutex_);
+<   V_SubscriberLink::const_iterator it = subscriber_links_.begin();
+<   V_SubscriberLink::const_iterator end = subscriber_links_.end();
+<   for (; it != end; ++it)
+<   {
+<     const SubscriberLinkPtr& sub = *it;
+<     bool s = false;
+<     bool n = false;
+<     sub->getPublishTypes(s, n, ti);
+<     serialize = serialize || s;
+<     nocopy = nocopy || n;
+< 
+<     if (serialize && nocopy)
+<     {
+<       break;
+<     }
+<   }
+< }
+< 
+< bool Publication::hasSubscribers()
+< {
+<   boost::mutex::scoped_lock lock(subscriber_links_mutex_);
+<   return !subscriber_links_.empty();
+< }
+< 
+< void Publication::publish(SerializedMessage& m)
+< {
+<   if (m.message)
+<   {
+<     boost::mutex::scoped_lock lock(subscriber_links_mutex_);
+<     V_SubscriberLink::const_iterator it = subscriber_links_.begin();
+<     V_SubscriberLink::const_iterator end = subscriber_links_.end();
+<     for (; it != end; ++it)
+<     {
+<       const SubscriberLinkPtr& sub = *it;
+<       if (sub->isIntraprocess())
+<       {
+<         sub->enqueueMessage(m, false, true);
+<       }
+<     }
+< 
+<     m.message.reset();
+<   }
+< 
+<   if (m.buf)
+<   {
+<     boost::mutex::scoped_lock lock(publish_queue_mutex_);
+<     publish_queue_.push_back(m);
+<   }
+< }
+< 
+< void Publication::processPublishQueue()
+< {
+<   V_SerializedMessage queue;
+<   {
+<     boost::mutex::scoped_lock lock(publish_queue_mutex_);
+< 
+<     if (dropped_)
+<     {
+<       return;
+<     }
+< 
+<     queue.insert(queue.end(), publish_queue_.begin(), publish_queue_.end());
+<     publish_queue_.clear();
+<   }
+< 
+<   if (queue.empty())
+<   {
+<     return;
+<   }
+< 
+<   V_SerializedMessage::iterator it = queue.begin();
+<   V_SerializedMessage::iterator end = queue.end();
+<   for (; it != end; ++it)
+<   {
+<     enqueueMessage(*it);
+<   }
+< }
+< 
+< bool Publication::validateHeader(const Header& header, std::string& error_msg)
+< {
+<   std::string md5sum, topic, client_callerid;
+<   if (!header.getValue("md5sum", md5sum)
+<    || !header.getValue("topic", topic)
+<    || !header.getValue("callerid", client_callerid))
+<   {
+<     std::string msg("Header from subscriber did not have the required elements: md5sum, topic, callerid");
+< 
+<     ROS_ERROR("%s", msg.c_str());
+<     error_msg = msg;
+< 
+<     return false;
+<   }
+< 
+<   // Check whether the topic has been deleted from
+<   // advertised_topics through a call to unadvertise(), which could
+<   // have happened while we were waiting for the subscriber to
+<   // provide the md5sum.
+<   if(isDropped())
+<   {
+<     std::string msg = std::string("received a tcpros connection for a nonexistent topic [") +
+<                 topic + std::string("] from [" + client_callerid +"].");
+< 
+<     ROS_ERROR("%s", msg.c_str());
+<     error_msg = msg;
+< 
+<     return false;
+<   }
+< 
+<   if (getMD5Sum() != md5sum &&
+<       (md5sum != std::string("*") && getMD5Sum() != std::string("*")))
+<   {
+<     std::string datatype;
+<     header.getValue("type", datatype);
+< 
+<     std::string msg = std::string("Client [") + client_callerid + std::string("] wants topic ") + topic +
+<                       std::string(" to have datatype/md5sum [") + datatype + "/" + md5sum +
+<                       std::string("], but our version has [") + getDataType() + "/" + getMD5Sum() +
+<                       std::string("]. Dropping connection.");
+< 
+<     ROS_ERROR("%s", msg.c_str());
+<     error_msg = msg;
+< 
+<     return false;
+<   }
+< 
+<   return true;
+< }
+< 
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/publisher.cpp tmp/old/core/roscpp/src/libros/publisher.cpp
+79c79
+< void Publisher::publish(const boost::function<SerializedMessage(void)>& serfunc, SerializedMessage& m) const
+---
+> void Publisher::publish(const MessageConstPtr& message) const
+83c83
+<     ROS_ASSERT_MSG(false, "Call to publish() on an invalid Publisher (topic [%s])", impl_->topic_.c_str());
+---
+>     ROS_ASSERT_MSG(false, "Call to publish() on an invalid Publisher");
+87,91c87,91
+<   if (!impl_->isValid())
+<   {
+<     ROS_ASSERT_MSG(false, "Call to publish() on an invalid Publisher (topic [%s])", impl_->topic_.c_str());
+<     return;
+<   }
+---
+>  if (!impl_->isValid())
+>  {
+>    ROS_ASSERT_MSG(false, "Call to publish() on an invalid Publisher (topic [%s])", impl_->topic_.c_str());
+>    return;
+>  }
+93c93
+<   TopicManager::instance()->publish(impl_->topic_, serfunc, m);
+---
+>   TopicManager::instance()->publish(impl_->topic_, *message);
+96c96
+< void Publisher::incrementSequence() const
+---
+> void Publisher::publish(const Message& message) const
+98c98
+<   if (impl_ && impl_->isValid())
+---
+>   if (!impl_)
+100c100,107
+<     TopicManager::instance()->incrementSequence(impl_->topic_);
+---
+>     ROS_ASSERT_MSG(false, "Call to publish() on an invalid Publisher");
+>     return;
+>   }
+> 
+>   if (!impl_->isValid())
+>   {
+>    ROS_ASSERT_MSG(false, "Call to publish() on an invalid Publisher (topic [%s])", impl_->topic_.c_str());
+>    return;
+101a109,110
+> 
+>   TopicManager::instance()->publish(impl_->topic_, message);
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/publisher_link.cpp tmp/old/core/roscpp/src/libros/publisher_link.cpp
+70c70
+<     ROS_ERROR("Publisher header did not have required element: md5sum");
+---
+>     ROS_ERROR("Publisher TCPROS header did not have required element: md5sum");
+74,75d73
+<   md5sum_ = md5sum;
+< 
+78c76
+<     ROS_ERROR("Publisher header did not have required element: type");
+---
+>     ROS_ERROR("Publisher TCPROS header did not have required element: type");
+94,98d91
+<   if (SubscriptionPtr parent = parent_.lock())
+<   {
+<     parent->headerReceived(shared_from_this(), header);
+<   }
+< 
+107,112d99
+< const std::string& PublisherLink::getMD5Sum()
+< {
+<   ROS_ASSERT(!md5sum_.empty());
+<   return md5sum_;
+< }
+< 
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/rosout_appender.cpp tmp/old/core/roscpp/src/libros/rosout_appender.cpp
+35,36d34
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+46,49d43
+< #ifdef WIN32
+< #include <log4cxx/helpers/transcoder.h>
+< #endif //WIN32
+< 
+83a78
+> 
+88,91c83
+< 	msg->level = roslib::Log::FATAL;
+< #ifdef WIN32
+< 	LOG4CXX_ENCODE_CHAR(last_error_, event->getMessage());
+< #else
+---
+>     msg->level = roslib::Log::FATAL;
+93d84
+< #endif //WIN32
+97,101c88
+< #ifdef WIN32
+< 	msg->level = roslib::Log::ERR;
+< 	LOG4CXX_ENCODE_CHAR(last_error_, event->getMessage());
+< #else
+< 	msg->level = roslib::Log::ERROR;
+---
+>     msg->level = roslib::Log::ERROR;
+103d89
+< #endif //WIN32
+108d93
+< 
+120,123d104
+< #ifdef WIN32
+<   LOG4CXX_ENCODE_CHAR(tempmsg, event->getMessage());
+<   msg->msg = tempmsg;
+< #else
+125d105
+< #endif //WIN32
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/service_client.cpp tmp/old/core/roscpp/src/libros/service_client.cpp
+58c58
+<       server_link_->getConnection()->drop(Connection::Destructing);
+---
+>       server_link_->getConnection()->drop();
+109c109
+< bool ServiceClient::call(const SerializedMessage& req, SerializedMessage& resp, const std::string& service_md5sum)
+---
+> bool ServiceClient::call(Message& req, Message& resp, const std::string& service_md5sum)
+144c144
+<   bool ret = link->call(req, resp);
+---
+>   bool ret = link->call(&req, &resp);
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/service_client_link.cpp tmp/old/core/roscpp/src/libros/service_client_link.cpp
+50d49
+< : persistent_(false)
+56,66d54
+<   if (connection_)
+<   {
+<     if (connection_->isSendingHeaderError())
+<     {
+<       connection_->removeDropListener(dropped_conn_);
+<     }
+<     else
+<     {
+<       connection_->drop(Connection::Destructing);
+<     }
+<   }
+72c60
+<   dropped_conn_ = connection_->addDropListener(boost::bind(&ServiceClientLink::onConnectionDropped, this, _1));
+---
+>   connection_->addDropListener(boost::bind(&ServiceClientLink::onConnectionDropped, this, _1));
+93,101d80
+<   std::string persistent;
+<   if (header.getValue("persistent", persistent))
+<   {
+<     if (persistent == "1" || persistent == "true")
+<     {
+<       persistent_ = true;
+<     }
+<   }
+< 
+190c169
+<     ROS_ERROR("a message of over a gigabyte was " \
+---
+>     ROS_ERROR("woah! a message of over a gigabyte was " \
+193,195c172,173
+<                 "synchronization is lost.");
+<     conn->drop(Connection::Destructing);
+<     return;
+---
+>                 "synchronization is lost... it's over.");
+>     conn->drop();
+222c200,208
+<   if (persistent_)
+---
+>   connection_->read(4, boost::bind(&ServiceClientLink::onRequestLength, this, _1, _2, _3, _4));
+> }
+> 
+> void ServiceClientLink::processResponse(bool ok, const MessagePtr& resp)
+> {
+>   boost::shared_array<uint8_t> buf;
+>   uint32_t num_bytes = 0;
+> 
+>   if (ok)
+224c210,215
+<     connection_->read(4, boost::bind(&ServiceClientLink::onRequestLength, this, _1, _2, _3, _4));
+---
+>     int msg_len = resp->serializationLength();
+>     buf = boost::shared_array<uint8_t>(new uint8_t[msg_len + 5]);
+>     buf[0] = 1;
+>     memcpy(buf.get() + 1, &msg_len, 4);
+>     resp->serialize(buf.get() + 5, 0);
+>     num_bytes = msg_len + 5;
+228c219,225
+<     connection_->drop(Connection::Destructing);
+---
+>     buf = boost::shared_array<uint8_t>(new uint8_t[5]);
+>     buf[0] = 0;
+>     buf[1] = 0;
+>     buf[2] = 0;
+>     buf[3] = 0;
+>     buf[4] = 0;
+>     num_bytes = 5;
+230d226
+< }
+232,234c228
+< void ServiceClientLink::processResponse(bool ok, const SerializedMessage& res)
+< {
+<   connection_->write(res.buf, res.num_bytes, boost::bind(&ServiceClientLink::onResponseWritten, this, _1));
+---
+>   connection_->write(buf, num_bytes, boost::bind(&ServiceClientLink::onResponseWritten, this, _1));
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/service.cpp tmp/old/core/roscpp/src/libros/service.cpp
+37d36
+< #include "ros/header.h"
+50c49
+<     TransportTCPPtr transport(new TransportTCP(0, TransportTCP::SYNCHRONOUS));
+---
+>     TransportTCPPtr transport(new TransportTCP(&PollManager::instance()->getPollSet()));
+54,63d52
+<       M_string m;
+<       m["probe"] = "1";
+<       m["md5sum"] = "*";
+<       m["callerid"] = this_node::getName();
+<       m["service"] = mapped_name;
+<       boost::shared_array<uint8_t> buffer;
+<       uint32_t size = 0;;
+<       Header::write(m, buffer, size);
+<       transport->write((uint8_t*)&size, sizeof(size));
+<       transport->write(buffer.get(), size);
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/service_manager.cpp tmp/old/core/roscpp/src/libros/service_manager.cpp
+93c93
+<   boost::recursive_mutex::scoped_lock shutdown_lock(shutting_down_mutex_);
+---
+>   boost::mutex::scoped_lock shutdown_lock(shutting_down_mutex_);
+126c126
+<       (*it)->getConnection()->drop(Connection::Destructing);
+---
+>       (*it)->getConnection()->drop();
+136c136
+<   boost::recursive_mutex::scoped_lock shutdown_lock(shutting_down_mutex_);
+---
+>   boost::mutex::scoped_lock shutdown_lock(shutting_down_mutex_);
+170c170
+<   boost::recursive_mutex::scoped_lock shutdown_lock(shutting_down_mutex_);
+---
+>   boost::mutex::scoped_lock shutdown_lock(shutting_down_mutex_);
+252c252
+<   boost::recursive_mutex::scoped_lock shutdown_lock(shutting_down_mutex_);
+---
+>   boost::mutex::scoped_lock shutdown_lock(shutting_down_mutex_);
+297c297
+<   boost::recursive_mutex::scoped_lock shutdown_lock(shutting_down_mutex_);
+---
+>   boost::mutex::scoped_lock shutdown_lock(shutting_down_mutex_);
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/service_publication.cpp tmp/old/core/roscpp/src/libros/service_publication.cpp
+46,47c46,47
+<                              const std::string& response_data_type, const ServiceCallbackHelperPtr& helper, CallbackQueueInterface* callback_queue,
+<                              const VoidConstPtr& tracked_object)
+---
+>                              const std::string& response_data_type, const ServiceMessageHelperPtr& helper, CallbackQueueInterface* callback_queue,
+>                              const VoidPtr& tracked_object)
+87c87
+<   ServiceCallback(const ServiceCallbackHelperPtr& helper, const boost::shared_array<uint8_t>& buf, size_t num_bytes, const ServiceClientLinkPtr& link, bool has_tracked_object, const VoidConstWPtr& tracked_object)
+---
+>   ServiceCallback(const ServiceMessageHelperPtr& helper, const boost::shared_array<uint8_t>& buf, size_t num_bytes, const ServiceClientLinkPtr& link, bool has_tracked_object, const VoidWPtr& tracked_object)
+104c104
+<     VoidConstPtr tracker;
+---
+>     VoidPtr tracker;
+111,112c111
+<         SerializedMessage res = serialization::serializeServiceResponse(false, 0);
+<         link_->processResponse(false, res);
+---
+>         link_->processResponse(false, MessagePtr());
+117,121c116,117
+<     ServiceCallbackHelperCallParams params;
+<     params.request = SerializedMessage(buffer_, num_bytes_);
+<     params.connection_header = link_->getConnection()->getHeader().getValues();
+<     try
+<     {
+---
+>     MessagePtr req = helper_->createRequest();
+>     MessagePtr resp = helper_->createResponse();
+123,132c119,124
+<       bool ok = helper_->call(params);
+<       link_->processResponse(ok, params.response);
+<     }
+<     catch (std::exception& e)
+<     {
+<       ROS_ERROR("Exception thrown while processing service call: %s", e.what());
+<       SerializedMessage res = serialization::serializeServiceResponse(false, 0);
+<       link_->processResponse(false, res);
+<       return Invalid;
+<     }
+---
+>     req->__connection_header = link_->getConnection()->getHeader().getValues();
+> 
+>     req->__serialized_length = num_bytes_;
+>     req->deserialize(buffer_.get());
+>     bool ok = helper_->call(req, resp);
+>     link_->processResponse(ok, resp);
+138c130
+<   ServiceCallbackHelperPtr helper_;
+---
+>   ServiceMessageHelperPtr helper_;
+143c135
+<   VoidConstWPtr tracked_object_;
+---
+>   VoidWPtr tracked_object_;
+185c177
+<     (*i)->getConnection()->drop(Connection::Destructing);
+---
+>     (*i)->getConnection()->drop();
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/service_server_link.cpp tmp/old/core/roscpp/src/libros/service_server_link.cpp
+74a75
+>     local->success_ = false;
+124d124
+<   header["persistent"] = persistent_ ? "1" : "0";
+180d179
+<   //ros::WallDuration(0.1).sleep();
+197c196
+<     ROS_ERROR("a message of over a gigabyte was " \
+---
+>     ROS_ERROR("woah! a message of over a gigabyte was " \
+200,201c199,200
+<                 "synchronization is lost.");
+<     conn->drop(Connection::Destructing);
+---
+>                 "synchronization is lost... it's over.");
+>     conn->drop();
+208c207
+< 	current_call_->success_ = ( ok > 0 ? true : false );
+---
+>     current_call_->success_ = ok;
+233c232,233
+<       *current_call_->resp_ = SerializedMessage(buffer, size);
+---
+>       current_call_->resp_->__serialized_length = size;
+>       current_call_->resp_->deserialize(buffer.get());
+296c296
+<       connection_->drop(Connection::Destructing);
+---
+>       connection_->drop();
+305c305,306
+<     SerializedMessage request;
+---
+>     boost::shared_array<uint8_t> dummy;
+>     SerializedMessage request(dummy, 0);
+309c310,315
+<       request = current_call_->req_;
+---
+> 
+>       uint32_t num_bytes = current_call_->req_->serializationLength() + 4;
+> 
+>       request = SerializedMessage(boost::shared_array<uint8_t>(new uint8_t[num_bytes]), num_bytes);
+>       *((uint32_t*)request.buf.get()) = num_bytes - 4;
+>       current_call_->req_->serialize(request.buf.get() + 4, 0);
+316c322
+< bool ServiceServerLink::call(const SerializedMessage& req, SerializedMessage& resp)
+---
+> bool ServiceServerLink::call(Message* req, Message* resp)
+320c326
+<   info->resp_ = &resp;
+---
+>   info->resp_ = resp;
+326,327d331
+<   //ros::WallDuration(0.1).sleep();
+< 
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/single_subscriber_publisher.cpp tmp/old/core/roscpp/src/libros/single_subscriber_publisher.cpp
+42c42
+< void SingleSubscriberPublisher::publish(const SerializedMessage& m) const
+---
+> void SingleSubscriberPublisher::publish(const MessageConstPtr& message) const
+44c44,49
+<   link_->enqueueMessage(m, true, true);
+---
+>   link_->publish(*message);
+> }
+> 
+> void SingleSubscriberPublisher::publish(const Message& message) const
+> {
+>   link_->publish(message);
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/subscriber.cpp tmp/old/core/roscpp/src/libros/subscriber.cpp
+63c63
+< Subscriber::Subscriber(const std::string& topic, const NodeHandle& node_handle, const SubscriptionCallbackHelperPtr& helper)
+---
+> Subscriber::Subscriber(const std::string& topic, const NodeHandle& node_handle, const SubscriptionMessageHelperPtr& helper)
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/subscriber_link.cpp tmp/old/core/roscpp/src/libros/subscriber_link.cpp
+68,85d67
+< const std::string& SubscriberLink::getMD5Sum()
+< {
+<   PublicationPtr parent = parent_.lock();
+<   return parent->getMD5Sum();
+< }
+< 
+< const std::string& SubscriberLink::getDataType()
+< {
+<   PublicationPtr parent = parent_.lock();
+<   return parent->getDataType();
+< }
+< 
+< const std::string& SubscriberLink::getMessageDefinition()
+< {
+<   PublicationPtr parent = parent_.lock();
+<   return parent->getMessageDefinition();
+< }
+< 
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/subscription.cpp tmp/old/core/roscpp/src/libros/subscription.cpp
+35,40c35
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+< #ifdef WIN32
+< #include <Winsock2.h>
+< #include <Ws2tcpip.h>
+< #else
+---
+> #include <sstream>
+43,46d37
+< #include <sys/poll.h> // for POLLOUT
+< #endif //WIN32
+< 
+< #include <sstream>
+47a39
+> #include <sys/poll.h> // for POLLOUT
+50d41
+< #include <typeinfo>
+70,72d60
+< #include "ros/subscription_callback_helper.h"
+< 
+< #include <boost/make_shared.hpp>
+83d70
+< , nonconst_callbacks_(0)
+204c191
+<   addPublisherLink(pub_link);
+---
+>   publisher_links_.push_back(pub_link);
+208,216d194
+< bool urisEqual(const std::string& uri1, const std::string& uri2)
+< {
+<   std::string host1, host2;
+<   uint32_t port1 = 0, port2 = 0;
+<   network::splitURI(uri1, host1, port1);
+<   network::splitURI(uri2, host2, port2);
+<   return port1 == port2 && host1 == host2;
+< }
+< 
+270c248
+<         if (urisEqual((*spc)->getPublisherXMLRPCURI(), *up_i))
+---
+>         if ((*spc)->getPublisherXMLRPCURI() == *up_i)
+289c267
+<         if (urisEqual(*up_i, (*spc)->getPublisherXMLRPCURI()))
+---
+>         if (*up_i == (*spc)->getPublisherXMLRPCURI())
+303c281
+<           if (urisEqual(*up_i, (*it)->getRemoteURI()))
+---
+>           if (*up_i == (*it)->getRemoteURI())
+318,332d295
+<   for (V_PublisherLink::iterator i = subtractions.begin(); i != subtractions.end(); ++i)
+<   {
+< 	const PublisherLinkPtr& link = *i;
+<     if (link->getPublisherXMLRPCURI() != XMLRPCManager::instance()->getServerURI())
+<     {
+<       ROSCPP_LOG_DEBUG("Disconnecting from publisher [%s] of topic [%s] at [%s]",
+<                         link->getCallerID().c_str(), name_.c_str(), link->getPublisherXMLRPCURI().c_str());
+< 		  link->drop();
+< 	  }
+< 	  else
+< 	  {
+< 		  ROSCPP_LOG_DEBUG("Disconnect: skipping myself for topic [%s]", name_.c_str());
+< 	  }
+< 	}
+< 
+346a310,325
+>   for (V_PublisherLink::iterator i = subtractions.begin();
+>            i != subtractions.end(); ++i)
+>   {
+>     const PublisherLinkPtr& link = *i;
+>     if (link->getPublisherXMLRPCURI() != XMLRPCManager::instance()->getServerURI())
+>     {
+>       ROSCPP_LOG_DEBUG("Disconnecting from publisher [%s] of topic [%s] at [%s]",
+>                   link->getCallerID().c_str(), name_.c_str(), link->getPublisherXMLRPCURI().c_str());
+>       link->drop();
+>     }
+>     else
+>     {
+>       ROSCPP_LOG_DEBUG("Disconnect: skipping myself for topic [%s]", name_.c_str());
+>     }
+>   }
+> 
+411c390
+<   XmlRpc::XmlRpcClient* c = new XmlRpc::XmlRpcClient(peer_host.c_str(),
+---
+>   XmlRpc::XmlRpcClient* c = new XmlRpc::XmlRpcClient(peer_host.c_str(), 
+421,425d399
+<     if (udp_transport)
+<     {
+<       udp_transport->close();
+<     }
+< 
+445,452d418
+< void closeTransport(const TransportUDPPtr& trans)
+< {
+<   if (trans)
+<   {
+<     trans->close();
+<   }
+< }
+< 
+480,481c446
+<   	closeTransport(udp_transport);
+<   	return;
+---
+>     return;
+487,488c452
+<   	closeTransport(udp_transport);
+<   	return;
+---
+>     return;
+494,495c458
+<   	closeTransport(udp_transport);
+<   	return;
+---
+>     return;
+500,501c463
+<   	closeTransport(udp_transport);
+<   	return;
+---
+>     return;
+531c493
+<       addPublisherLink(pub_link);
+---
+>       publisher_links_.push_back(pub_link);
+542c504
+<     if (proto.size() != 6 ||
+---
+>     if (proto.size() != 5 ||
+546,547c508
+<         proto[4].getType() != XmlRpcValue::TypeInt ||
+<         proto[5].getType() != XmlRpcValue::TypeBase64)
+---
+>         proto[4].getType() != XmlRpcValue::TypeInt)
+549,551c510,511
+<       ROSCPP_LOG_DEBUG("publisher implements UDPROS, but the " \
+< 	    	       "parameters aren't string,int,int,int,base64");
+<       closeTransport(udp_transport);
+---
+>     	ROSCPP_LOG_DEBUG("publisher implements UDPROS, but the " \
+>                 "parameters aren't string,int,int");
+558,568d517
+<     std::vector<char> header_bytes = proto[5];
+<     boost::shared_array<uint8_t> buffer = boost::shared_array<uint8_t>(new uint8_t[header_bytes.size()]);
+<     memcpy(buffer.get(), &header_bytes[0], header_bytes.size());
+<     Header h;
+<     std::string err;
+<     if (!h.parse(buffer, header_bytes.size(), err))
+<     {
+<       ROSCPP_LOG_DEBUG("Unable to parse UDPROS connection header: %s", err.c_str());
+<       closeTransport(udp_transport);
+<       return;
+<     }
+571,577c520
+<     std::string error_msg;
+<     if (h.getValue("error", error_msg))
+<     {
+<       ROSCPP_LOG_DEBUG("Received error message in header for connection to [%s]: [%s]", xmlrpc_uri.c_str(), error_msg.c_str());
+<       closeTransport(udp_transport);
+<       return;
+<     }
+---
+>     //TransportUDPPtr transport(new TransportUDP(&g_node->getPollSet()));
+579,580c522,528
+<     TransportPublisherLinkPtr pub_link(new TransportPublisherLink(shared_from_this(), xmlrpc_uri, transport_hints_));
+<     if (pub_link->setHeader(h))
+---
+>     //if (udp_transport->connect(pub_host, pub_port, conn_id))
+>     // Using if(1) below causes a bizarre compiler error on some OS X
+>     // machines.  Creating a variable and testing it doesn't.  Presumably
+>     // it's related to the conditional compilation that goes on inside
+>     // ROS_ERROR.
+>     int foo=1;
+>     if (foo)
+582a531,532
+>       TransportPublisherLinkPtr pub_link(new TransportPublisherLink(shared_from_this(), xmlrpc_uri, transport_hints_));
+> 
+584d533
+<       connection->setHeader(h);
+590c539
+<       addPublisherLink(pub_link);
+---
+>       publisher_links_.push_back(pub_link);
+596,598c545
+<       ROSCPP_LOG_DEBUG("Failed to connect to publisher of topic [%s] at [%s:%d]", name_.c_str(), pub_host.c_str(), pub_port);
+<       closeTransport(udp_transport);
+<       return;
+---
+>     	ROSCPP_LOG_DEBUG("Failed to connect to publisher of topic [%s] at [%s:%d]", name_.c_str(), pub_host.c_str(), pub_port);
+607c554,591
+< uint32_t Subscription::handleMessage(const SerializedMessage& m, bool ser, bool nocopy, const boost::shared_ptr<M_string>& connection_header, const PublisherLinkPtr& link)
+---
+> class SubscriptionCallback : public CallbackInterface
+> {
+> public:
+>   SubscriptionCallback(const SubscriptionQueuePtr& queue, uint64_t id)
+>   : queue_(queue)
+>   , id_(id)
+>   , called_(false)
+>   {}
+> 
+>   ~SubscriptionCallback()
+>   {
+>     if (!called_)
+>     {
+>       queue_->remove(id_);
+>     }
+>   }
+> 
+>   virtual CallResult call()
+>   {
+>     CallResult result = queue_->call(id_);
+>     called_ = true;
+> 
+>     return result;
+>   }
+> 
+>   virtual bool ready()
+>   {
+>     return queue_->ready(id_);
+>   }
+> 
+> private:
+>   SubscriptionQueuePtr queue_;
+>   uint64_t id_;
+>   bool called_;
+> };
+> typedef boost::shared_ptr<SubscriptionCallback> SubscriptionCallbackPtr;
+> 
+> uint32_t Subscription::handleMessage(const boost::shared_array<uint8_t>& buffer, size_t num_bytes, bool buffer_includes_size_header, const boost::shared_ptr<M_string>& connection_header, const PublisherLinkPtr& link)
+613,618c597,598
+<   // Cache the deserializers by type info.  If all the subscriptions are the same type this has the same performance as before.  If
+<   // there are subscriptions with different C++ type (but same ROS message type), this now works correctly rather than passing
+<   // garbage to the messages with different C++ types than the first one.
+<   cached_deserializers_.clear();
+< 
+<   ros::Time receipt_time = ros::Time::now();
+---
+>   MessagePtr msg;
+>   MessageDeserializerPtr deserializer;
+627,629c607
+<     const std::type_info* ti = &info->helper_->getTypeInfo();
+< 
+<     if ((nocopy && m.type_info && *ti == *m.type_info) || (ser && (!m.type_info || *ti != *m.type_info)))
+---
+>     if (!deserializer)
+631,657c609,610
+<       MessageDeserializerPtr deserializer;
+< 
+<       V_TypeAndDeserializer::iterator des_it = cached_deserializers_.begin();
+<       V_TypeAndDeserializer::iterator des_end = cached_deserializers_.end();
+<       for (; des_it != des_end; ++des_it)
+<       {
+<         if (*des_it->first == *ti)
+<         {
+<           deserializer = des_it->second;
+<           break;
+<         }
+<       }
+< 
+<       if (!deserializer)
+<       {
+<         deserializer = boost::make_shared<MessageDeserializer>(info->helper_, m, connection_header);
+<         cached_deserializers_.push_back(std::make_pair(ti, deserializer));
+<       }
+< 
+<       bool was_full = false;
+<       bool nonconst_need_copy = false;
+<       if (callbacks_.size() > 1)
+<       {
+<         nonconst_need_copy = true;
+<       }
+< 
+<       info->subscription_queue_->push(info->helper_, deserializer, info->has_tracked_object_, info->tracked_object_, nonconst_need_copy, receipt_time, &was_full);
+---
+>       deserializer.reset(new MessageDeserializer(info->helper_, buffer, num_bytes, buffer_includes_size_header, connection_header));
+>     }
+659,666c612,614
+<       if (was_full)
+<       {
+<         ++drops;
+<       }
+<       else
+<       {
+<         info->callback_queue_->addCallback(info->subscription_queue_, (uint64_t)info.get());
+<       }
+---
+>     if (info->subscription_queue_->full())
+>     {
+>       ++drops;
+667a616,619
+> 
+>     uint64_t id = info->subscription_queue_->push(info->helper_, deserializer, info->has_tracked_object_, info->tracked_object_);
+>     SubscriptionCallbackPtr cb(new SubscriptionCallback(info->subscription_queue_, id));
+>     info->callback_queue_->addCallback(cb, (uint64_t)info.get());
+671c623
+<   if (link->isLatched())
+---
+>   if (deserializer && link->isLatched())
+673,678c625
+<     LatchInfo li;
+<     li.connection_header = connection_header;
+<     li.link = link;
+<     li.message = m;
+<     li.receipt_time = receipt_time;
+<     latched_messages_[link] = li;
+---
+>     latched_messages_[link] = deserializer;
+681,682d627
+<   cached_deserializers_.clear();
+< 
+686c631
+< bool Subscription::addCallback(const SubscriptionCallbackHelperPtr& helper, const std::string& md5sum, CallbackQueueInterface* queue, int32_t queue_size, const VoidConstPtr& tracked_object, bool allow_concurrent_callbacks)
+---
+> bool Subscription::addCallback(const SubscriptionMessageHelperPtr& helper, CallbackQueueInterface* queue, int32_t queue_size, const VoidPtr& tracked_object)
+690,701c635
+< 
+<   // Decay to a real type as soon as we have a subscriber with a real type
+<   {
+<     boost::mutex::scoped_lock lock(md5sum_mutex_);
+<     if (md5sum_ == "*" && md5sum != "*")
+<     {
+< 
+<       md5sum_ = md5sum;
+<     }
+<   }
+< 
+<   if (md5sum != "*" && md5sum != this->md5sum())
+---
+>   if (helper->getMD5Sum() != md5sum())
+712c646
+<     info->subscription_queue_.reset(new SubscriptionQueue(name_, queue_size, allow_concurrent_callbacks));
+---
+>     info->subscription_queue_.reset(new SubscriptionQueue(name_, queue_size));
+720,724d653
+<     if (!helper->isConst())
+<     {
+<       ++nonconst_callbacks_;
+<     }
+< 
+726d654
+<     cached_deserializers_.reserve(callbacks_.size());
+740c668
+<           M_PublisherLinkToLatchInfo::iterator des_it = latched_messages_.find(link);
+---
+>           M_PublisherLinkToDeserializer::iterator des_it = latched_messages_.find(link);
+743c671
+<             const LatchInfo& latch_info = des_it->second;
+---
+>             const MessageDeserializerPtr& des = des_it->second;
+745,751c673,675
+<             MessageDeserializerPtr des(new MessageDeserializer(helper, latch_info.message, latch_info.connection_header));
+<             bool was_full = false;
+<             info->subscription_queue_->push(info->helper_, des, info->has_tracked_object_, info->tracked_object_, true, latch_info.receipt_time, &was_full);
+<             if (!was_full)
+<             {
+<               info->callback_queue_->addCallback(info->subscription_queue_, (uint64_t)info.get());
+<             }
+---
+>             uint64_t id = info->subscription_queue_->push(info->helper_, des, info->has_tracked_object_, info->tracked_object_);
+>             SubscriptionCallbackPtr cb(new SubscriptionCallback(info->subscription_queue_, id));
+>             info->callback_queue_->addCallback(cb, (uint64_t)info.get());
+761c685
+< void Subscription::removeCallback(const SubscriptionCallbackHelperPtr& helper)
+---
+> void Subscription::removeCallback(const SubscriptionMessageHelperPtr& helper)
+773,778d696
+< 
+<       if (!helper->isConst())
+<       {
+<         --nonconst_callbacks_;
+<       }
+< 
+784,797d701
+< void Subscription::headerReceived(const PublisherLinkPtr& link, const Header& h)
+< {
+<   boost::mutex::scoped_lock lock(md5sum_mutex_);
+<   if (md5sum_ == "*")
+<   {
+<     md5sum_ = link->getMD5Sum();
+<   }
+< }
+< 
+< void Subscription::addPublisherLink(const PublisherLinkPtr& link)
+< {
+<   publisher_links_.push_back(link);
+< }
+< 
+814,836d717
+< void Subscription::getPublishTypes(bool& ser, bool& nocopy, const std::type_info& ti)
+< {
+<   boost::mutex::scoped_lock lock(callbacks_mutex_);
+<   for (V_CallbackInfo::iterator cb = callbacks_.begin();
+<        cb != callbacks_.end(); ++cb)
+<   {
+<     const CallbackInfoPtr& info = *cb;
+<     if (info->helper_->getTypeInfo() == ti)
+<     {
+<       nocopy = true;
+<     }
+<     else
+<     {
+<       ser = true;
+<     }
+< 
+<     if (nocopy && ser)
+<     {
+<       return;
+<     }
+<   }
+< }
+< 
+844d724
+<   boost::mutex::scoped_lock lock(md5sum_mutex_);
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/subscription_queue.cpp tmp/old/core/roscpp/src/libros/subscription_queue.cpp
+31d30
+< #include "ros/subscription_callback_helper.h"
+36c35
+< SubscriptionQueue::SubscriptionQueue(const std::string& topic, int32_t queue_size, bool allow_concurrent_callbacks)
+---
+> SubscriptionQueue::SubscriptionQueue(const std::string& topic, int32_t queue_size)
+39a39
+> , id_counter_(0)
+41d40
+< , allow_concurrent_callbacks_(allow_concurrent_callbacks)
+49,51c48
+< void SubscriptionQueue::push(const SubscriptionCallbackHelperPtr& helper, const MessageDeserializerPtr& deserializer,
+<                                  bool has_tracked_object, const VoidConstWPtr& tracked_object, bool nonconst_need_copy,
+<                                  ros::Time receipt_time, bool* was_full)
+---
+> uint64_t SubscriptionQueue::push(const SubscriptionMessageHelperPtr& helper, const MessageDeserializerPtr& deserializer, bool has_tracked_object, const VoidWPtr& tracked_object)
+55,59d51
+<   if (was_full)
+<   {
+<     *was_full = false;
+<   }
+< 
+71,75d62
+< 
+<     if (was_full)
+<     {
+<       *was_full = true;
+<     }
+81a69,70
+>   uint64_t count = id_counter_++;
+> 
+87,88c76
+<   i.nonconst_need_copy = nonconst_need_copy;
+<   i.receipt_time = receipt_time;
+---
+>   i.id = count;
+90a79,105
+> 
+>   return count;
+> }
+> 
+> void SubscriptionQueue::remove(uint64_t id)
+> {
+>   boost::mutex::scoped_lock lock(queue_mutex_);
+>   if (!queue_.empty())
+>   {
+>     if (id < queue_.front().id)
+>     {
+>       return;
+>     }
+>   }
+> 
+>   L_Item::iterator it = queue_.begin();
+>   L_Item::iterator end = queue_.end();
+>   for (; it != end; ++it)
+>   {
+>     const Item& i = *it;
+>     if (i.id == id)
+>     {
+>       queue_.erase(it);
+>       --queue_size_;
+>       return;
+>     }
+>   }
+102c117
+< CallbackInterface::CallResult SubscriptionQueue::call()
+---
+> CallbackInterface::CallResult SubscriptionQueue::call(uint64_t id)
+107,109c122,123
+<   boost::recursive_mutex::scoped_try_lock lock(callback_mutex_, boost::defer_lock);
+< 
+<   if (!allow_concurrent_callbacks_)
+---
+>   boost::recursive_mutex::scoped_try_lock lock(callback_mutex_);
+>   if (!lock.owns_lock())
+111,115c125
+<     lock.try_lock();
+<     if (!lock.owns_lock())
+<     {
+<       return CallbackInterface::TryAgain;
+<     }
+---
+>     return CallbackInterface::TryAgain;
+118c128
+<   VoidConstPtr tracker;
+---
+>   VoidPtr tracker;
+130a141,150
+>     if (id < i.id)
+>     {
+>       return CallbackInterface::Invalid;
+>     }
+> 
+>     if (id > i.id)
+>     {
+>       return CallbackInterface::TryAgain;
+>     }
+> 
+150c170
+<   VoidConstPtr msg = i.deserializer->deserialize();
+---
+>   MessagePtr msg = i.deserializer->deserialize();
+162,164c182
+<     SubscriptionCallbackHelperCallParams params;
+<     params.event = MessageEvent<void const>(msg, i.deserializer->getConnectionHeader(), i.receipt_time, i.nonconst_need_copy, MessageEvent<void const>::CreateFunction());
+<     i.helper->call(params);
+---
+>     i.helper->call(msg);
+170c188
+< bool SubscriptionQueue::ready()
+---
+> bool SubscriptionQueue::ready(uint64_t id)
+172c190,196
+<   return true;
+---
+>   boost::mutex::scoped_lock lock(queue_mutex_);
+>   if (queue_.empty())
+>   {
+>     return true;
+>   }
+> 
+>   return id <= queue_.front().id;
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/this_node.cpp tmp/old/core/roscpp/src/libros/this_node.cpp
+28,29d27
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+125,127d122
+< #ifdef WIN32
+<     sprintf_s(buf, sizeof(buf), "_%llu", (unsigned long long)WallTime::now().toNSec());
+< #else
+129d123
+< #endif //WIN32
+132,133d125
+< 
+<   ros::console::setFixedFilterToken("node", g_name);
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/timer.cpp tmp/old/core/roscpp/src/libros/timer.cpp
+57c57
+<     VoidConstPtr tracked_object;
+---
+>     VoidPtr tracked_object;
+88,93d87
+< void Timer::Impl::setPeriod(const Duration& period)
+< {
+<   period_ = period;
+<   TimerManager<Time, Duration, TimerEvent>::global().setPeriod(timer_handle_, period);
+< }
+< 
+140,147d133
+< void Timer::setPeriod(const Duration& period)
+< {
+<   if (impl_)
+<   {
+<     impl_->setPeriod(period);
+<   }
+< }
+< 
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/topic.cpp tmp/old/core/roscpp/src/libros/topic.cpp
+55c55
+<     if (!timeout.isZero() && ros::Time::now() >= end)
+---
+>     if (!timeout.isZero() && ros::Time::now() <= end)
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/topic_manager.cpp tmp/old/core/roscpp/src/libros/topic_manager.cpp
+42d41
+< #include "ros/subscribe_options.h"
+96c95
+<   poll_manager_->addPollThreadListener(boost::bind(&TopicManager::processPublishQueues, this));
+---
+>   poll_manager_->addPollThreadListener(boost::bind(&TopicManager::processPublishQueue, this));
+109a109
+>     boost::mutex::scoped_lock lock3(publish_queue_mutex_);
+148a149,150
+> 
+>   publish_queue_.clear();
+151c153
+< void TopicManager::processPublishQueues()
+---
+> void TopicManager::processPublishQueue()
+153c155,171
+<   boost::recursive_mutex::scoped_lock lock(advertised_topics_mutex_);
+---
+>   V_PublicationAndSerializedMessagePair queue;
+>   {
+>     boost::mutex::scoped_lock lock(publish_queue_mutex_);
+> 
+>     if (isShuttingDown())
+>     {
+>       return;
+>     }
+> 
+>     queue.insert(queue.end(), publish_queue_.begin(), publish_queue_.end());
+>     publish_queue_.clear();
+>   }
+> 
+>   if (queue.empty())
+>   {
+>     return;
+>   }
+155,156c173,174
+<   V_Publication::iterator it = advertised_topics_.begin();
+<   V_Publication::iterator end = advertised_topics_.end();
+---
+>   V_PublicationAndSerializedMessagePair::iterator it = queue.begin();
+>   V_PublicationAndSerializedMessagePair::iterator end = queue.end();
+159,160c177,178
+<     const PublicationPtr& pub = *it;
+<     pub->processPublishQueue();
+---
+>     PublicationPtr pub = it->first;
+>     pub->enqueueMessage(it->second);
+195,199d212
+< bool md5sumsMatch(const std::string& lhs, const std::string& rhs)
+< {
+<   return lhs == "*" || rhs == "*" || lhs == rhs;
+< }
+< 
+204d216
+<   bool found_topic = false;
+220,221c232
+<         found_topic = true;
+<         if (md5sumsMatch(ops.md5sum, sub->md5sum()))
+---
+>         if (sub->md5sum() == ops.helper->getMD5Sum())
+223a235
+>           break;
+225d236
+<         break;
+230c241
+<   if (found_topic && !found)
+---
+>   if (found)
+232,238c243
+<     std::stringstream ss;
+<     ss << "Tried to subscribe to a topic with the same name but different md5sum as a topic that was already subscribed [" << ops.datatype << "/" << ops.md5sum << " vs. " << sub->datatype() << "/" << sub->md5sum() << "]";
+<     throw ConflictingSubscriptionException(ss.str());
+<   }
+<   else if (found)
+<   {
+<     if (!sub->addCallback(ops.helper, ops.md5sum, ops.callback_queue, ops.queue_size, ops.tracked_object, ops.allow_concurrent_callbacks))
+---
+>     if (!sub->addCallback(ops.helper, ops.callback_queue, ops.queue_size, ops.tracked_object))
+262,278c267,268
+<   if (ops.md5sum.empty())
+<   {
+<     throw InvalidParameterException("Subscribing to topic [" + ops.topic + "] with an empty md5sum");
+<   }
+< 
+<   if (ops.datatype.empty())
+<   {
+<     throw InvalidParameterException("Subscribing to topic [" + ops.topic + "] with an empty datatype");
+<   }
+< 
+<   if (!ops.helper)
+<   {
+<     throw InvalidParameterException("Subscribing to topic [" + ops.topic + "] without a callback");
+<   }
+< 
+<   const std::string& md5sum = ops.md5sum;
+<   std::string datatype = ops.datatype;
+---
+>   std::string md5sum = ops.helper->getMD5Sum();
+>   std::string datatype = ops.helper->getDataType();
+281c271
+<   s->addCallback(ops.helper, ops.md5sum, ops.callback_queue, ops.queue_size, ops.tracked_object, ops.allow_concurrent_callbacks);
+---
+>   s->addCallback(ops.helper, ops.callback_queue, ops.queue_size, ops.tracked_object);
+299,301c289
+<     std::stringstream ss;
+<     ss << "Advertising with * as the datatype is not allowed.  Topic [" << ops.topic << "]";
+<     throw InvalidParameterException(ss.str());
+---
+>     ROS_WARN("Advertising on topic [%s] with datatype [*].  If you are not playing back an old bag file, this is a problem.", ops.topic.c_str());
+306,323c294
+<     std::stringstream ss;
+<     ss << "Advertising with * as the md5sum is not allowed.  Topic [" << ops.topic << "]";
+<     throw InvalidParameterException(ss.str());
+<   }
+< 
+<   if (ops.md5sum.empty())
+<   {
+<     throw InvalidParameterException("Advertising on topic [" + ops.topic + "] with an empty md5sum");
+<   }
+< 
+<   if (ops.datatype.empty())
+<   {
+<     throw InvalidParameterException("Advertising on topic [" + ops.topic + "] with an empty datatype");
+<   }
+< 
+<   if (ops.message_definition.empty())
+<   {
+<     ROS_WARN("Advertising on topic [%s] with an empty message definition.  Some tools (e.g. rosbag) may not work correctly.", ops.topic.c_str());
+---
+>     ROS_WARN("Advertising on topic [%s] with md5sum [*].  If you are not playing back an old bag file, this is a problem.", ops.topic.c_str());
+356c327
+<     pub = PublicationPtr(new Publication(ops.topic, ops.datatype, ops.md5sum, ops.message_definition, ops.queue_size, ops.latch, ops.has_header));
+---
+>     pub = PublicationPtr(new Publication(ops.topic, ops.datatype, ops.md5sum, ops.message_definition, ops.queue_size, ops.latch));
+380c351
+<       if ((*s)->getName() == ops.topic && md5sumsMatch((*s)->md5sum(), ops.md5sum) && !(*s)->isDropped())
+---
+>       if ((*s)->getName() == ops.topic && (*s)->md5sum() == ops.md5sum && !(*s)->isDropped())
+501d471
+<   const std::string& sub_md5sum = s->md5sum();
+510,511c480
+<       const std::string& pub_md5sum = pub->getMD5Sum();
+<       if (pub->getName() == s->getName() && md5sumsMatch(pub_md5sum, sub_md5sum) && !pub->isDropped())
+---
+>       if (pub->getName() == s->getName() && pub->getDataType() == s->datatype() && !pub->isDropped())
+632,638d600
+<       PublicationPtr pub_ptr = lookupPublication(topic);
+<       if(!pub_ptr)
+<       {
+<       	ROSCPP_LOG_DEBUG("Unable to find advertised topic %s for UDPROS connection", topic.c_str());
+<         return false;
+<       }
+< 
+641,649d602
+< 
+<       M_string m;
+<       std::string error_msg;
+<       if (!pub_ptr->validateHeader(h, error_msg))
+<       {
+<         ROSCPP_LOG_DEBUG("Error validating header from [%s:%d] for topic [%s]: %s", host.c_str(), port, topic.c_str(), error_msg.c_str());
+<         return false;
+<       }
+< 
+651c604
+<       int conn_id = connection_manager_->getNewConnectionID();
+---
+>       int conn_id = connection_manager_->getUDPServerTransport()->generateConnectionId();
+661,670d613
+<       m["topic"] = topic;
+<       m["md5sum"] = pub_ptr->getMD5Sum();
+<       m["type"] = pub_ptr->getDataType();
+<       m["callerid"] = this_node::getName();
+<       m["message_definition"] = pub_ptr->getMessageDefinition();
+<       boost::shared_array<uint8_t> msg_def_buffer;
+<       uint32_t len;
+<       Header::write(m, msg_def_buffer, len);
+<       XmlRpcValue v(msg_def_buffer.get(), len);
+<       udpros_params[5] = v;
+689c632
+< void TopicManager::publish(const std::string& topic, const boost::function<SerializedMessage(void)>& serfunc, SerializedMessage& m)
+---
+> void TopicManager::publish(const std::string &topic, const Message& m)
+698,699c641,642
+<   PublicationPtr p = lookupPublicationWithoutLock(topic);
+<   if (p->hasSubscribers() || p->isLatching())
+---
+>   for (V_Publication::iterator t = advertised_topics_.begin();
+>        t != advertised_topics_.end(); ++t)
+701,718c644
+<     ROS_DEBUG_NAMED("superdebug", "Publishing message on topic [%s] with sequence number [%d]", p->getName().c_str(), p->getSequence());
+< 
+<     // Determine what kinds of subscribers we're publishing to.  If they're intraprocess with the same C++ type we can
+<     // do a no-copy publish.
+<     bool nocopy = false;
+<     bool serialize = false;
+< 
+<     // We can only do a no-copy publish if a shared_ptr to the message is provided, and we have type information for it
+<     if (m.type_info && m.message)
+<     {
+<       p->getPublishTypes(serialize, nocopy, *m.type_info);
+<     }
+<     else
+<     {
+<       serialize = true;
+<     }
+< 
+<     if (!nocopy)
+---
+>     if ((*t)->getName() == topic)
+720,738c646,654
+<       m.message.reset();
+<       m.type_info = 0;
+<     }
+< 
+<     if (serialize)
+<     {
+<       SerializedMessage m2 = serfunc();
+<       m.buf = m2.buf;
+<       m.num_bytes = m2.num_bytes;
+<       m.message_start = m2.message_start;
+<     }
+< 
+<     p->publish(m);
+< 
+<     // If we're not doing a serialized publish we don't need to signal the pollset.  The write()
+<     // call inside signal() is actually relatively expensive when doing a nocopy publish.
+<     if (serialize)
+<     {
+<       poll_manager_->getPollSet().signal();
+---
+>       if (m.__getDataType() != ((*t)->getDataType()))
+>       {
+>         ROS_ERROR("Topic [%s] advertised as [%s], but published as [%s]", topic.c_str(), (*t)->getDataType().c_str(), m.__getDataType().c_str());
+>       }
+>       else
+>       {
+>         publish(*t, m);
+>       }
+>       break;
+741,744d656
+<   else
+<   {
+<     p->incrementSequence();
+<   }
+747c659
+< void TopicManager::incrementSequence(const std::string& topic)
+---
+> void TopicManager::publish(const PublicationPtr& p, const Message& m)
+749,750c661,662
+<   PublicationPtr pub = lookupPublication(topic);
+<   if (pub)
+---
+>   p->incrementSequence();
+>   if (p->hasSubscribers() || p->isLatching())
+752,754c664,665
+<     pub->incrementSequence();
+<   }
+< }
+---
+>     uint32_t msg_len = m.serializationLength();
+>     boost::shared_array<uint8_t> buf = boost::shared_array<uint8_t>(new uint8_t[msg_len + 4]);
+756,761c667,673
+< bool TopicManager::isLatched(const std::string& topic)
+< {
+<   PublicationPtr pub = lookupPublication(topic);
+<   if (pub)
+<   {
+<     return pub->isLatched();
+---
+>     *((uint32_t*)buf.get()) = msg_len;
+>     m.serialize(buf.get() + 4, p->getSequence());
+>     ROS_DEBUG_NAMED("superdebug", "Publishing message on topic [%s] with sequence number [%d] of length [%d]", p->getName().c_str(), p->getSequence(), msg_len);
+> 
+>     boost::mutex::scoped_lock lock(publish_queue_mutex_);
+>     publish_queue_.push_back(std::make_pair(p, SerializedMessage(buf, msg_len + 4)));
+>     poll_manager_->getPollSet().signal();
+763,764d674
+< 
+<   return false;
+783c693
+< bool TopicManager::unsubscribe(const std::string &topic, const SubscriptionCallbackHelperPtr& helper)
+---
+> bool TopicManager::unsubscribe(const std::string &topic, const SubscriptionMessageHelperPtr& helper)
+844,845c754,755
+<   PublicationPtr p = lookupPublicationWithoutLock(topic);
+<   if (p)
+---
+>   for (V_Publication::const_iterator t = advertised_topics_.begin();
+>        t != advertised_topics_.end(); ++t)
+847c757,760
+<     return p->getNumSubscribers();
+---
+>     if ((*t)->getName() == topic)
+>     {
+>       return (*t)->getNumSubscribers();
+>     }
+871c784
+<     if (!(*t)->isDropped() && (*t)->getName() == topic)
+---
+>     if ((*t)->getName() == topic)
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/transport/transport_tcp.cpp tmp/old/core/roscpp/src/libros/transport/transport_tcp.cpp
+35,47d34
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+< #ifdef WIN32
+< #include <winsock2.h>
+< #include <Ws2tcpip.h>
+< #else
+< #include <sys/socket.h>
+< #include <netinet/tcp.h>
+< #include <sys/poll.h>
+< #include <arpa/inet.h>
+< #include <netdb.h>
+< #endif //WIN32
+< 
+58a46,51
+> #include <sys/socket.h>
+> #include <netinet/tcp.h>
+> 
+> #include <sys/poll.h>
+> #include <arpa/inet.h>
+> #include <netdb.h>
+91c84
+< bool TransportTCP::setNonBlocking()
+---
+> bool TransportTCP::initializeSocket()
+92a86,87
+>   ROS_ASSERT(sock_ != -1);
+> 
+95,104c90
+< #ifdef WIN32
+<     u_long non_blocking = 1; //non zero value for non blocking
+< 	if(ioctlsocket( sock_, FIONBIO, &non_blocking ) != 0 )
+< 	{
+<       ROS_ERROR("ioctlsocket (non-blocking) to socket [%d] failed with error [%d]", sock_, WSAGetLastError());
+<       close();
+<       return false;
+< 	}
+< #else
+< 	// make the socket non-blocking
+---
+>     // make the socket non-blocking
+112,124d97
+< #endif //WIN32
+<   }
+< 
+<   return true;
+< }
+< 
+< bool TransportTCP::initializeSocket()
+< {
+<   ROS_ASSERT(sock_ != -1);
+< 
+<   if (!setNonBlocking())
+<   {
+<     return false;
+147d119
+<     ROS_DEBUG("Adding socket [%d] to pollset", sock_);
+153c125
+<     //enableRead();
+---
+>     enableRead();
+182a155,156
+>     ROSCPP_LOG_DEBUG("Enabling TCP Keepalive on socket [%d]", sock_);
+> 
+184,186d157
+< #ifdef WIN32
+<     if (setsockopt(sock_, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, sizeof(val)) != 0)
+< #else
+188d158
+< #endif //WIN32
+190c160
+<       ROS_DEBUG("setsockopt failed to set SO_KEEPALIVE on socket [%d] [%s]", sock_, cached_remote_host_.c_str());
+---
+>       ROS_ERROR("setsockopt failed to set SO_KEEPALIVE on socket [%d] [%s]", sock_, cached_remote_host_.c_str());
+198c168
+<       ROS_DEBUG("setsockopt failed to set TCP_KEEPIDLE on socket [%d] [%s]", sock_, cached_remote_host_.c_str());
+---
+>       ROS_ERROR("setsockopt failed to set TCP_KEEPIDLE on socket [%d] [%s]", sock_, cached_remote_host_.c_str());
+204c174
+<       ROS_DEBUG("setsockopt failed to set TCP_KEEPINTVL on socket [%d] [%s]", sock_, cached_remote_host_.c_str());
+---
+>       ROS_ERROR("setsockopt failed to set TCP_KEEPINTVL on socket [%d] [%s]", sock_, cached_remote_host_.c_str());
+210c180
+<       ROS_DEBUG("setsockopt failed to set TCP_KEEPCNT on socket [%d] [%s]", sock_, cached_remote_host_.c_str());
+---
+>       ROS_ERROR("setsockopt failed to set TCP_KEEPCNT on socket [%d] [%s]", sock_, cached_remote_host_.c_str());
+215a186,187
+>     ROSCPP_LOG_DEBUG("Disabling TCP Keepalive on socket [%d]", sock_);
+> 
+217,219d188
+< #ifdef WIN32
+<     if (setsockopt(sock_, SOL_SOCKET, SO_KEEPALIVE, (char *)&val, sizeof(val)) != 0)
+< #else
+221d189
+< #endif //WIN32
+223c191
+<     	ROS_DEBUG("setsockopt failed to set SO_KEEPALIVE on socket [%d] [%s]", sock_, cached_remote_host_.c_str());
+---
+>       ROS_ERROR("setsockopt failed to set SO_KEEPALIVE on socket [%d] [%s]", sock_, cached_remote_host_.c_str());
+231,232d198
+<   connected_host_ = host;
+<   connected_port_ = port;
+236,238d201
+< #ifdef WIN32
+<     ROS_ERROR("socket() failed with error [%d]", WSAGetLastError());
+< #else
+240d202
+< #endif //WIN32
+244,245d205
+<   setNonBlocking();
+< 
+281c241
+<     ROSCPP_LOG_DEBUG("Resolved publisher host [%s] to [%s] for socket [%d]", host.c_str(), inet_ntoa(sin.sin_addr), sock_);
+---
+>     ROSCPP_LOG_DEBUG("Resolved publisher host [%s] to [%s]", host.c_str(), inet_ntoa(sin.sin_addr));
+290,306c250
+<   int ret = ::connect(sock_, (sockaddr *)&sin, sizeof(sin));
+< #ifdef WIN32
+<   Sleep(100); //Sleep for 100ms ensuring enough time for connect() to connect
+< #endif //WIN32
+<   ROS_ASSERT((flags_ & SYNCHRONOUS) || ret != 0);
+< #ifndef WIN32
+<   if (((flags_ & SYNCHRONOUS) && ret != 0) || // synchronous, connect() should return 0
+<       (!(flags_ & SYNCHRONOUS) && errno != EINPROGRESS)) // asynchronous, connect() should return -1 and errno should be EINPROGRESS
+<   {
+<     ROSCPP_LOG_DEBUG("Connect to tcpros publisher [%s:%d] failed with error [%d, %s]", host.c_str(), port, ret, strerror(errno));
+<     close();
+< 
+<     return false;
+<   }
+< #else
+<   if (((flags_ & SYNCHRONOUS) && ret != 0) || // synchronous, connect() should return 0
+<       (!(flags_ & SYNCHRONOUS) && WSAGetLastError() != WSAEWOULDBLOCK)) // asynchronous, connect() should return -1 and WSAGetLastError() should return WSAEWOULDBLOCK
+---
+>   if (::connect(sock_, (sockaddr *)&sin, sizeof(sin)))
+308c252
+<     ROSCPP_LOG_DEBUG("Connect to tcpros publisher [%s:%d] failed with error [%d, %d]", host.c_str(), port, ret, WSAGetLastError());
+---
+>     ROSCPP_LOG_DEBUG("Connect to tcpros publisher [%s:%d] failed with error [%s]", host.c_str(), port, strerror(errno));
+313d256
+< #endif //WIN32
+320,327c263
+<   if (flags_ & SYNCHRONOUS)
+<   {
+<     ROSCPP_LOG_DEBUG("connect() succeeded to [%s:%d] on socket [%d]", host.c_str(), port, sock_);
+<   }
+<   else
+<   {
+<     ROSCPP_LOG_DEBUG("Async connect() in progress to [%s:%d] on socket [%d]", host.c_str(), port, sock_);
+<   }
+---
+>   ROSCPP_LOG_DEBUG("Connect succeeded to [%s:%d] on socket [%d]", host.c_str(), port, sock_);
+341,343d276
+< #ifdef WIN32
+<     ROS_ERROR("socket() failed with error [%d]", WSAGetLastError());
+< #else
+345d277
+< #endif //WIn32
+354,356d285
+< #ifdef WIN32
+<     ROS_ERROR("bind() failed with error [%d]", WSAGetLastError());
+< #else
+358d286
+< #endif //WIN32
+363,366d290
+< #ifdef WIN32
+<   int len = sizeof(server_address_);
+<   getsockname(sock_, (sockaddr *)&server_address_, &len);
+< #else
+369d292
+< #endif //WIN32
+377,381d299
+<   if (!(flags_ & SYNCHRONOUS))
+<   {
+<     enableRead();
+<   }
+< 
+397a316,317
+>         ROSCPP_LOG_DEBUG("TCP socket [%d] closed", sock_);
+> 
+405,415d324
+< #ifdef WIN32
+<         ::shutdown(sock_, SD_BOTH);
+< 		if (::closesocket(sock_) < 0)
+<         {
+<           ROS_ERROR("Error closing socket [%d]: [%d]", sock_, WSAGetLastError());
+<         }
+<         else
+<         {
+<           ROSCPP_LOG_DEBUG("TCP socket [%d] closed", sock_);
+<         }
+< #else
+421,425d329
+<         else
+<         {
+<           ROSCPP_LOG_DEBUG("TCP socket [%d] closed", sock_);
+<         }
+< #endif //WIN32
+458,460d361
+< #ifdef WIN32
+<   int num_bytes = ::recv(sock_, (char*)buffer, size, 0);
+< #else
+462d362
+< #endif //WIN32
+465,466c365
+< #ifdef WIN32
+< 	if (errno != EAGAIN && WSAGetLastError() != WSAEWOULDBLOCK)
+---
+>     if (errno != EAGAIN)
+468,469c367
+<       ROSCPP_LOG_DEBUG("recv() on socket [%d] failed with error [%d]", sock_, WSAGetLastError());
+<       close();
+---
+>       ROSCPP_LOG_DEBUG("recv() failed with error [%s]", strerror(errno));
+475,485d372
+< #else
+<     if (errno != EAGAIN && errno != EWOULDBLOCK)
+<     {
+<       ROSCPP_LOG_DEBUG("recv() on socket [%d] failed with error [%s]", sock_, strerror(errno));
+<       close();
+<     }
+<     else
+<     {
+<       num_bytes = 0;
+<     }
+< #endif //WIN32
+511,513d397
+< #ifdef WIN32
+<   int num_bytes = ::send(sock_, (char*)buffer, size, 0);
+< #else
+515d398
+< #endif //WIN32
+518,525d400
+< #ifdef WIN32
+< 	if(WSAGetLastError() != WSAEWOULDBLOCK)
+<     {
+<       ROSCPP_LOG_DEBUG("send() on socket [%d] failed with error [%d]", sock_, WSAGetLastError());
+< 
+<       close();
+<     }
+< #else
+528c403
+<       ROSCPP_LOG_DEBUG("send() on socket [%d] failed with error [%s]", sock_, strerror(errno));
+---
+>       ROSCPP_LOG_DEBUG("send() failed with error [%s]", strerror(errno));
+532d406
+< #endif //WIN32
+562,581d435
+< void TransportTCP::disableRead()
+< {
+<   ROS_ASSERT(!(flags_ & SYNCHRONOUS));
+< 
+<   {
+<     boost::recursive_mutex::scoped_lock lock(close_mutex_);
+< 
+<     if (closed_)
+<     {
+<       return;
+<     }
+<   }
+< 
+<   if (expecting_read_)
+<   {
+<     poll_set_->delEvents(sock_, POLLIN);
+<     expecting_read_ = false;
+<   }
+< }
+< 
+631c485
+<     ROSCPP_LOG_DEBUG("Accepted connection on socket [%d], new socket [%d]", sock_, new_sock);
+---
+>     ROSCPP_LOG_DEBUG("Accepted connection on socket [%d]", new_sock);
+643,645d496
+< #ifdef WIN32
+<     ROS_ERROR("accept() on socket [%d] failed with error [%d]", sock_, WSAGetLastError());
+< #else
+647d497
+< #endif //WIN32
+662,663c512,514
+<   // Handle read events before err/hup/nval, since there may be data left on the wire
+<   if ((events & POLLIN) && expecting_read_)
+---
+>   if((events & POLLERR) ||
+>      (events & POLLHUP) ||
+>      (events & POLLNVAL))
+665c516,521
+<     if (is_server_)
+---
+>     ROSCPP_LOG_DEBUG("Socket %d closed with (ERR|HUP|NVAL) events %d", sock_, events);
+>     close();
+>   }
+>   else
+>   {
+>     if ((events & POLLIN) && expecting_read_)
+667,670c523
+<       // Should not block here, because poll() said that it's ready
+<       // for reading
+<       TransportTCPPtr transport = accept();
+<       if (transport)
+---
+>       if (is_server_)
+672,673c525,532
+<         ROS_ASSERT(accept_cb_);
+<         accept_cb_(transport);
+---
+>         // Should not block here, because poll() said that it's ready
+>         // for reading
+>         TransportTCPPtr transport = accept();
+>         if (transport)
+>         {
+>           ROS_ASSERT(accept_cb_);
+>           accept_cb_(transport);
+>         }
+675,678c534
+<     }
+<     else
+<     {
+<       if (read_cb_)
+---
+>       else
+680c536,539
+<         read_cb_(shared_from_this());
+---
+>         if (read_cb_)
+>         {
+>           read_cb_(shared_from_this());
+>         }
+683d541
+<   }
+685,692c543
+<   if (closed_)
+<   {
+<     return;
+<   }
+< 
+<   if ((events & POLLOUT) && expecting_write_)
+<   {
+<     if (write_cb_)
+---
+>     if ((events & POLLOUT) && expecting_write_)
+694c545,548
+<       write_cb_(shared_from_this());
+---
+>       if (write_cb_)
+>       {
+>         write_cb_(shared_from_this());
+>       }
+697,723d550
+< 
+<   if (closed_)
+<   {
+<     return;
+<   }
+< 
+<   if((events & POLLERR) ||
+<      (events & POLLHUP) ||
+<      (events & POLLNVAL))
+<   {
+<     uint32_t error = -1;
+<     socklen_t len = sizeof(error);
+< #ifdef WIN32
+<     if (getsockopt(sock_, SOL_SOCKET, SO_ERROR, (char *)&error, &len) < 0)
+< #else
+<     if (getsockopt(sock_, SOL_SOCKET, SO_ERROR, &error, &len) < 0)
+< #endif //WIN32
+<     {
+<       ROSCPP_LOG_DEBUG("getsockopt failed on socket [%d]", sock_);
+<     }
+< #ifdef WIN32
+<     ROSCPP_LOG_DEBUG("Socket %d closed with (ERR|HUP|NVAL) events %d: %d", sock_, events, WSAGetLastError());
+< #else
+<     ROSCPP_LOG_DEBUG("Socket %d closed with (ERR|HUP|NVAL) events %d: %s", sock_, events, strerror(error));
+< #endif //WIN32
+<     close();
+<   }
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/transport/transport_udp.cpp tmp/old/core/roscpp/src/libros/transport/transport_udp.cpp
+35,48d34
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+< #ifdef WIN32
+< #define NOMINMAX
+< #include <Winsock2.h>
+< #include <Ws2tcpip.h>
+< #else
+< #include <sys/uio.h>
+< #include <sys/socket.h>
+< #include <netinet/in.h>
+< #include <arpa/inet.h>
+< #include <netdb.h>
+< #endif //WIN32
+< 
+56a43,47
+> #include <sys/uio.h>
+> #include <sys/socket.h>
+> #include <netinet/in.h>
+> #include <arpa/inet.h>
+> #include <netdb.h>
+76d66
+< , data_filled_(0)
+84,86d73
+<   reorder_start_ = reorder_buffer_;
+<   data_buffer_ = new uint8_t[max_datagram_size_];
+<   data_start_ = data_buffer_;
+92,93c79
+<   delete [] reorder_buffer_;
+<   delete [] data_buffer_;
+---
+>   delete[] reorder_buffer_;
+153,155d138
+< #ifdef WIN32
+<     ROS_ERROR("socket() failed with error [%s]", WSAGetLastError());
+< #else
+157d139
+< #endif //WIN32
+207,209d188
+< #ifdef WIN32
+<     ROSCPP_LOG_DEBUG("Connect to udpros host [%s:%d] failed with error [%d]", host.c_str(), port, WSAGetLastError());
+< #else
+211d189
+< #endif //WIN32
+229a208
+>   gen_.seed(getpid());
+235,237d213
+< #ifdef WIN32
+<     ROS_ERROR("socket() failed with error [%d]", WSAGetLastError());
+< #else
+239d214
+< #endif //WIN32
+248,250d222
+< #ifdef WIN32
+<     ROS_ERROR("bind() failed with error [%d]", WSAGetLastError());
+< #else
+252d223
+< #endif //WIN32
+277,287c248
+< 	// make the socket non-blocking
+< #ifdef WIN32
+< 	u_long non_blocking = 1; //non zero value for non blocking
+< 	if(ioctlsocket( sock_, FIONBIO, &non_blocking ) != 0 )
+< 	{
+< 	  ROS_ERROR("ioctlsocket (non-blocking) to socket [%d] failed with error [%d]", sock_, WSAGetLastError());
+< 
+<       close();
+<       return false;
+< 	}
+< #else
+---
+>     // make the socket non-blocking
+295d255
+< #endif //WIN32
+329,331d288
+< #ifdef WIN32
+< 		if(::closesocket(sock_) < 0 )
+< #else
+333d289
+< #endif //WIN32
+335,337d290
+< #ifdef WIN32
+<           ROS_ERROR("Error closing socket [%d]: [%d]", sock_, WSAGetLastError());
+< #else
+339d291
+< #endif //WIN32
+376a329,333
+>     struct iovec iov[2];
+>     iov[0].iov_base = &header;
+>     iov[0].iov_len = sizeof(header);
+>     iov[1].iov_base = buffer + bytes_read;
+>     iov[1].iov_len = (size - bytes_read) > max_datagram_size_ ? max_datagram_size_ : (size - bytes_read);
+378,380c335,339
+< #ifdef WIN32
+<     SSIZE_T num_bytes = 0;
+< #else
+---
+>     // Don't read a partial datagram when buffer gets full
+>     if (iov[1].iov_len < max_datagram_size_ && bytes_read != 0)
+>       break;
+> 
+>     // Read a datagram with header
+382,383d340
+< #endif //WIN32
+<     bool from_previous = false;
+386,391c343
+<       if (reorder_start_ != reorder_buffer_)
+<       {
+<         from_previous = true;
+<       }
+< 
+<       num_bytes = std::min(size - bytes_read, reorder_bytes_);
+---
+>       num_bytes = reorder_bytes_ + sizeof(header);
+393,395c345,346
+<       memcpy(buffer + bytes_read, reorder_start_, num_bytes);
+<       reorder_bytes_ -= num_bytes;
+<       reorder_start_ += num_bytes;
+---
+>       memcpy(iov[1].iov_base, reorder_buffer_, reorder_bytes_);
+>       reorder_bytes_ = 0;
+399c350,354
+<       if (data_filled_ == 0)
+---
+>       num_bytes = readv(sock_, iov, 2);
+>     }
+>     if (num_bytes < 0)
+>     {
+>       if (errno != EAGAIN)
+401,473c356,358
+< #ifdef WIN32
+<         WSABUF iov[2];
+< 		WSAOVERLAPPED RecvOverlapped = {0};
+< 		DWORD RecvBytes, Flags;
+< 		int rc, err;
+< 		iov[0].buf = (char *)&header;
+< 		iov[0].len = sizeof(header);
+< 		iov[1].buf = (char *)data_buffer_;
+< 		iov[1].len = max_datagram_size_ - sizeof(header);
+< 		// Read a datagram with header
+<         //num_bytes = readv(sock_, iov, 2);
+< 		rc = WSARecv(sock_, iov, 2, &RecvBytes, &Flags, &RecvOverlapped, NULL);
+< 		num_bytes = RecvBytes;
+< 		if ( (rc == SOCKET_ERROR) && (WSA_IO_PENDING != (err = WSAGetLastError()))) 
+< 		{
+<             ROS_ERROR("WSARecv failed: %d\n", err);
+<             break;
+<         }
+< #else
+<         struct iovec iov[2];
+<         iov[0].iov_base = &header;
+<         iov[0].iov_len = sizeof(header);
+<         iov[1].iov_base = data_buffer_;
+<         iov[1].iov_len = max_datagram_size_ - sizeof(header);
+< 
+<         // Read a datagram with header
+<         num_bytes = readv(sock_, iov, 2);
+< #endif //WIN32
+< 
+<         if (num_bytes < 0)
+<         {
+< #ifdef WIN32
+<           if (WSAGetLastError() == WSAEWOULDBLOCK)
+< #else
+<           if (errno == EAGAIN || errno == EWOULDBLOCK)
+< #endif //Win32
+<           {
+<             num_bytes = 0;
+<             break;
+<           }
+<           else
+<           {
+< #ifdef WIN32
+<             ROSCPP_LOG_DEBUG("readv() failed with error [%d]", WSAGetLastError());
+< #else
+<             ROSCPP_LOG_DEBUG("readv() failed with error [%s]", strerror(errno));
+< #endif //WIN32
+<             close();
+<             break;
+<           }
+<         }
+<         else if (num_bytes == 0)
+<         {
+<           ROSCPP_LOG_DEBUG("Socket [%d] received 0/%d bytes, closing", sock_, size);
+<           close();
+<           return -1;
+<         }
+< #ifdef WIN32
+<         else if (num_bytes < (SSIZE_T)sizeof(header))
+<         {
+<           ROS_ERROR("Socket [%d] received short header (%d bytes): %d", sock_, int(num_bytes), WSAGetLastError());
+< #else
+< 		else if (num_bytes < (ssize_t)sizeof(header))
+<         {
+<           ROS_ERROR("Socket [%d] received short header (%d bytes): %s", sock_, int(num_bytes), strerror(errno));
+< #endif //WIN32
+<           close();
+<           return -1;
+<         }
+< 
+<         num_bytes -= sizeof(header);
+<         data_filled_ = num_bytes;
+<         data_start_ = data_buffer_;
+---
+>         ROSCPP_LOG_DEBUG("readv() failed with error [%s]", strerror(errno));
+>         close();
+>         break;
+477c362
+<         from_previous = true;
+---
+>         num_bytes = 0;
+479,485d363
+< 
+<       num_bytes = std::min(size - bytes_read, data_filled_);
+<       // Copy from the data buffer, whether it has data left in it from a previous datagram or
+<       // was just filled by readv()
+<       memcpy(buffer + bytes_read, data_start_, num_bytes);
+<       data_filled_ = std::max((int64_t)0, (int64_t)data_filled_ - (int64_t)size);
+<       data_start_ += num_bytes;
+487,489c365
+< 
+< 
+<     if (from_previous)
+---
+>     else if (num_bytes == 0)
+491c367,369
+<       bytes_read += num_bytes;
+---
+>       ROSCPP_LOG_DEBUG("Socket [%d] received 0/%d bytes, closing", sock_, size);
+>       close();
+>       return -1;
+493c371
+<     else
+---
+>     else if (num_bytes >= ssize_t(sizeof(header)))
+494a373
+>       num_bytes -= sizeof(header);
+501c380
+<             ROS_DEBUG("Received new message [%d:%d], while still working on [%d] (block %d of %d)", header.message_id_, header.block_, current_message_id_, last_block_ + 1, total_blocks_);
+---
+>             ROSCPP_LOG_DEBUG("Received new message [%d:%d], while still working on [%d] (block %d of %d)", header.message_id_, header.block_, current_message_id_, last_block_ + 1, total_blocks_);
+505d383
+<             reorder_start_ = reorder_buffer_;
+509,511d386
+< 
+<             data_filled_ = 0;
+<             data_start_ = data_buffer_;
+521c396
+<             ROS_DEBUG("Message Id mismatch: %d != %d", header.message_id_, current_message_id_);
+---
+>             ROSCPP_LOG_DEBUG("Message Id mismatch: %d != %d", header.message_id_, current_message_id_);
+526c401
+<             ROS_DEBUG("Expected block %d, received %d", last_block_ + 1, header.block_);
+---
+>             ROSCPP_LOG_DEBUG("Expected block %d, received %d", last_block_ + 1, header.block_);
+533c408
+<           ROS_ERROR("Unexpected UDP header OP [%d]", header.op_);
+---
+>           ROSCPP_LOG_DEBUG("Unexpected UDP header OP [%d]", header.op_);
+536d410
+< 
+538d411
+< 
+544a418,423
+>     else
+>     {
+>       ROS_ERROR("Socket [%d] received short header (%d bytes), closing", sock_, int(num_bytes));
+>       close();
+>       return -1;
+>     }
+546d424
+< 
+564,565d441
+<   const uint32_t max_payload_size = max_datagram_size_ - sizeof(TransportUDPHeader);
+< 
+578c454
+<       header.block_ = (size + max_payload_size - 1) / max_payload_size;
+---
+>       header.block_ = (size + max_datagram_size_ - 1) / max_datagram_size_;
+586,604d461
+< 
+< #ifdef WIN32
+<     WSABUF iov[2];
+< 	WSAOVERLAPPED SendOverlapped = {0};
+< 	DWORD SendBytes;
+< 	int rc, err;
+< 	iov[0].buf = (char *)&header;
+< 	iov[0].len = sizeof(header);
+< 	iov[1].buf = (char *)(buffer + bytes_sent);
+< 	iov[1].len = std::min(max_payload_size, size - bytes_sent);
+< 	rc = WSASend(sock_, iov, 2, &SendBytes, 0, &SendOverlapped, NULL);
+<     if ((rc == SOCKET_ERROR) &&
+<        (WSA_IO_PENDING != (err = WSAGetLastError()))) 
+< 	{
+<             ROS_ERROR("WSASend failed: %d\n", err);
+<             break;
+<     }
+< 	SSIZE_T num_bytes = SendBytes;
+< #else
+609c466
+<     iov[1].iov_len = std::min(max_payload_size, size - bytes_sent);
+---
+>     iov[1].iov_len = (size - bytes_sent) > max_datagram_size_ ? max_datagram_size_ : (size - bytes_sent);
+612d468
+< #endif //WIN32
+615,622d470
+< #ifdef WIN32
+<       if(WSAGetLastError() == WSAEWOULDBLOCK )
+<       {
+<         ROSCPP_LOG_DEBUG("writev() failed with error [%d]", WSAGetLastError());
+<         close();
+<         break;
+<       }
+< #else
+629d476
+< #endif //WIN32
+635,637d481
+< #ifdef WIN32
+<     else if (num_bytes < SSIZE_T(sizeof(header)))
+< #else
+639d482
+< #endif //WIN32
+675,694d517
+< void TransportUDP::disableRead()
+< {
+<   ROS_ASSERT(!(flags_ & SYNCHRONOUS));
+< 
+<   {
+<     boost::mutex::scoped_lock lock(close_mutex_);
+< 
+<     if (closed_)
+<     {
+<       return;
+<     }
+<   }
+< 
+<   if (expecting_read_)
+<   {
+<     poll_set_->delEvents(sock_, POLLIN);
+<     expecting_read_ = false;
+<   }
+< }
+< 
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/transport_publisher_link.cpp tmp/old/core/roscpp/src/libros/transport_publisher_link.cpp
+35,39d34
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+< #ifdef WIN32
+< #define NOMINMAX
+< #endif //WIN32
+48,52d42
+< #include "ros/poll_manager.h"
+< #include "ros/transport/transport_tcp.h"
+< #include "ros/timer_manager.h"
+< #include "ros/callback_queue.h"
+< #include "ros/internal_timer_manager.h"
+63,65d52
+< , retry_timer_handle_(-1)
+< , needs_retry_(false)
+< , dropping_(false)
+71,78d57
+<   dropping_ = true;
+< 
+<   if (retry_timer_handle_ != -1)
+<   {
+<     getInternalTimerManager()->remove(retry_timer_handle_);
+<   }
+< 
+<   connection_->drop(Connection::Destructing);
+84c63
+<   connection_->addDropListener(boost::bind(&TransportPublisherLink::onConnectionDropped, this, _1, _2));
+---
+>   connection_->addDropListener(boost::bind(&TransportPublisherLink::onConnectionDropped, this, _1));
+87d65
+<   {
+89,99d66
+< 
+<     SubscriptionPtr parent = parent_.lock();
+< 
+<     M_string header;
+<     header["topic"] = parent->getName();
+<     header["md5sum"] = parent->md5sum();
+<     header["callerid"] = this_node::getName();
+<     header["type"] = parent->datatype();
+<     header["tcp_nodelay"] = transport_hints_.getTCPNoDelay() ? "1" : "0";
+<     connection_->writeHeader(header, boost::bind(&TransportPublisherLink::onHeaderWritten, this, _1));
+<   }
+101d67
+<   {
+103c69,78
+<   }
+---
+> 
+>   SubscriptionPtr parent = parent_.lock();
+> 
+>   M_string header;
+>   header["topic"] = parent->getName();
+>   header["md5sum"] = parent->md5sum();
+>   header["callerid"] = this_node::getName();
+>   header["type"] = parent->datatype();
+>   header["tcp_nodelay"] = transport_hints_.getTCPNoDelay() ? "1" : "0";
+>   connection_->writeHeader(header, boost::bind(&TransportPublisherLink::onHeaderWritten, this, _1));
+110,116c85
+<   dropping_ = true;
+<   connection_->drop(Connection::Destructing);
+< 
+<   if (SubscriptionPtr parent = parent_.lock())
+<   {
+<     parent->removePublisherLink(shared_from_this());
+<   }
+---
+>   connection_->drop();
+126,127d94
+<   ROS_ASSERT(conn == connection_);
+< 
+130d96
+<     drop();
+134,139d99
+<   if (retry_timer_handle_ != -1)
+<   {
+<     getInternalTimerManager()->remove(retry_timer_handle_);
+<     retry_timer_handle_ = -1;
+<   }
+< 
+147,152d106
+<   if (retry_timer_handle_ != -1)
+<   {
+<     getInternalTimerManager()->remove(retry_timer_handle_);
+<     retry_timer_handle_ = -1;
+<   }
+< 
+167c121
+<     ROS_ERROR("a message of over a gigabyte was " \
+---
+>     ROS_ERROR("woah! a message of over a gigabyte was " \
+170,172c124,125
+<                 "synchronization is lost.");
+<     drop();
+<     return;
+---
+>                 "synchronization is lost... it's over.");
+>     conn->drop();
+186,188c139
+<   {
+<     handleMessage(SerializedMessage(buffer, size), true, false);
+<   }
+---
+>     handleMessage(buffer, size);
+196,246c147
+< void TransportPublisherLink::onRetryTimer(const ros::WallTimerEvent&)
+< {
+<   if (dropping_)
+<   {
+<     return;
+<   }
+< 
+<   if (needs_retry_ && WallTime::now() > next_retry_)
+<   {
+<     retry_period_ = std::min(retry_period_ * 2, WallDuration(20));
+<     needs_retry_ = false;
+<     SubscriptionPtr parent = parent_.lock();
+<     // TODO: support retry on more than just TCP
+<     // For now, since UDP does not have a heartbeat, we do not attempt to retry
+<     // UDP connections since an error there likely means some invalid operation has
+<     // happened.
+<     if (connection_->getTransport()->getType() == std::string("TCPROS"))
+<     {
+<       std::string topic = parent ? parent->getName() : "unknown";
+< 
+<       TransportTCPPtr old_transport = boost::dynamic_pointer_cast<TransportTCP>(connection_->getTransport());
+<       ROS_ASSERT(old_transport);
+<       const std::string& host = old_transport->getConnectedHost();
+<       int port = old_transport->getConnectedPort();
+< 
+<       ROSCPP_LOG_DEBUG("Retrying connection to [%s:%d] for topic [%s]", host.c_str(), port, topic.c_str());
+< 
+<       TransportTCPPtr transport(new TransportTCP(&PollManager::instance()->getPollSet()));
+<       if (transport->connect(host, port))
+<       {
+<         ConnectionPtr connection(new Connection);
+<         connection->initialize(transport, false, HeaderReceivedFunc());
+<         initialize(connection);
+< 
+<         ConnectionManager::instance()->addConnection(connection);
+<       }
+<       else
+<       {
+<         ROSCPP_LOG_DEBUG("connect() failed when retrying connection to [%s:%d] for topic [%s]", host.c_str(), port, topic.c_str());
+<       }
+<     }
+<     else if (parent)
+<     {
+<       parent->removePublisherLink(shared_from_this());
+<     }
+<   }
+< }
+< 
+< CallbackQueuePtr getInternalCallbackQueue();
+< 
+< void TransportPublisherLink::onConnectionDropped(const ConnectionPtr& conn, Connection::DropReason reason)
+---
+> void TransportPublisherLink::onConnectionDropped(const ConnectionPtr& conn)
+248,252d148
+<   if (dropping_)
+<   {
+<     return;
+<   }
+< 
+255,257c151
+<   SubscriptionPtr parent = parent_.lock();
+< 
+<   if (reason == Connection::TransportDisconnect)
+---
+>   if (SubscriptionPtr parent = parent_.lock())
+259,261c153
+<     std::string topic = parent ? parent->getName() : "unknown";
+< 
+<     ROSCPP_LOG_DEBUG("Connection to publisher [%s] to topic [%s] dropped", connection_->getTransport()->getTransportInfo().c_str(), topic.c_str());
+---
+>     ROSCPP_LOG_DEBUG("Connection to publisher [%s] to topic [%s] dropped", connection_->getTransport()->getTransportInfo().c_str(), parent->getName().c_str());
+263,282c155
+<     ROS_ASSERT(!needs_retry_);
+<     needs_retry_ = true;
+<     next_retry_ = WallTime::now() + retry_period_;
+< 
+<     if (retry_timer_handle_ == -1)
+<     {
+<       retry_period_ = WallDuration(0.1);
+<       next_retry_ = WallTime::now() + retry_period_;
+<       retry_timer_handle_ = getInternalTimerManager()->add(WallDuration(retry_period_),
+<           boost::bind(&TransportPublisherLink::onRetryTimer, this, _1), getInternalCallbackQueue().get(),
+<           VoidConstPtr(), false);
+<     }
+<     else
+<     {
+<       getInternalTimerManager()->setPeriod(retry_timer_handle_, retry_period_);
+<     }
+<   }
+<   else
+<   {
+<     drop();
+---
+>     parent->removePublisherLink(shared_from_this());
+286c159
+< void TransportPublisherLink::handleMessage(const SerializedMessage& m, bool ser, bool nocopy)
+---
+> void TransportPublisherLink::handleMessage(const boost::shared_array<uint8_t>& buffer, size_t num_bytes)
+288c161
+<   stats_.bytes_received_ += m.num_bytes;
+---
+>   stats_.bytes_received_ += num_bytes;
+295c168
+<     stats_.drops_ += parent->handleMessage(m, ser, nocopy, getConnection()->getHeader().getValues(), shared_from_this());
+---
+>     stats_.drops_ += parent->handleMessage(buffer, num_bytes, false, getConnection()->getHeader().getValues(), shared_from_this());
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/transport_subscriber_link.cpp tmp/old/core/roscpp/src/libros/transport_subscriber_link.cpp
+54c54
+<   drop();
+---
+> 
+60c60
+<   dropped_conn_ = connection_->addDropListener(boost::bind(&TransportSubscriberLink::onConnectionDropped, this, _1));
+---
+>   connection_->addDropListener(boost::bind(&TransportSubscriberLink::onConnectionDropped, this, _1));
+67,68c67,70
+<   std::string topic;
+<   if (!header.getValue("topic", topic))
+---
+>   std::string md5sum, topic, client_callerid;
+>   if (!header.getValue("md5sum", md5sum)
+>    || !header.getValue("topic", topic)
+>    || !header.getValue("callerid", client_callerid))
+70c72
+<     std::string msg("Header from subscriber did not have the required element: topic");
+---
+>     std::string msg("Header from subscriber did not have the required elements: md5sum, topic, callerid");
+78,80c80
+<   // This will get validated by validateHeader below
+<   std::string client_callerid;
+<   header.getValue("callerid", client_callerid);
+---
+>   ROSCPP_LOG_DEBUG("Client [%s] wants topic [%s] with md5sum [%s]", client_callerid.c_str(), topic.c_str(), md5sum.c_str());
+93,94c93,94
+<   std::string error_msg;
+<   if (!pt->validateHeader(header, error_msg))
+---
+>   if (pt->getMD5Sum() != md5sum &&
+>       (md5sum != std::string("*") && pt->getMD5Sum() != std::string("*")))
+96,97c96,105
+<     ROSCPP_LOG_DEBUG("%s", error_msg.c_str());
+<     connection_->sendHeaderError(error_msg);
+---
+>     std::string datatype;
+>     header.getValue("type", datatype);
+> 
+>     std::string msg = std::string("Client [") + client_callerid + std::string("] wants topic ") + topic +
+>                       std::string(" to have datatype/md5sum [") + datatype + "/" + md5sum +
+>                       std::string("], but our version has [") + pt->getDataType() + "/" + pt->getMD5Sum() +
+>                       std::string("]. Dropping connection.");
+> 
+>     ROS_ERROR("%s", msg.c_str());
+>     connection_->sendHeaderError(msg);
+102,114c110,117
+<   destination_caller_id_ = client_callerid;
+<   connection_id_ = ConnectionManager::instance()->getNewConnectionID();
+<   topic_ = pt->getName();
+<   parent_ = PublicationWPtr(pt);
+< 
+<   // Send back a success, with info
+<   M_string m;
+<   m["type"] = pt->getDataType();
+<   m["md5sum"] = pt->getMD5Sum();
+<   m["message_definition"] = pt->getMessageDefinition();
+<   m["callerid"] = this_node::getName();
+<   m["latching"] = pt->isLatching() ? "1" : "0";
+<   connection_->writeHeader(m, boost::bind(&TransportSubscriberLink::onHeaderWritten, this, _1));
+---
+>   // Check whether the topic (pt here) has been deleted from
+>   // advertised_topics through a call to unadvertise(), which could
+>   // have happened while we were waiting for the subscriber to
+>   // provide the md5sum.
+>   if(pt->isDropped())
+>   {
+>     std::string msg = std::string("received a tcpros connection for a nonexistent topic [") +
+>                 topic + std::string("] from [" + connection_->getTransport()->getTransportInfo() + "] [" + client_callerid +"].");
+116c119,141
+<   pt->addSubscriberLink(shared_from_this());
+---
+>     ROS_ERROR("%s", msg.c_str());
+>     connection_->sendHeaderError(msg);
+> 
+>     return false;
+>   }
+>   else
+>   {
+>     destination_caller_id_ = client_callerid;
+>     connection_id_ = ConnectionManager::instance()->getNewConnectionID();
+>     topic_ = pt->getName();
+>     parent_ = PublicationWPtr(pt);
+> 
+>     // Send back a success, with info
+>     M_string m;
+>     m["type"] = pt->getDataType();
+>     m["md5sum"] = pt->getMD5Sum();
+>     m["message_definition"] = pt->getMessageDefinition();
+>     m["callerid"] = this_node::getName();
+>     m["latching"] = pt->isLatching() ? "1" : "0";
+>     connection_->writeHeader(m, boost::bind(&TransportSubscriberLink::onHeaderWritten, this, _1));
+> 
+>     pt->addSubscriberLink(shared_from_this());
+>   }
+150c175
+<   SerializedMessage m(dummy, (uint32_t)0);
+---
+>   SerializedMessage m(dummy, (unsigned int)0);
+173c198
+< void TransportSubscriberLink::enqueueMessage(const SerializedMessage& m, bool ser, bool nocopy)
+---
+> bool TransportSubscriberLink::publish(const Message& m)
+175c200
+<   if (!ser)
+---
+>   if (!verifyDatatype(m.__getDataType()))
+177c202
+<     return;
+---
+>     return false;
+179a205,222
+>   uint32_t msg_len = m.serializationLength();
+>   boost::shared_array<uint8_t> buf = boost::shared_array<uint8_t>(new uint8_t[msg_len + 4]);
+>   *((uint32_t*)buf.get()) = msg_len;
+> 
+>   int seq = 0;
+>   if (PublicationPtr parent = parent_.lock())
+>   {
+>     seq = parent->getSequence();
+>   }
+> 
+>   m.serialize(buf.get() + 4, seq);
+>   enqueueMessage(SerializedMessage(buf, msg_len + 4));
+> 
+>   return true;
+> }
+> 
+> void TransportSubscriberLink::enqueueMessage(const SerializedMessage& m)
+> {
+225,234c268
+<   // Only drop the connection if it's not already sending a header error
+<   // If it is, it will automatically drop itself
+<   if (connection_->isSendingHeaderError())
+<   {
+<     connection_->removeDropListener(dropped_conn_);
+<   }
+<   else
+<   {
+<     connection_->drop(Connection::Destructing);
+<   }
+---
+>   connection_->drop();
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/wall_timer.cpp tmp/old/core/roscpp/src/libros/wall_timer.cpp
+52c52
+<     VoidConstPtr tracked_object;
+---
+>     VoidPtr tracked_object;
+87,93d86
+< void WallTimer::Impl::setPeriod(const WallDuration& period)
+< {
+<   period_ = period;
+<   TimerManager<WallTime, WallDuration, WallTimerEvent>::global().setPeriod(timer_handle_, period);
+< }
+< 
+< 
+140,147d132
+< void WallTimer::setPeriod(const WallDuration& period)
+< {
+<   if (impl_)
+<   {
+<     impl_->setPeriod(period);
+<   }
+< }
+< 
+diff -r -x .svn tmp/msvc/core/roscpp/src/libros/xmlrpc_manager.cpp tmp/old/core/roscpp/src/libros/xmlrpc_manager.cpp
+28,32d27
+< /* Initial WIN32 port by Hozefa Indorewala, Robotics Equipment Corporation GmbH, www.servicerobotics.eu */
+< 
+< #ifdef WIN32
+< #include <process.h>
+< #endif //WIN32
+96,98d90
+< #ifdef WIN32
+<   result = xmlrpc::responseInt(1, "", (int)_getpid());
+< #else
+100d91
+< #endif //WIN32

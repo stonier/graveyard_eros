@@ -1,0 +1,47 @@
+diff -r -x .svn tmp/windoze/core/roscpp/include/ros/common.h tmp/old/core/roscpp/include/ros/common.h
+30a31
+> #include <stdint.h>
+diff -r -x .svn tmp/windoze/core/roscpp/include/ros/header.h tmp/old/core/roscpp/include/ros/header.h
+38c38
+< #include "types.h"
+---
+> #include <stdint.h>
+diff -r -x .svn tmp/windoze/core/roscpp/include/ros/message.h tmp/old/core/roscpp/include/ros/message.h
+37,38c37
+< 
+< #include "types.h"
+---
+> #include <stdint.h>
+diff -r -x .svn tmp/windoze/core/roscpp/include/ros/poll_set.h tmp/old/core/roscpp/include/ros/poll_set.h
+39a40,41
+> #include <poll.h>
+> 
+diff -r -x .svn tmp/windoze/core/roscpp/include/ros/topic_manager.h tmp/old/core/roscpp/include/ros/topic_manager.h
+34a35
+> #include "rosout_appender.h"
+diff -r -x .svn tmp/windoze/core/roscpp/include/ros/transport/transport_tcp.h tmp/old/core/roscpp/include/ros/transport/transport_tcp.h
+38,41d37
+< #if defined(WIN32)
+<   #include <winsock2.h>
+< #endif
+< 
+47,49c43
+< #if !defined(WIN32)
+<   #include <netinet/in.h>
+< #endif
+---
+> #include <netinet/in.h>
+diff -r -x .svn tmp/windoze/core/roscpp/include/ros/transport/transport_udp.h tmp/old/core/roscpp/include/ros/transport/transport_udp.h
+44,48c44
+< #if defined(WIN32)
+<   #include <winsock2.h>
+< #else
+<   #include <netinet/in.h>
+< #endif
+---
+> #include <netinet/in.h>
+diff -r -x .svn tmp/windoze/core/roscpp/include/ros/types.h tmp/old/core/roscpp/include/ros/types.h
+34c34
+< #if !defined(WIN32)
+---
+> #ifndef _MSC_VER

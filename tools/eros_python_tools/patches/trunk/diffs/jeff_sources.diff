@@ -1,0 +1,772 @@
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/CMakeLists.txt tmp/old/core/roscpp/src/libros/CMakeLists.txt
+13,18d12
+< # Need to figure out how to get this info from rosconsole
+< find_library(log4cxx_lib log4cxx)
+< if(log4cxx_lib STREQUAL "log4cxx_lib-NOTFOUND")
+<   message(FATAL_ERROR "Could not find log4cxx.lib. Set CMAKE_LIBRARY_PATH.")
+< endif(log4cxx_lib STREQUAL "log4cxx_lib-NOTFOUND")
+< 
+68,71d61
+< if(WIN32)
+<   target_link_libraries(ros ${log4cxx_lib})
+<   target_link_libraries(ros ws2_32)
+< endif(WIN32)
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/common.cpp tmp/old/core/roscpp/src/libros/common.cpp
+41,44c41,42
+< #if !defined(WIN32)
+<   #include <unistd.h>
+<   #include <pthread.h>
+< #endif
+---
+> #include <unistd.h>
+> #include <pthread.h>
+51,54d48
+< #if !defined(WIN32)
+<   // pthreads_win32, despite having an implementation of pthread_sigmask,
+<   // doesn't have an implementation of sigset_t, and also doesn't expose its
+<   // pthread_sigmask externally.
+60d53
+< #endif
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/connection.cpp tmp/old/core/roscpp/src/libros/connection.cpp
+43,47d42
+< #include <algorithm>
+< 
+< #if defined(min)
+< #undef min
+< #endif
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/connection_manager.cpp tmp/old/core/roscpp/src/libros/connection_manager.cpp
+28,31d27
+< // This stops windows.h including winsock, which, because there are no
+< // inclusion guards in the winsock headers, causes it to blow up without this.
+< #define _WINSOCKAPI_
+< 
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/file_log.cpp tmp/old/core/roscpp/src/libros/file_log.cpp
+34d33
+< #include <log4cxx/helpers/transcoder.h>
+40,46d38
+< #if defined(WIN32)
+<   #include <process.h>
+<   #define pid_t int
+<   #define getpid _getpid
+<   #define snprintf _snprintf
+< #endif
+< 
+144d135
+<     LOG4CXX_DECODE_CHAR(ls_log_file_name, log_file_name);
+147,148c138,139
+<     log4cxx::LayoutPtr layout = new log4cxx::PatternLayout(LOG4CXX_STR("[%c] [%d] [thread %t]: [%p] %m\n"));
+<     log4cxx::RollingFileAppenderPtr appender = new log4cxx::RollingFileAppender(layout, ls_log_file_name, false);
+---
+>     log4cxx::LayoutPtr layout = new log4cxx::PatternLayout("[%c] [%d] [thread %t]: [%p] %m\n");
+>     log4cxx::RollingFileAppenderPtr appender = new log4cxx::RollingFileAppender(layout, log_file_name, false);
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/header.cpp tmp/old/core/roscpp/src/libros/header.cpp
+42a43
+> #include <sys/socket.h>
+166d166
+< 
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/init.cpp tmp/old/core/roscpp/src/libros/init.cpp
+35,38d34
+< // This stops windows.h including winsock, which, because there are no
+< // inclusion guards in the winsock headers, causes it to blow up without this.
+< #define _WINSOCKAPI_
+< 
+51c47
+< //#include "ros/rosout_appender.h"
+---
+> #include "ros/rosout_appender.h"
+63c59
+< #include <log4cxx/helpers/transcoder.h>
+---
+> 
+68,72d63
+< #if defined(WIN32)
+<   #include <process.h>
+<   #define getpid _getpid
+< #endif
+< 
+102c93
+< //ROSOutAppenderPtr g_rosout_appender;
+---
+> ROSOutAppenderPtr g_rosout_appender;
+174,175c165
+<     LOG4CXX_ENCODE_CHAR(temp_name, (*it)->getName());
+<     logger.name = temp_name;
+---
+>     logger.name = (*it)->getName();
+179,180c169
+<       LOG4CXX_ENCODE_CHAR(temp_level, level->toString());
+<       logger.level = temp_level;
+---
+>       logger.level = level->toString();
+299,304c288,290
+<     // TODO: figure out why this doesn't link in windows (probably something to
+<     // do with cl's inability to properly link templates across DLL
+<     // boundaries).
+<     //g_rosout_appender = new ROSOutAppender;
+<     //const log4cxx::LoggerPtr& logger = log4cxx::Logger::getLogger(ROSCONSOLE_ROOT_LOGGER_NAME);
+<     //logger->addAppender(g_rosout_appender);
+---
+>     g_rosout_appender = new ROSOutAppender;
+>     const log4cxx::LoggerPtr& logger = log4cxx::Logger::getLogger(ROSCONSOLE_ROOT_LOGGER_NAME);
+>     logger->addAppender(g_rosout_appender);
+510,513c496,498
+<   // TODO: figure out why this doesn't link in windows
+<   //const log4cxx::LoggerPtr& logger = log4cxx::Logger::getLogger(ROSCONSOLE_ROOT_LOGGER_NAME);
+<   //logger->removeAppender(g_rosout_appender);
+<   //g_rosout_appender = NULL;
+---
+>   const log4cxx::LoggerPtr& logger = log4cxx::Logger::getLogger(ROSCONSOLE_ROOT_LOGGER_NAME);
+>   logger->removeAppender(g_rosout_appender);
+>   g_rosout_appender = 0;
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/network.cpp tmp/old/core/roscpp/src/libros/network.cpp
+35,40c35,37
+< #if defined(WIN32)
+< #else
+<   #include <netinet/in.h>
+<   #include <sys/socket.h>
+<   #include <netdb.h>
+< #endif
+---
+> #include <netinet/in.h>
+> #include <sys/socket.h>
+> #include <netdb.h>
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/poll_manager.cpp tmp/old/core/roscpp/src/libros/poll_manager.cpp
+83d82
+< #if !defined(WIN32)
+86d84
+< #endif
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/poll_set.cpp tmp/old/core/roscpp/src/libros/poll_set.cpp
+44,55c44,46
+< #if defined(WIN32)
+<   #include <io.h>
+<   #include <fcntl.h>
+<   #define pipe(a) _pipe((a), 256, _O_BINARY)
+<   #define close _close
+<   #define write _write
+<   #define read _read
+< #else
+<   #include <sys/poll.h>
+<   #include <arpa/inet.h>
+<   #include <netdb.h>
+< #endif
+---
+> #include <sys/poll.h>
+> #include <arpa/inet.h>
+> #include <netdb.h>
+61,289d51
+< #if defined(WIN32)
+< // All code from here until the end of this #ifdef came from Player's poll
+< // replacement, which in turn came, via Brian, from glibc. As glibc is licensed
+< // under the GPL, this is almost certainly a licensing problem. A better
+< // solution is to replace the call to poll() above with whatever boost has to
+< // replace it (there's got to be something in there).
+< 
+< /* Event types that can be polled for.  These bits may be set in `events'
+<    to indicate the interesting event types; they will appear in `revents'
+<    to indicate the status of the file descriptor.  */
+< #define POLLIN          01              /* There is data to read.  */
+< #define POLLPRI         02              /* There is urgent data to read.  */
+< #define POLLOUT         04              /* Writing now will not block.  */
+< 
+< /* Some aliases.  */
+< #define POLLWRNORM      POLLOUT
+< #define POLLRDNORM      POLLIN
+< #define POLLRDBAND      POLLPRI
+< 
+< /* Event types always implicitly polled for.  These bits need not be set in
+<    `events', but they will appear in `revents' to indicate the status of
+<    the file descriptor.  */
+< #define POLLERR         010             /* Error condition.  */
+< #define POLLHUP         020             /* Hung up.  */
+< #define POLLNVAL        040             /* Invalid polling request.  */
+< 
+< /* Canonical number of polling requests to read in at a time in poll.  */
+< #define NPOLLFILE       30
+< 
+< /* Data structure describing a polling request.  */
+< struct pollfd
+<   {
+<     int fd;			/* File descriptor to poll.  */
+<     short int events;		/* Types of events poller cares about.  */
+<     short int revents;		/* Types of events that actually occurred.  */
+<   };
+< 
+< 
+< #include <sys/types.h>
+< #include <errno.h>
+< #include <string.h>
+< //#include <winsock2.h> // For struct timeval
+< #include <malloc.h> // For alloca()
+< #include <string.h> // For memset ()
+< 
+< /* *-*-nto-qnx doesn't define this constant in the system headers */
+< #ifndef NFDBITS
+< #define	NFDBITS (8 * sizeof(unsigned long))
+< #endif
+< 
+< /* Macros for counting and rounding.  */
+< #ifndef howmany
+< #define howmany(x, y)  (((x) + ((y) - 1)) / (y))
+< #endif
+< #ifndef powerof2
+< #define powerof2(x)     ((((x) - 1) & (x)) == 0)
+< #endif
+< #ifndef roundup
+< #define roundup(x, y)  ((((x) + ((y) - 1)) / (y)) * (y))
+< #endif
+< 
+< /* Poll the file descriptors described by the NFDS structures starting at
+<    FDS.  If TIMEOUT is nonzero and not -1, allow TIMEOUT milliseconds for
+<    an event to occur; if TIMEOUT is -1, block until an event occurs.
+<    Returns the number of file descriptors with events, zero if timed out,
+<    or -1 for errors.  */
+< 
+< int
+< poll(struct pollfd* fds, unsigned long int nfds, int timeout)
+< {
+<   static int max_fd_size;
+<   struct timeval tv;
+<   fd_set *rset, *wset, *xset;
+<   struct pollfd *f;
+<   int ready;
+<   int maxfd = 0;
+<   int bytes;
+< 
+<   if (!max_fd_size)
+<     max_fd_size = 256; // Best value I could find, the help doesn't specify anywhere
+< 
+<   bytes = howmany (max_fd_size, NFDBITS);
+<   rset = reinterpret_cast<fd_set*> (alloca (bytes));
+<   wset = reinterpret_cast<fd_set*> (alloca (bytes));
+<   xset = reinterpret_cast<fd_set*> (alloca (bytes));
+< 
+<   /* We can't call FD_ZERO, since FD_ZERO only works with sets
+<      of exactly FD_SETSIZE size.  */
+<   memset (rset, 0, bytes);
+<   memset (wset, 0, bytes);
+<   memset (xset, 0, bytes);
+< 
+<   for (f = fds; f < &fds[nfds]; ++f)
+<     {
+<       f->revents = 0;
+<       if (f->fd >= 0)
+<     {
+<       if (f->fd >= max_fd_size)
+<         {
+<           /* The user provides a file descriptor number which is higher
+<          than the maximum we got from the `getdtablesize' call.
+<          Maybe this is ok so enlarge the arrays.  */
+<           fd_set *nrset, *nwset, *nxset;
+<           int nbytes;
+< 
+<           max_fd_size = roundup (f->fd, NFDBITS);
+<           nbytes = howmany (max_fd_size, NFDBITS);
+< 
+<           nrset = reinterpret_cast<fd_set*> (alloca (nbytes));
+<           nwset = reinterpret_cast<fd_set*> (alloca (nbytes));
+<           nxset = reinterpret_cast<fd_set*> (alloca (nbytes));
+< 
+<           memset ((char *) nrset + bytes, 0, nbytes - bytes);
+<           memset ((char *) nwset + bytes, 0, nbytes - bytes);
+<           memset ((char *) nxset + bytes, 0, nbytes - bytes);
+< 
+<           rset = reinterpret_cast<fd_set*> (memcpy (nrset, rset, bytes));
+<           wset = reinterpret_cast<fd_set*> (memcpy (nwset, wset, bytes));
+<           xset = reinterpret_cast<fd_set*> (memcpy (nxset, xset, bytes));
+< 
+<           bytes = nbytes;
+<         }
+< 
+<       if (f->events & POLLIN)
+<         FD_SET (f->fd, rset);
+<       if (f->events & POLLOUT)
+<         FD_SET (f->fd, wset);
+<       if (f->events & POLLPRI)
+<         FD_SET (f->fd, xset);
+<       if (f->fd > maxfd && (f->events & (POLLIN|POLLOUT|POLLPRI)))
+<         maxfd = f->fd;
+<     }
+<     }
+< 
+<   tv.tv_sec = timeout / 1000;
+<   tv.tv_usec = (timeout % 1000) * 1000;
+< 
+<   while (1)
+<     {
+<       ready = select (maxfd + 1, rset, wset, xset,
+<             timeout == -1 ? NULL : &tv);
+< 
+<       /* It might be that one or more of the file descriptors is invalid.
+<      We now try to find and mark them and then try again.  */
+<       if (ready == -1 && errno == EBADF)
+<     {
+<       fd_set *sngl_rset = reinterpret_cast<fd_set*> (alloca (bytes));
+<       fd_set *sngl_wset = reinterpret_cast<fd_set*> (alloca (bytes));
+<       fd_set *sngl_xset = reinterpret_cast<fd_set*> (alloca (bytes));
+<       struct timeval sngl_tv;
+< 
+<       /* Clear the original set.  */
+<       memset (rset, 0, bytes);
+<       memset (wset, 0, bytes);
+<       memset (xset, 0, bytes);
+< 
+<       /* This means we don't wait for input.  */
+<       sngl_tv.tv_sec = 0;
+<       sngl_tv.tv_usec = 0;
+< 
+<       maxfd = -1;
+< 
+<       /* Reset the return value.  */
+<       ready = 0;
+< 
+<       for (f = fds; f < &fds[nfds]; ++f)
+<         if (f->fd != -1 && (f->events & (POLLIN|POLLOUT|POLLPRI))
+<         && (f->revents & POLLNVAL) == 0)
+<           {
+<         int n;
+< 
+<         memset (sngl_rset, 0, bytes);
+<         memset (sngl_wset, 0, bytes);
+<         memset (sngl_xset, 0, bytes);
+< 
+<         if (f->events & POLLIN)
+<           FD_SET (f->fd, sngl_rset);
+<         if (f->events & POLLOUT)
+<           FD_SET (f->fd, sngl_wset);
+<         if (f->events & POLLPRI)
+<           FD_SET (f->fd, sngl_xset);
+< 
+<         n = select (f->fd + 1, sngl_rset, sngl_wset, sngl_xset,
+<                   &sngl_tv);
+<         if (n != -1)
+<           {
+<             /* This descriptor is ok.  */
+<             if (f->events & POLLIN)
+<               FD_SET (f->fd, rset);
+<             if (f->events & POLLOUT)
+<               FD_SET (f->fd, wset);
+<             if (f->events & POLLPRI)
+<               FD_SET (f->fd, xset);
+<             if (f->fd > maxfd)
+<               maxfd = f->fd;
+<             if (n > 0)
+<               /* Count it as being available.  */
+<               ++ready;
+<           }
+<         else if (errno == EBADF)
+<           f->revents |= POLLNVAL;
+<           }
+<       /* Try again.  */
+<       continue;
+<     }
+< 
+<       break;
+<     }
+< 
+<   if (ready > 0)
+<     for (f = fds; f < &fds[nfds]; ++f)
+<       {
+<       if (f->fd >= 0)
+<         {
+<           if (FD_ISSET (f->fd, rset))
+<             f->revents |= POLLIN;
+<           if (FD_ISSET (f->fd, wset))
+<             f->revents |= POLLOUT;
+<           if (FD_ISSET (f->fd, xset))
+<             f->revents |= POLLPRI;
+<         }
+<       }
+< 
+<   return ready;
+< }
+< 
+< #endif // defined(WIN32)
+< 
+< 
+302,303d63
+< #if !defined(WIN32)
+<   // Windows pipes can't be made non-blocking. This is probably a problem.
+314d73
+< #endif
+524d282
+< 
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/rosout_appender.cpp tmp/old/core/roscpp/src/libros/rosout_appender.cpp
+43d42
+< #include <log4cxx/helpers/transcoder.h>
+85,86c84
+<     LOG4CXX_ENCODE_CHAR(temp_error_msg, event->getMessage());
+<     last_error_ = temp_error_msg;
+---
+>     last_error_ = event->getMessage();
+91,92c89
+<     LOG4CXX_ENCODE_CHAR(temp_error_msg, event->getMessage());
+<     last_error_ = temp_error_msg;
+---
+>     last_error_ = event->getMessage();
+108,110c105
+<   LOG4CXX_ENCODE_CHAR(temp_error_msg, event->getMessage());
+<   last_error_ = temp_error_msg;
+<   msg->msg = temp_error_msg;
+---
+>   msg->msg = event->getMessage();
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/service.cpp tmp/old/core/roscpp/src/libros/service.cpp
+28,31d27
+< // This stops windows.h including winsock, which, because there are no
+< // inclusion guards in the winsock headers, causes it to blow up without this.
+< #define _WINSOCKAPI_
+< 
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/service_manager.cpp tmp/old/core/roscpp/src/libros/service_manager.cpp
+28,31d27
+< // This stops windows.h including winsock, which, because there are no
+< // inclusion guards in the winsock headers, causes it to blow up without this.
+< #define _WINSOCKAPI_
+< 
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/subscription.cpp tmp/old/core/roscpp/src/libros/subscription.cpp
+35,38d34
+< // This stops windows.h including winsock, which, because there are no
+< // inclusion guards in the winsock headers, causes it to blow up without this.
+< #define _WINSOCKAPI_
+< 
+40,44c36,37
+< #if !defined(WIN32)
+<   #include <arpa/inet.h>
+<   #include <netdb.h>
+<   #include <sys/poll.h> // for POLLOUT
+< #endif
+---
+> #include <arpa/inet.h>
+> #include <netdb.h>
+45a39
+> #include <sys/poll.h> // for POLLOUT
+606,607c600,601
+<   for (V_CallbackInfo::iterator cb_itr = callbacks_.begin();
+<        cb_itr != callbacks_.end(); ++cb_itr)
+---
+>   for (V_CallbackInfo::iterator cb = callbacks_.begin();
+>        cb != callbacks_.end(); ++cb)
+609c603
+<     const CallbackInfoPtr& info = *cb_itr;
+---
+>     const CallbackInfoPtr& info = *cb;
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/this_node.cpp tmp/old/core/roscpp/src/libros/this_node.cpp
+34,37d33
+< #if defined(WIN32)
+<   #define snprintf _snprintf
+< #endif
+< 
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/topic_manager.cpp tmp/old/core/roscpp/src/libros/topic_manager.cpp
+28,31d27
+< // This stops windows.h including winsock, which, because there are no
+< // inclusion guards in the winsock headers, causes it to blow up without this.
+< #define _WINSOCKAPI_
+< 
+43c39
+< //#include "ros/rosout_appender.h"
+---
+> #include "ros/rosout_appender.h"
+855c851
+< //extern ROSOutAppenderPtr g_rosout_appender;
+---
+> extern ROSOutAppenderPtr g_rosout_appender;
+871,874c867,870
+<     //if ( g_rosout_appender != 0 )
+<     //{
+<       //last_error = g_rosout_appender->getLastError();
+<     //}
+---
+>     if ( g_rosout_appender != 0 )
+>     {
+>       last_error = g_rosout_appender->getLastError();
+>     }
+885,888c881,884
+<     //if ( g_rosout_appender != 0 )
+<     //{
+<       //last_error = g_rosout_appender->getLastError();
+<     //}
+---
+>     if ( g_rosout_appender != 0 )
+>     {
+>       last_error = g_rosout_appender->getLastError();
+>     }
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/transport/transport_tcp.cpp tmp/old/core/roscpp/src/libros/transport/transport_tcp.cpp
+36,40d35
+< #if defined(WIN32)
+<   // This has to go after winsock2.h because MS didn't put proper inclusion
+<   // guards and #define guards in their headers.
+<   #include <Ws2tcpip.h>
+< #endif
+51,57c46,47
+< #if !defined(WIN32)
+<   #include <sys/socket.h>
+<   #include <netinet/tcp.h>
+<   #include <sys/poll.h>
+<   #include <arpa/inet.h>
+<   #include <netdb.h>
+< #endif
+---
+> #include <sys/socket.h>
+> #include <netinet/tcp.h>
+58a49,51
+> #include <sys/poll.h>
+> #include <arpa/inet.h>
+> #include <netdb.h>
+62,77d54
+< // Joy of joys, even strerror isn't the same for Windows sockets
+< #if defined(WIN32)
+<   const int ERRNO_EAGAIN = WSAEWOULDBLOCK;
+<   const int ERRNO_EWOULDBLOCK = WSAEWOULDBLOCK;
+<   // This is hideous, but for some unknown reason calling ROS_ERROR from within
+<   // a macro isn't working right now.
+<   #define STRERROR_START() do {LPVOID strerror_result = NULL;\
+<     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,\
+<     NULL, WSAGetLastError(), 0, (LPTSTR) &strerror_result, 0, NULL);
+<   #define STRERROR_END() LocalFree(strerror_result); }while(0);
+< #else
+<   #define STRERROR_START() do {char strerror_result[256];\
+<     strerror_r(errno, strerror_result, 256);\
+<   #define STRERROR_END() }while(0);
+< #endif
+< 
+114,117d90
+< #if defined(WIN32)
+<     unsigned long setting = 1;
+<     if (ioctlsocket (sock_, FIONBIO, &setting) == SOCKET_ERROR)
+< #else
+119d91
+< #endif
+121,123c93
+<       STRERROR_START()
+<       ROS_ERROR("fcntl (non-blocking) to socket [%d] failed with error [%s]", sock_, strerror_result);
+<       STRERROR_END()
+---
+>       ROS_ERROR("fcntl (non-blocking) to socket [%d] failed with error [%s]", sock_, strerror(errno));
+188c158
+<     if (setsockopt(sock_, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&val), sizeof(val)) != 0)
+---
+>     if (setsockopt(sock_, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val)) != 0)
+219c189
+<     if (setsockopt(sock_, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&val), sizeof(val)) != 0)
+---
+>     if (setsockopt(sock_, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val)) != 0)
+232,234c202
+<     STRERROR_START()
+<     ROS_ERROR("socket() failed with error [%s]", strerror_result);
+<     STRERROR_END()
+---
+>     ROS_ERROR("socket() failed with error [%s]", strerror(errno));
+284,286c252
+<     STRERROR_START()
+<     ROSCPP_LOG_DEBUG("Connect to tcpros publisher [%s:%d] failed with error [%s]", host.c_str(), port, strerror_result);
+<     STRERROR_END()
+---
+>     ROSCPP_LOG_DEBUG("Connect to tcpros publisher [%s:%d] failed with error [%s]", host.c_str(), port, strerror(errno));
+311,313c277
+<     STRERROR_START()
+<     ROS_ERROR("socket() failed with error [%s]", strerror_result);
+<     STRERROR_END()
+---
+>     ROS_ERROR("socket() failed with error [%s]", strerror(errno));
+322,324c286
+<     STRERROR_START()
+<     ROS_ERROR("bind() failed with error [%s]", strerror_result);
+<     STRERROR_END()
+---
+>     ROS_ERROR("bind() failed with error [%s]", strerror(errno));
+363,365d324
+< #if defined(WIN32)
+<         ::shutdown(sock_, SD_BOTH);
+< #else
+367,370d325
+< #endif
+< #if defined(WIN32)
+<         if (closesocket(sock_) == SOCKET_ERROR)
+< #else
+372d326
+< #endif
+374,376c328
+<           STRERROR_START()
+<           ROS_ERROR("Error closing socket [%d]: [%s]", sock_, strerror_result);
+<           STRERROR_END()
+---
+>           ROS_ERROR("Error closing socket [%d]: [%s]", sock_, strerror(errno));
+410c362
+<   int num_bytes = ::recv(sock_, reinterpret_cast<char*>(buffer), size, 0);
+---
+>   int num_bytes = ::recv(sock_, buffer, size, 0);
+415,417c367
+<       STRERROR_START()
+<       ROSCPP_LOG_DEBUG("recv() failed with error [%s]", strerror_result);
+<       STRERROR_END()
+---
+>       ROSCPP_LOG_DEBUG("recv() failed with error [%s]", strerror(errno));
+448c398
+<   int num_bytes = ::send(sock_, reinterpret_cast<const char*>(buffer), size, 0);
+---
+>   int num_bytes = ::send(sock_, buffer, size, 0);
+453,455c403
+<       STRERROR_START()
+<       ROSCPP_LOG_DEBUG("send() failed with error [%s]", strerror_result);
+<       STRERROR_END()
+---
+>       ROSCPP_LOG_DEBUG("send() failed with error [%s]", strerror(errno));
+549,551c497
+<     STRERROR_START()
+<     ROS_ERROR("accept() on socket [%d] failed with error [%s]", sock_, strerror_result);
+<     STRERROR_END()
+---
+>     ROS_ERROR("accept() on socket [%d] failed with error [%s]", sock_, strerror(errno));
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/transport/transport_udp.cpp tmp/old/core/roscpp/src/libros/transport/transport_udp.cpp
+43,54c43,47
+< #if defined(WIN32)
+<   #include <Winsock2.h>
+<   #include <Ws2tcpip.h>
+<   #include <process.h>
+< #else
+<   #include <sys/uio.h>
+<   #include <sys/socket.h>
+<   #include <netinet/in.h>
+<   #include <arpa/inet.h>
+<   #include <netdb.h>
+< #endif
+< 
+---
+> #include <sys/uio.h>
+> #include <sys/socket.h>
+> #include <netinet/in.h>
+> #include <arpa/inet.h>
+> #include <netdb.h>
+57,74d49
+< #if defined(WIN32)
+<   #define getpid _getpid
+<   #define ssize_t int
+<   const int EAGAIN = WSAEWOULDBLOCK;
+<   const int EWOULDBLOCK = WSAEWOULDBLOCK;
+<   // Joy of joys, even strerror isn't the same for Windows sockets.
+<   // This is hideous, but for some unknown reason calling ROS_ERROR from within
+<   // a macro isn't working right now.
+<   #define STRERROR_START() do {LPVOID strerror_result = NULL;\
+<     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,\
+<     NULL, WSAGetLastError(), 0, (LPTSTR) &strerror_result, 0, NULL);
+<   #define STRERROR_END() LocalFree(strerror_result); }while(0);
+< #else
+<   #define STRERROR_START() do {char strerror_result[256];\
+<     strerror_r(errno, strerror_result, 256);\
+<   #define STRERROR_END() }while(0);
+< #endif
+< 
+164,166c139
+<     STRERROR_START()
+<     ROS_ERROR("socket() failed with error [%s]", strerror_result);
+<     STRERROR_END()
+---
+>     ROS_ERROR("socket() failed with error [%s]", strerror(errno));
+216,218c189
+<     STRERROR_START()
+<     ROSCPP_LOG_DEBUG("Connect to udpros host [%s:%d] failed with error [%s]", host.c_str(), port, strerror_result);
+<     STRERROR_END()
+---
+>     ROSCPP_LOG_DEBUG("Connect to udpros host [%s:%d] failed with error [%s]", host.c_str(), port, strerror(errno));
+243,245c214
+<     STRERROR_START()
+<     ROS_ERROR("socket() failed with error [%s]", strerror_result);
+<     STRERROR_END()
+---
+>     ROS_ERROR("socket() failed with error [%s]", strerror(errno));
+254,256c223
+<     STRERROR_START()
+<     ROS_ERROR("bind() failed with error [%s]", strerror_result);
+<     STRERROR_END()
+---
+>     ROS_ERROR("bind() failed with error [%s]", strerror(errno));
+282,285d248
+< #if defined(WIN32)
+<     unsigned long setting = 1;
+<     if (ioctlsocket (sock_, FIONBIO, &setting) == SOCKET_ERROR)
+< #else
+287d249
+< #endif
+289,291c251
+<       STRERROR_START()
+<       ROS_ERROR("fcntl (non-blocking) to socket [%d] failed with error [%s]", sock_, strerror_result);
+<       STRERROR_END()
+---
+>       ROS_ERROR("fcntl (non-blocking) to socket [%d] failed with error [%s]", sock_, strerror(errno));
+329,331d288
+< #if defined(WIN32)
+<         if (closesocket(sock_) == SOCKET_ERROR)
+< #else
+333d289
+< #endif
+335,337c291
+<           STRERROR_START()
+<           ROS_ERROR("Error closing socket [%d]: [%s]", sock_, strerror_result);
+<           STRERROR_END()
+---
+>           ROS_ERROR("Error closing socket [%d]: [%s]", sock_, strerror(errno));
+375,381d328
+< #if defined(WIN32)
+<     WSABUF iov[2];
+<     iov[0].buf = reinterpret_cast<char*>(&header);
+<     iov[0].len = sizeof(header);
+<     iov[1].buf = reinterpret_cast<char*>(buffer + bytes_read);
+<     iov[1].len = (size - bytes_read) > max_datagram_size_ ? max_datagram_size_ : (size - bytes_read);
+< #else
+387d333
+< #endif
+390,392d335
+< #if defined(WIN32)
+<     if (iov[1].len < max_datagram_size_ && bytes_read != 0)
+< #else
+394d336
+< #endif
+403,405d344
+< #if defined(WIN32)
+<       memcpy(iov[1].buf, reorder_buffer_, reorder_bytes_);
+< #else
+407d345
+< #endif
+412,416d349
+< #if defined(WIN32)
+<       if (WSARecv(sock_, iov, 2, reinterpret_cast<LPDWORD>(&num_bytes), 0,
+<                   NULL, NULL) == SOCKET_ERROR)
+<           num_bytes = -1;
+< #else
+418d350
+< #endif
+424,426c356
+<         STRERROR_START()
+<         ROSCPP_LOG_DEBUG("readv() failed with error [%s]", strerror_result);
+<         STRERROR_END()
+---
+>         ROSCPP_LOG_DEBUG("readv() failed with error [%s]", strerror(errno));
+532,538d461
+< #if defined(WIN32)
+<     WSABUF iov[2];
+<     iov[0].buf = reinterpret_cast<char*>(&header);
+<     iov[0].len = sizeof(header);
+<     iov[1].buf = reinterpret_cast<char*>(buffer + bytes_sent);
+<     iov[1].len = (size - bytes_sent) > max_datagram_size_ ? max_datagram_size_ : (size - bytes_sent);
+< #else
+544,550d466
+< #endif
+< #if defined(WIN32)
+<     ssize_t num_bytes;
+<     if (WSASend(sock_, iov, 2, reinterpret_cast<LPDWORD>(&num_bytes), 0, NULL,
+<                 NULL) == SOCKET_ERROR)
+<         num_bytes = -1;
+< #else
+552d467
+< #endif
+558,560c473
+<         STRERROR_START()
+<         ROSCPP_LOG_DEBUG("writev() failed with error [%s]", strerror_result);
+<         STRERROR_END()
+---
+>         ROSCPP_LOG_DEBUG("writev() failed with error [%s]", strerror(errno));
+diff -r -x .svn tmp/windoze/core/roscpp/src/libros/xmlrpc_manager.cpp tmp/old/core/roscpp/src/libros/xmlrpc_manager.cpp
+35,39d34
+< #if defined(WIN32)
+<   #include <process.h>
+<   #define getpid _getpid
+< #endif
+< 

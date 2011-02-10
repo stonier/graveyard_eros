@@ -83,3 +83,56 @@ Funny defines for _WINDOW accomodated for as well as an extra header.
 - XmlRpcSocket.h
   - added an include for <ws2tcpip.h> - will be different for other wins?
 
+====================== Roscpp ======================
+
+== Against ==
+
+Files: lots
+Revision: 12965 (last package revision)
+
+== Summary ==
+
+Note, couldn't use service robotics socket stuff because the WSA calls only exist
+in windows vista onwards. Instead, using some old player code but probably needs an update.
+
+== Mingw ==
+
+- poll_set.h
+  - avoid the call to <poll.h> in windows.
+- transport/transport_tcp.h, transport/transport_udf.h
+  - appropriately redirect socket headers.
+- common.cpp
+  - disable signals altogether.
+- poll_set.cpp
+  - this is where that ugly old player code comes in.
+- headers.cpp
+  - removed a seemingly unused <sys/socket.h> call that was not found by mingw.
+- include/ros/transport/transport_tcp.h _udp.h, src/libros/transport/transport_tcp.cpp, _udp.cpp
+  - replaced alot fo the linux socket code with old (pre vista windows code).
+  - for vista and later, see service robotics hacks.
+- network.cpp
+  - avoid posix socket header calls in windows.
+- file_log.cpp
+  - macros for pid's
+  - minor change in log4cxx handling.
+- init.cpp
+  - alot of cludgy hacks from service robotics (jeff's dropped the appender).
+- subscription.cpp 
+  - avoid the posix header calls in windows.
+  
+================= Roscpp Tutorials =================
+  
+== Against ==
+
+Files: CMakeLists.txt listener/CMakeLists.txt talker/CMakeLists.txt
+Revision: 10564 (last package revision)
+
+== Summary ==
+
+Just disabling everything but talker/listener and adding targets for mingw
+static linking. All in all, a temporary fix!
+
+== Mingw ==
+  
+- CMakeLists.txt, talker/CMakeLists.txt, listener/CMakeLists.txt
+  - as stated above. 
