@@ -74,13 +74,15 @@ Revisions: 13154, 13154
 
 == Summary ==
 
-Funny defines for _WINDOW accomodated for as well as an extra header.
+Funny defines for _WINDOW accomodated for as well as an extra header. Note this also
+needed the toolchain to define the macro _WIN32_WINNT=0x0501, but that's easiest done
+in the toolchain file.
 
 == Mingw ==
 
 - CMakeLists.txt
   - make sure we define xmlrpc's _WINDOW macro when on WIN systems (let cmake detect for us). 
-- XmlRpcSocket.h
+- XmlRpcSocket.cpp
   - added an include for <ws2tcpip.h> - will be different for other wins?
 
 ====================== Roscpp ======================
