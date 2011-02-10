@@ -100,6 +100,11 @@ Revision: 12965 (last package revision)
 Note, couldn't use service robotics socket stuff because the WSA calls only exist
 in windows vista onwards. Instead, using some old player code but probably needs an update.
 
+== Issue Tracking ==
+
+- init.cpp
+  - https://code.ros.org/trac/ros/ticket/3319 : moving the time init function.
+  
 == Eros ==
 
 It also overlays across patches from eros in diamondback to slow down timers (see
