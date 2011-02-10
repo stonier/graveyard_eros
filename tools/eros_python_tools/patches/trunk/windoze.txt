@@ -97,6 +97,14 @@ Revision: 12965 (last package revision)
 Note, couldn't use service robotics socket stuff because the WSA calls only exist
 in windows vista onwards. Instead, using some old player code but probably needs an update.
 
+== Eros ==
+
+It also overlays across patches from eros in diamondback to slow down timers (see
+the diffs there for details).
+
+- init.cpp
+  - in internalCallbackQueueThreadFunc(), slows down the timer.
+
 == Mingw ==
 
 - poll_set.h
