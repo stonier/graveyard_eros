@@ -21,10 +21,8 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 # Boost needs to be hand held on windoze for boost_thread.
 # Maybe bad place for this? Could also embed in rosbuild/public.cmake
-set(TOOLCHAIN_COMPILE_FLAGS "-DBOOST_THREAD_USE_LIB ${TOOLCHAIN_COMPILE_FLAGS}")
-# Also need this I think - http://lists-archives.org/mingw-users/04689-linking-help.html
-#set(TOOLCHAIN_COMPILE_FLAGS "${TOOLCHAIN_COMPILE_FLAGS} -D_WIN32_WINNT=0x0500")
-#set(TOOLCHAIN_LINK_FLAGS "${TOOLCHAIN_LINK_FLAGS} -no-undefined")
+# Also need this - http://lists-archives.org/mingw-users/04689-linking-help.html
+set(TOOLCHAIN_COMPILE_FLAGS "-DBOOST_THREAD_USE_LIB -D_WIN32_WINNT=0x0501")
 
 ###############################
 # Mingw Ecosystem is Static
