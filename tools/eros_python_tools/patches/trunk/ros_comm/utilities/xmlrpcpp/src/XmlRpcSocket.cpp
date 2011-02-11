@@ -187,9 +187,9 @@ XmlRpcSocket::connect(int fd, std::string& host, int port)
   // For asynch operation, this will return EWOULDBLOCK (windows) or
   // EINPROGRESS (linux) and we just need to wait for the socket to be writable...
   int result = ::connect(fd, (struct sockaddr *)&saddr, sizeof(saddr));
-  if (result != 0 && errno != EINPROGRESS)
+  if (result != 0 && errno != EINPROGRESS && errno != EWOULDBLOCK)
   {
-    printf("error = %d (%s)\n", errno, strerror(errno));
+    printf("::connect error = %d\n", getError());
   }
 
   freeaddrinfo(addr);

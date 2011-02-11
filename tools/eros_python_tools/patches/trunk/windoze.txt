@@ -87,7 +87,8 @@ in the toolchain file.
   - make sure we define xmlrpc's _WINDOW macro when on WIN systems (let cmake detect for us). 
 - XmlRpcSocket.cpp
   - added an include for <ws2tcpip.h> - will be different for other wins?
-
+  - avoid an EWOULDBLOCK error output on connecting (see comments).
+  
 ====================== Roscpp ======================
 
 == Against ==
