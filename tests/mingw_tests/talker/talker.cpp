@@ -24,8 +24,10 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+#include "ros/poll_set.h"
 
 #include <sstream>
 
@@ -34,62 +36,35 @@
  */
 int main(int argc, char **argv)
 {
-   ros::master::setURI("http://192.168.10.66:11311/");
-   ros::master::setHost("192.168.10.67");
-  /**
-   * The ros::init() function needs to see argc and argv so that it can perform
-   * any ROS arguments and name remapping that were provided at the command line. For programmatic
-   * remappings you can use a different version of init() which takes remappings
-   * directly, but for most command-line programs, passing argc and argv is the easiest
-   * way to do it.  The third argument to init() is the name of the node.
-   *
-   * You must call one of the versions of ros::init() before using any other
-   * part of the ROS system.
-   */
-  ros::init(argc, argv, "talker");
+	if ( ros::init_sockets() != 0 ) {
+		std::cout << "Failed to initialise socket subsystem." << std::endl;
+		return -1;
+	} else {
+		std::cout << "Initialised the socket subsystem." << std::endl;
+	}
 
-  /**
-   * NodeHandle is the main access point to communications with the ROS system.
-   * The first NodeHandle constructed will fully initialize this node, and the last
-   * NodeHandle destructed will close down the node.
-   */
-  ros::start();
-  //ros::NodeHandle n;
+	ros::master::setURI("http://192.168.10.66:11311/");
+	ros::master::setHost("192.168.10.67");
+	//   ros::init(argc, argv, "talker",ros::init_options::NoRosout);
+	ros::init(argc, argv, "talker");
+	ros::start();
 
-  /**
-   * The advertise() function is how you tell ROS that you want to
-   * publish on a given topic name. This invokes a call to the ROS
-   * master node, which keeps a registry of who is publishing and who
-   * is subscribing. After this advertise() call is made, the master
-   * node will notify anyone who is trying to subscribe to this topic name,
-   * and they will in turn negotiate a peer-to-peer connection with this
-   * node.  advertise() returns a Publisher object which allows you to
-   * publish messages on that topic through a call to publish().  Once
-   * all copies of the returned Publisher object are destroyed, the topic
-   * will be automatically unadvertised.
-   *
-   * The second parameter to advertise() is the size of the message queue
-   * used for publishing messages.  If messages are published more quickly
-   * than we can send them, the number here specifies how many messages to
-   * buffer up before throwing some away.
-   */
+	ROS_INFO("Dude");
+	Sleep(1000);
+	ROS_INFO("Dude");
+
+//  ros::NodeHandle n;
 //  ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
-
 //  ros::Rate loop_rate(10);
-
-  /**
-   * A count of how many messages we have sent. This is used to create
-   * a unique string for each message.
-   */
-  int count = 0;
-  ROS_INFO("Dude");
-  while (ros::ok())
-  {
-	  Sleep(1000);
-	  ROS_INFO_STREAM("Dude: " << count);
-	  ++count;
-
-  }
+//  int count = 0;
+//  while (ros::ok() && (count < 4) )
+//  {
+//	  Sleep(1000);
+//	  ROS_INFO_STREAM("Dude: " << count);
+//	  ++count;
+//    ros::spinOnce();
+//  }
+//  ros::shutdown();
 //    std_msgs::String msg;
 //    std::stringstream ss;
 //    ss << "hello world " << count;
