@@ -36,21 +36,23 @@
  */
 int main(int argc, char **argv)
 {
+#if defined(WIN32)
 	if ( ros::init_sockets() != 0 ) {
 		std::cout << "Failed to initialise socket subsystem." << std::endl;
 		return -1;
 	} else {
 		std::cout << "Initialised the socket subsystem." << std::endl;
 	}
-
 	ros::master::setURI("http://192.168.10.66:11311/");
 	ros::master::setHost("192.168.10.67");
+#endif(WIN32)
 	//   ros::init(argc, argv, "talker",ros::init_options::NoRosout);
 	ros::init(argc, argv, "talker");
-	ros::start();
+//	ros::start();
 
 	ROS_INFO("Dude");
-	Sleep(1000);
+	ros::Duration one_sec(1,0);
+	one_sec.sleep();
 	ROS_INFO("Dude");
 
 //  ros::NodeHandle n;
