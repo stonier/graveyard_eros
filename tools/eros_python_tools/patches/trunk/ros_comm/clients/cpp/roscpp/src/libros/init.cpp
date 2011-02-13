@@ -325,6 +325,7 @@ void start()
   PollManager::instance()->start();
   XMLRPCManager::instance()->start();
 
+  abort();
   if (!(g_init_options & init_options::NoSigintHandler))
   {
     signal(SIGINT, basicSigintHandler);
