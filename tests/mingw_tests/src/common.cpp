@@ -12,7 +12,18 @@
 ** Includes
 *****************************************************************************/
 
+#include <ros/ros.h>
+#include <ros/network.h>
+
+/*****************************************************************************
+** Namespaces
+*****************************************************************************/
+
 namespace tests {
+
+/*****************************************************************************
+** Functions
+*****************************************************************************/
 
 void set_debug_log_levels() {
 	// This needs to happen before we start fooling around with logger levels.  Otherwise the level we set may be overwritten by

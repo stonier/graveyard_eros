@@ -5,6 +5,6 @@ macro(add_mingw_test tgt)
 endmacro(ecl_add_example)
 
 add_mingw_test(talker talker.cpp common.cpp)
-add_mingw_test(nodelist nodelist.cpp common.cpp)
+#add_mingw_test(nodelist nodelist.cpp common.cpp)
 
-add_mingw_test(listener listener.cpp)
+#add_mingw_test(listener listener.cpp)
