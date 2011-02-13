@@ -27,7 +27,8 @@
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-#include "ros/poll_set.h"
+#include <ros/poll_set.h>
+#include <ros/network.h>
 
 #include <sstream>
 
@@ -36,49 +37,19 @@
  */
 int main(int argc, char **argv)
 {
-#if defined(WIN32)
-	if ( ros::init_sockets() != 0 ) {
-		std::cout << "Failed to initialise socket subsystem." << std::endl;
-		return -1;
+	tests::set_urls();
+	tests::set_debug_log_levels();
+	ros::init(argc, argv, "nodelist");
+	ros::Time::init();
+
+	ros::V_string nodes;
+	if ( ros::master::getNodes(nodes) ) {
+		std::cout << "Node list:" << std::endl;
+		for (unsigned int i = 0; i < nodes.size(); ++i ) {
+			std::cout << "  " << nodes[i] << std::endl;
+		}
 	} else {
-		std::cout << "Initialised the socket subsystem." << std::endl;
+		ROS_ERROR("Couldn't contact the master");
 	}
-	ros::master::setURI("http://192.168.10.66:11311/");
-	ros::master::setHost("192.168.10.67");
-#endif(WIN32)
-	//   ros::init(argc, argv, "talker",ros::init_options::NoRosout);
-	ros::init(argc, argv, "talker");
-//	ros::start();
-
-	ROS_INFO("Dude");
-	ros::Duration one_sec(1,0);
-	one_sec.sleep();
-	ROS_INFO("Dude");
-
-//  ros::NodeHandle n;
-//  ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
-//  ros::Rate loop_rate(10);
-//  int count = 0;
-//  while (ros::ok() && (count < 4) )
-//  {
-//	  Sleep(1000);
-//	  ROS_INFO_STREAM("Dude: " << count);
-//	  ++count;
-//    ros::spinOnce();
-//  }
-//  ros::shutdown();
-//    std_msgs::String msg;
-//    std::stringstream ss;
-//    ss << "hello world " << count;
-//    msg.data = ss.str();
-//    ROS_INFO("%s", msg.data.c_str());
-//    chatter_pub.publish(msg);
-//    ros::spinOnce();
-//    loop_rate.sleep();
-//    ++count;
-//  }
-
-
   return 0;
 }
-// %EndTag(FULLTEXT)%
