@@ -38,10 +38,10 @@ void set_debug_log_levels() {
 
 void set_urls() {
 #if defined(WIN32)
-//	ros::master::setURI("http://192.168.10.66:11311/");
-//	ros::network::setHost("192.168.10.67");
-	ros::master::setURI("http://192.168.1.3:11311/");
-	ros::network::setHost("192.168.1.67");
+	ros::master::setURI("http://192.168.10.66:11311/");
+	ros::network::setHost("192.168.10.67");
+//	ros::master::setURI("http://192.168.1.3:11311/");
+//	ros::network::setHost("192.168.1.67");
 //	ros::master::setURI("http://192.168.56.1:11311/");
 //	ros::network::setHost("192.168.56.2");
 #endif

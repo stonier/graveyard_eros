@@ -19,12 +19,12 @@ int main(int argc, char **argv)
 {
 	tests::set_urls();
 	tests::set_debug_log_levels();
-	// ros::init(argc, argv, "talker",ros::init_options::NoRosout);
-	ros::init(argc, argv, "talker");
+	ros::init(argc, argv, "talker",ros::init_options::NoRosout);
+//	ros::init(argc, argv, "talker");
 	ros::Time::init();
     ros::NodeHandle n;
 
-	ros::Rate loop_rate(1);
+	ros::Rate loop_rate(100);
 
     ROS_INFO("Setting up publisher");
     ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
@@ -42,6 +42,7 @@ int main(int argc, char **argv)
 		loop_rate.sleep();
 		++count;
 	}
+	ros::Duration(1,0).sleep();
 //	ROS_INFO("Shutdown commencing");
 ///	ros::shutdown();
 
