@@ -215,7 +215,7 @@ bool ros_wallsleep(uint32_t sec, uint32_t nsec)
 #else
 	ros_timespec req = { sec, nsec };
 	ros_timespec rem = {0, 0};
-	while (nanosleep(req, rem) && !g_stopped)
+	while (nanosleep(&req, &rem) && !g_stopped)
 	{
 		req = rem;
 	}
