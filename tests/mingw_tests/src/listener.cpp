@@ -4,7 +4,7 @@
 
 #include <ros/ros.h>
 #include <std_msgs/String.h>
-
+#include "common.h"
 /**
  * Used with talker to test pubsubs. Run on the side with the master.
  */
@@ -15,10 +15,11 @@ void chatterCallback(const std_msgs::String::ConstPtr& msg)
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "listener");
-  ros::NodeHandle n;
-  ros::Subscriber sub = n.subscribe("chatter", 1000, chatterCallback);
-  ros::spin();
+	tests::set_urls();
+	ros::init(argc, argv, "listener");
+	ros::NodeHandle n;
+	ros::Subscriber sub = n.subscribe("chatter", 1000, chatterCallback);
+	ros::spin();
 
-  return 0;
+	return 0;
 }
