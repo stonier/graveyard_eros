@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 
     ROS_INFO("Setting up publisher");
     ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
-	ros::Duration(0,300000000).sleep(); // give it some time to make the subscriber connection.
+	ros::Duration(1,000000000).sleep(); // give it some time to make the subscriber connection.
     ROS_INFO("Commencing Loop.");
 	int count = 0;
 	while (ros::ok() && (count < 4) ) {
