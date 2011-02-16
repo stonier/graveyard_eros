@@ -21,7 +21,8 @@ svn co http://ros-win32.servicerobotics.eu/trunk/cturtle/ ./msvc
 == Against ==
 
 Files: time.h duration.h time.cpp
-Patched: r12815
+Patched Against: r12815
+Ticket: https://code.ros.org/trac/ros/ticket/3331
 
 == Summary	 ==
 
@@ -72,7 +73,8 @@ Could update the colouring info for windows.
 == Against ==
 
 File: CMakeLists.txt, src/XmlRpcSocket.h
-Revisions: 13154, 13154 
+Patched Against: 11844
+Ticket: https://code.ros.org/trac/ros/ticket/3332
 
 == Summary ==
 

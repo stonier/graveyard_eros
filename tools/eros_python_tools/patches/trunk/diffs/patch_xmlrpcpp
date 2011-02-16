@@ -1,0 +1,39 @@
+diff -NBaur -x .svn xmlrpcpp_original/CMakeLists.txt xmlrpcpp_new/CMakeLists.txt
+--- xmlrpcpp_original/CMakeLists.txt	2011-02-16 11:50:07.901170012 +0900
++++ xmlrpcpp_new/CMakeLists.txt	2011-02-16 11:51:14.277353870 +0900
+@@ -1,6 +1,9 @@
+ cmake_minimum_required(VERSION 2.4.6)
+ include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+ rosbuild_init()
++if(WIN32)
++  set(ROS_COMPILE_FLAGS ${ROS_COMPILE_FLAGS} -D_WINDOWS)
++endif()
+ rosbuild_add_library(XmlRpc src/XmlRpcClient.cpp
+                      src/XmlRpcDispatch.cpp
+                      src/XmlRpcServer.cpp
+diff -NBaur -x .svn xmlrpcpp_original/src/XmlRpcSocket.cpp xmlrpcpp_new/src/XmlRpcSocket.cpp
+--- xmlrpcpp_original/src/XmlRpcSocket.cpp	2011-02-16 11:50:07.901170012 +0900
++++ xmlrpcpp_new/src/XmlRpcSocket.cpp	2011-02-16 11:51:14.309395097 +0900
+@@ -10,6 +10,7 @@
+ #if defined(_WINDOWS)
+ # include <stdio.h>
+ # include <winsock2.h>
++# include <ws2tcpip.h>
+ //# pragma lib(WS2_32.lib)
+ 
+ # define EINPROGRESS	WSAEINPROGRESS
+@@ -186,9 +187,11 @@
+   // For asynch operation, this will return EWOULDBLOCK (windows) or
+   // EINPROGRESS (linux) and we just need to wait for the socket to be writable...
+   int result = ::connect(fd, (struct sockaddr *)&saddr, sizeof(saddr));
+-  if (result != 0 && errno != EINPROGRESS)
+-  {
+-    printf("error = %d (%s)\n", errno, strerror(errno));
++  if (result != 0 ) {
++	  int error = getError();
++	  if ( (error != EINPROGRESS) && error != EWOULDBLOCK) { // actually, should probably do a platform check here, EWOULDBLOCK on WIN32 and EINPROGRESS otherwise
++		    printf("::connect error = %d\n", getError());
++	  }
+   }
+ 
+   freeaddrinfo(addr);
