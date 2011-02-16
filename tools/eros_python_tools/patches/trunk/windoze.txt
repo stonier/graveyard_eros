@@ -20,10 +20,10 @@ svn co http://ros-win32.servicerobotics.eu/trunk/cturtle/ ./msvc
   
 == Against ==
 
-Files: include/ros/time.h include/ros/duration.h src/ros/time.cpp
-Last Changed Revisions: 12080
+Files: time.h duration.h time.cpp
+Patched: r12815
 
-== Summary ==
+== Summary	 ==
 
 Windows dropins for getting the time and sleeping.
 code for catching the time (already there, just needed to edit out the 
@@ -38,7 +38,6 @@ ROS_INFO) and nanosleep (provided by Geoff Biggs).
   - drop out now broken ROS_INFO calls.
   - drop in Geoffrey Biggs nanosleep replacement.
   - fix Geoffrey's bugs in the sleep code.
-  - convert WIN32 to _WIN32 macros (ms visual express 2010 doesn't define WIN32).
   
 == ToDo ==
 

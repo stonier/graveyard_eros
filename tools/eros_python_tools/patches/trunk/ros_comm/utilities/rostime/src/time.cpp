@@ -78,19 +78,6 @@ static bool g_initialized(false);
 static bool g_use_sim_time(true);
 static Time g_sim_time(0, 0);
 
-/*****************************************************************************
-** Cross Platform Types
-*****************************************************************************/
-
-#ifdef WIN32
-	struct ros_timespec {
-		time_t tv_sec;
-		long tv_nsec;
-	};
-#else
-	typedef timespec ros_timespec;
-#endif
-
 /*********************************************************************
 ** Cross Platform Functions
 *********************************************************************/
@@ -198,7 +185,7 @@ int ros_nanosleep(const uint32_t &sec, const uint32_t &nsec)
 	}
 	return 0;
 #else
-	ros_timespec req = { sec, nsec };
+	timespec req = { sec, nsec };
 	return nanosleep(&req, NULL);
 #endif
 }
@@ -213,8 +200,8 @@ bool ros_wallsleep(uint32_t sec, uint32_t nsec)
 #if defined(WIN32)
 	ros_nanosleep(sec,nsec);
 #else
-	ros_timespec req = { sec, nsec };
-	ros_timespec rem = {0, 0};
+	timespec req = { sec, nsec };
+	timespec rem = {0, 0};
 	while (nanosleep(&req, &rem) && !g_stopped)
 	{
 		req = rem;
@@ -348,6 +335,7 @@ bool Time::sleepUntil(const Time& end)
         return false;
       }
     }
+
     return true;
   }
 }
