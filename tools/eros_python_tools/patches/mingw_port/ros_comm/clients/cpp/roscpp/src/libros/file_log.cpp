@@ -28,17 +28,14 @@
 #include <cstdio>
 #include "ros/file_log.h"
 #include "ros/this_node.h"
+
 #include "log4cxx/rollingfileappender.h"
 #include "log4cxx/patternlayout.h"
-#include <ros/console.h>
-#include <boost/filesystem.hpp>
+#include "ros/io.h"
 
-#if defined(WIN32)
-  #include <process.h>
-  #define pid_t int
-  #define getpid _getpid
-  #define snprintf _snprintf
-#endif
+#include <ros/console.h>
+
+#include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
 
@@ -139,15 +136,8 @@ void init(const M_string& remappings)
     g_log_filename = log_file_name;
 
     const log4cxx::LoggerPtr& logger = log4cxx::Logger::getLogger(ROSCONSOLE_ROOT_LOGGER_NAME);
-#ifdef WIN32
-	LOG4CXX_DECODE_CHAR(temp01, std::string("[%c] [%d] [thread %t]: [%p] %m\n"));
-	log4cxx::LayoutPtr layout = new log4cxx::PatternLayout(temp01);
-	LOG4CXX_DECODE_CHAR(temp02, log_file_name);
-	log4cxx::RollingFileAppenderPtr appender = new log4cxx::RollingFileAppender(layout, temp02, false);
-#else
     log4cxx::LayoutPtr layout = new log4cxx::PatternLayout("[%c] [%d] [thread %t]: [%p] %m\n");
     log4cxx::RollingFileAppenderPtr appender = new log4cxx::RollingFileAppender(layout, log_file_name, false);
-#endif //WIN32
     appender->setMaximumFileSize(100*1024*1024);
     appender->setMaxBackupIndex(10);
     log4cxx::helpers::Pool pool;

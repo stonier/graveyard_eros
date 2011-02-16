@@ -36,41 +36,7 @@
 #define ROSCPP_POLL_SET_H
 
 #include <vector>
-
-#ifndef WIN32
-# include <poll.h>
-#else
-// All code from here until the end of this #ifdef came from Player's poll
-// replacement, which in turn came, via Brian, from glibc. As glibc is licensed
-// under the GPL, this is almost certainly a licensing problem. A better
-// solution is to replace the call to poll() above with whatever boost has to
-// replace it (there's got to be something in there).
-//
-// See also poll_set.cpp for more win32 errata.
-
-/* Event types that can be polled for.  These bits may be set in `events'
-   to indicate the interesting event types; they will appear in `revents'
-   to indicate the status of the file descriptor.  */
-# define POLLIN          01              /* There is data to read.  */
-# define POLLPRI         02              /* There is urgent data to read.  */
-# define POLLOUT         04              /* Writing now will not block.  */
-
-/* Some aliases.  */
-# define POLLWRNORM      POLLOUT
-# define POLLRDNORM      POLLIN
-# define POLLRDBAND      POLLPRI
-
-/* Event types always implicitly polled for.  These bits need not be set in
-   `events', but they will appear in `revents' to indicate the status of
-   the file descriptor.  */
-# define POLLERR         010             /* Error condition.  */
-# define POLLHUP         020             /* Hung up.  */
-# define POLLNVAL        040             /* Invalid polling request.  */
-
-/* Canonical number of polling requests to read in at a time in poll.  */
-# define NPOLLFILE       30
-#endif
-
+#include "io.h"
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
@@ -176,7 +142,7 @@ private:
   typedef std::vector<int> V_int;
   V_int just_deleted_;
 
-  std::vector<struct pollfd> ufds_;
+  std::vector<socket_pollfd> ufds_;
 
   boost::mutex signal_mutex_;
   int signal_pipe_[2];

@@ -43,8 +43,8 @@
 #include "ros/network.h"
 #include "ros/file_log.h"
 #include "ros/callback_queue.h"
-#include "ros/rosout_appender.h"
 #include "ros/param.h"
+#include "ros/rosout_appender.h"
 #include "ros/subscribe_options.h"
 #include "ros/transport/transport_tcp.h"
 #include "ros/internal_timer_manager.h"
@@ -58,15 +58,10 @@
 #include <roslib/Clock.h>
 
 #include <algorithm>
-#include <signal.h>
-#include <cstdlib>
 
-#if defined(WIN32)
-  #include <process.h>
-  #define getpid _getpid
-  #include <log4cxx/helpers/transcoder.h>
-#else
-#endif
+#include <signal.h>
+
+#include <cstdlib>
 
 namespace ros
 {
@@ -182,21 +177,11 @@ bool getLoggers(roscpp::GetLoggers::Request&, roscpp::GetLoggers::Response& resp
   for (; it != end; ++it)
   {
     roscpp::Logger logger;
-#ifdef WIN32
-    LOG4CXX_ENCODE_CHAR(tmpstr, (*it)->getName());
-	logger.name = tmpstr;
-#else
     logger.name = (*it)->getName();
-#endif //WIN32
     const log4cxx::LevelPtr& level = (*it)->getEffectiveLevel();
     if (level)
     {
-#ifdef WIN32
-	  LOG4CXX_ENCODE_CHAR(tmpstr, level->toString());
-	  logger.level = tmpstr;
-#else
       logger.level = level->toString();
-#endif //WIN32
     }
     resp.loggers.push_back(logger);
   }
@@ -325,13 +310,10 @@ void start()
   PollManager::instance()->start();
   XMLRPCManager::instance()->start();
 
-  abort();
   if (!(g_init_options & init_options::NoSigintHandler))
   {
     signal(SIGINT, basicSigintHandler);
   }
-
-  ros::Time::init();
 
   if (!(g_init_options & init_options::NoRosout))
   {
@@ -374,6 +356,8 @@ void start()
     bool use_sim_time = false;
     param::param("/use_sim_time", use_sim_time, use_sim_time);
 
+    ros::Time::init();
+
     if (use_sim_time)
     {
       Time::setNow(ros::Time());
@@ -395,11 +379,7 @@ void start()
   g_internal_queue_thread = boost::thread(internalCallbackQueueThreadFunc);
   getGlobalCallbackQueue()->enable();
 
-#ifdef WIN32
-  ROSCPP_LOG_DEBUG("Started node [%s], pid [%d], bound on [%s], xmlrpc port [%d], tcpros port [%d], logging to [%s], using [%s] time", this_node::getName().c_str(), _getpid(), network::getHost().c_str(), XMLRPCManager::instance()->getServerPort(), ConnectionManager::instance()->getTCPPort(), file_log::getLogFilename().c_str(), Time::useSystemTime() ? "real" : "sim");
-#else
   ROSCPP_LOG_DEBUG("Started node [%s], pid [%d], bound on [%s], xmlrpc port [%d], tcpros port [%d], logging to [%s], using [%s] time", this_node::getName().c_str(), getpid(), network::getHost().c_str(), XMLRPCManager::instance()->getServerPort(), ConnectionManager::instance()->getTCPPort(), file_log::getLogFilename().c_str(), Time::useSystemTime() ? "real" : "sim");
-#endif //WIN32
 
   // Label used to abort if we've started shutting down in the middle of start(), which can happen in
   // threaded code or if Ctrl-C is pressed while we're initializing
@@ -430,10 +410,10 @@ void init(const M_string& remappings, const std::string& name, uint32_t options)
     g_ok = true;
 
     ROSCONSOLE_AUTOINIT;
-#ifndef WIN32 // No signals in windows.
     // Disable SIGPIPE
+#ifndef WIN32
     signal(SIGPIPE, SIG_IGN);
-#endif //WIN32
+#endif
     network::init(remappings);
     master::init(remappings);
     // names:: namespace is initialized by this_node
@@ -562,14 +542,6 @@ void shutdown()
   logger->removeAppender(g_rosout_appender);
   g_rosout_appender = 0;
 
-  // reset this so that the logger doesn't get crashily destroyed
-  // again during global destruction.  
-  //
-  // See https://code.ros.org/trac/ros/ticket/3271
-  //
-  log4cxx::LoggerPtr& fo_logger = ros::file_log::getFileOnlyLogger();
-  fo_logger = log4cxx::LoggerPtr();
-  
   if (g_started)
   {
     TopicManager::instance()->shutdown();

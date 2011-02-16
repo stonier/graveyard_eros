@@ -143,7 +143,7 @@ bool TransportTCP::initializeSocket()
   ROS_ASSERT(poll_set_ || (flags_ & SYNCHRONOUS));
   if (poll_set_)
   {
-    ROS_DEBUG("Adding socket [%d] to pollset", sock_);
+    ROS_DEBUG("Adding tcp socket [%d] to pollset", sock_);
     poll_set_->addSocket(sock_, boost::bind(&TransportTCP::socketUpdate, this, _1), shared_from_this());
   }
 
@@ -604,7 +604,6 @@ void TransportTCP::disableWrite()
 TransportTCPPtr TransportTCP::accept()
 {
   ROS_ASSERT(is_server_);
-
   sockaddr client_address;
   socklen_t len = sizeof(client_address);
   int new_sock = ::accept(sock_, (sockaddr *)&client_address, &len);

@@ -31,19 +31,6 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#ifdef WIN32
-# include <io.h>
-# include <fcntl.h>
-# define pipe(a) _pipe((a), 256, _O_BINARY)
-# define close _close
-# define write _write
-# define read _read
-#else
-# include <sys/poll.h>
-# include <arpa/inet.h>
-# include <netdb.h>
-#endif
-
 #include "ros/poll_set.h"
 #include "ros/file_log.h"
 
@@ -57,231 +44,17 @@
 
 namespace ros
 {
-#if defined(WIN32)
-/* Data structure describing a polling request.  */
-struct pollfd
-  {
-    int fd;			/* File descriptor to poll.  */
-    short int events;		/* Types of events poller cares about.  */
-    short int revents;		/* Types of events that actually occurred.  */
-  };
-
-
-#include <sys/types.h>
-#include <errno.h>
-#include <string.h>
-//#include <winsock2.h> // For struct timeval
-#include <malloc.h> // For alloca()
-#include <string.h> // For memset ()
-
-/* *-*-nto-qnx doesn't define this constant in the system headers */
-#ifndef NFDBITS
-#define	NFDBITS (8 * sizeof(unsigned long))
-#endif
-
-/* Macros for counting and rounding.  */
-#ifndef howmany
-#define howmany(x, y)  (((x) + ((y) - 1)) / (y))
-#endif
-#ifndef powerof2
-#define powerof2(x)     ((((x) - 1) & (x)) == 0)
-#endif
-#ifndef roundup
-#define roundup(x, y)  ((((x) + ((y) - 1)) / (y)) * (y))
-#endif
-
-/* Poll the file descriptors described by the NFDS structures starting at
-   FDS.  If TIMEOUT is nonzero and not -1, allow TIMEOUT milliseconds for
-   an event to occur; if TIMEOUT is -1, block until an event occurs.
-   Returns the number of file descriptors with events, zero if timed out,
-   or -1 for errors.  */
-
-int
-poll(struct pollfd* fds, unsigned long int nfds, int timeout)
-{
-  static int max_fd_size;
-  struct timeval tv;
-  fd_set *rset, *wset, *xset;
-  struct pollfd *f;
-  int ready;
-  int maxfd = 0;
-  int bytes;
-
-  if (!max_fd_size)
-    max_fd_size = 256; // Best value I could find, the help doesn't specify anywhere
-
-  bytes = howmany (max_fd_size, NFDBITS);
-  rset = reinterpret_cast<fd_set*> (alloca (bytes));
-  wset = reinterpret_cast<fd_set*> (alloca (bytes));
-  xset = reinterpret_cast<fd_set*> (alloca (bytes));
-
-  /* We can't call FD_ZERO, since FD_ZERO only works with sets
-     of exactly FD_SETSIZE size.  */
-  memset (rset, 0, bytes);
-  memset (wset, 0, bytes);
-  memset (xset, 0, bytes);
-
-  for (f = fds; f < &fds[nfds]; ++f)
-    {
-      f->revents = 0;
-      if (f->fd >= 0)
-    {
-      if (f->fd >= max_fd_size)
-        {
-          /* The user provides a file descriptor number which is higher
-         than the maximum we got from the `getdtablesize' call.
-         Maybe this is ok so enlarge the arrays.  */
-          fd_set *nrset, *nwset, *nxset;
-          int nbytes;
-
-          max_fd_size = roundup (f->fd, NFDBITS);
-          nbytes = howmany (max_fd_size, NFDBITS);
-
-          nrset = reinterpret_cast<fd_set*> (alloca (nbytes));
-          nwset = reinterpret_cast<fd_set*> (alloca (nbytes));
-          nxset = reinterpret_cast<fd_set*> (alloca (nbytes));
-
-          memset ((char *) nrset + bytes, 0, nbytes - bytes);
-          memset ((char *) nwset + bytes, 0, nbytes - bytes);
-          memset ((char *) nxset + bytes, 0, nbytes - bytes);
-
-          rset = reinterpret_cast<fd_set*> (memcpy (nrset, rset, bytes));
-          wset = reinterpret_cast<fd_set*> (memcpy (nwset, wset, bytes));
-          xset = reinterpret_cast<fd_set*> (memcpy (nxset, xset, bytes));
-
-          bytes = nbytes;
-        }
-
-      if (f->events & POLLIN)
-        FD_SET (f->fd, rset);
-      if (f->events & POLLOUT)
-        FD_SET (f->fd, wset);
-      if (f->events & POLLPRI)
-        FD_SET (f->fd, xset);
-      if (f->fd > maxfd && (f->events & (POLLIN|POLLOUT|POLLPRI)))
-        maxfd = f->fd;
-    }
-    }
-
-  tv.tv_sec = timeout / 1000;
-  tv.tv_usec = (timeout % 1000) * 1000;
-
-  while (1)
-    {
-      ready = select (maxfd + 1, rset, wset, xset,
-            timeout == -1 ? NULL : &tv);
-
-      /* It might be that one or more of the file descriptors is invalid.
-     We now try to find and mark them and then try again.  */
-      if (ready == -1 && errno == EBADF)
-    {
-      fd_set *sngl_rset = reinterpret_cast<fd_set*> (alloca (bytes));
-      fd_set *sngl_wset = reinterpret_cast<fd_set*> (alloca (bytes));
-      fd_set *sngl_xset = reinterpret_cast<fd_set*> (alloca (bytes));
-      struct timeval sngl_tv;
-
-      /* Clear the original set.  */
-      memset (rset, 0, bytes);
-      memset (wset, 0, bytes);
-      memset (xset, 0, bytes);
-
-      /* This means we don't wait for input.  */
-      sngl_tv.tv_sec = 0;
-      sngl_tv.tv_usec = 0;
-
-      maxfd = -1;
-
-      /* Reset the return value.  */
-      ready = 0;
-
-      for (f = fds; f < &fds[nfds]; ++f)
-        if (f->fd != -1 && (f->events & (POLLIN|POLLOUT|POLLPRI))
-        && (f->revents & POLLNVAL) == 0)
-          {
-        int n;
-
-        memset (sngl_rset, 0, bytes);
-        memset (sngl_wset, 0, bytes);
-        memset (sngl_xset, 0, bytes);
-
-        if (f->events & POLLIN)
-          FD_SET (f->fd, sngl_rset);
-        if (f->events & POLLOUT)
-          FD_SET (f->fd, sngl_wset);
-        if (f->events & POLLPRI)
-          FD_SET (f->fd, sngl_xset);
-
-        n = select (f->fd + 1, sngl_rset, sngl_wset, sngl_xset,
-                  &sngl_tv);
-        if (n != -1)
-          {
-            /* This descriptor is ok.  */
-            if (f->events & POLLIN)
-              FD_SET (f->fd, rset);
-            if (f->events & POLLOUT)
-              FD_SET (f->fd, wset);
-            if (f->events & POLLPRI)
-              FD_SET (f->fd, xset);
-            if (f->fd > maxfd)
-              maxfd = f->fd;
-            if (n > 0)
-              /* Count it as being available.  */
-              ++ready;
-          }
-        else if (errno == EBADF)
-          f->revents |= POLLNVAL;
-          }
-      /* Try again.  */
-      continue;
-    }
-
-      break;
-    }
-
-  if (ready > 0)
-    for (f = fds; f < &fds[nfds]; ++f)
-      {
-      if (f->fd >= 0)
-        {
-          if (FD_ISSET (f->fd, rset))
-            f->revents |= POLLIN;
-          if (FD_ISSET (f->fd, wset))
-            f->revents |= POLLOUT;
-          if (FD_ISSET (f->fd, xset))
-            f->revents |= POLLPRI;
-        }
-      }
-
-  return ready;
-}
-
-#endif // defined(WIN32)
 
 PollSet::PollSet()
 : sockets_changed_(false)
 {
-  signal_pipe_[0] = -1;
-  signal_pipe_[1] = -1;
-  // Also create a local pipe that will be used to kick us out of the
-  // poll() call
-  if(pipe(signal_pipe_) != 0)
-  {
-    ROS_FATAL( "pipe() failed");
-    ROS_BREAK();
-  }
-#if !defined(WIN32)
-  // Windows pipes can't be made non-blocking. This is probably a problem.
-  if(fcntl(signal_pipe_[0], F_SETFL, O_NONBLOCK) == -1)
-  {
-    ROS_FATAL( "fcntl() failed");
-    ROS_BREAK();
-  }
-  if(fcntl(signal_pipe_[1], F_SETFL, O_NONBLOCK) == -1)
-  {
-    ROS_FATAL( "fcntl() failed");
-    ROS_BREAK();
-  }
-#endif
+	signal_pipe_[0] = -1;
+	signal_pipe_[1] = -1;
+	if ( create_signal_pair(signal_pipe_) != 0 ) {
+//	if ( create_pipe(signal_pipe_) != 0) {
+        ROS_FATAL("create_signal_pair() failed");
+        ROS_BREAK();
+	}
   addSocket(signal_pipe_[0], boost::bind(&PollSet::onLocalPipeEvents, this, _1));
   addEvents(signal_pipe_[0], POLLIN);
 }
@@ -312,9 +85,7 @@ bool PollSet::addSocket(int fd, const SocketUpdateFunc& update_func, const Trans
 
     sockets_changed_ = true;
   }
-
   signal();
-
   return true;
 }
 
@@ -359,7 +130,6 @@ bool PollSet::addEvents(int sock, int events)
     ROSCPP_LOG_DEBUG("PollSet: Tried to add events [%d] to fd [%d] which does not exist in this pollset", events, sock);
     return false;
   }
-
   it->second.events_ |= events;
 
   signal();
@@ -383,12 +153,12 @@ bool PollSet::delEvents(int sock, int events)
   }
 
   signal();
-
   return true;
 }
-
 void PollSet::signal()
 {
+	//this is called internally and also from topic manager when publishing a serialized message.
+	// it triggers select into some activity? is that why its a pipe? and why anyway?
   boost::mutex::scoped_try_lock lock(signal_mutex_);
 
   if (lock.owns_lock())
@@ -401,7 +171,6 @@ void PollSet::signal()
   }
 }
 
-
 void PollSet::update(int poll_timeout)
 {
   createNativePollset();
@@ -409,16 +178,11 @@ void PollSet::update(int poll_timeout)
   // Poll across the sockets we're servicing
   int ret;
   size_t ufds_count = ufds_.size();
-  if((ret = poll(&ufds_.front(), ufds_count, poll_timeout)) < 0)
+  if((ret = poll_sockets(&ufds_.front(), ufds_count, poll_timeout)) < 0)
   {
-    // EINTR means that we got interrupted by a signal, and is not an
-    // error.
-    if(errno != EINTR)
-    {
-      ROS_ERROR("poll failed with error [%s]", strerror(errno));
-    }
+	  ROS_ERROR_STREAM("poll failed with error " << last_socket_error_string());
   }
-  else if (ret > 0)
+  else if (ret > 0)  // ret = 0 implies the poll timed out, nothing to do
   {
     // We have one or more sockets to service
     for(size_t i=0; i<ufds_count; i++)
@@ -480,7 +244,6 @@ void PollSet::update(int poll_timeout)
 
       ufds_[i].revents = 0;
     }
-
     boost::mutex::scoped_lock lock(just_deleted_mutex_);
     just_deleted_.clear();
   }
@@ -502,13 +265,12 @@ void PollSet::createNativePollset()
   for (int i = 0; sock_it != sock_end; ++sock_it, ++i)
   {
     const SocketInfo& info = sock_it->second;
-    struct pollfd& pfd = ufds_[i];
+    struct socket_pollfd& pfd = ufds_[i];
     pfd.fd = info.fd_;
     pfd.events = info.events_;
     pfd.revents = 0;
   }
 }
-
 void PollSet::onLocalPipeEvents(int events)
 {
   if(events & POLLIN)
@@ -519,7 +281,5 @@ void PollSet::onLocalPipeEvents(int events)
       //do nothing keep draining
     };
   }
-
 }
-
 }

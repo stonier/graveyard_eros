@@ -84,6 +84,7 @@ const std::string&  ROSOutAppender::getLastError()
 
 void ROSOutAppender::append(const log4cxx::spi::LoggingEventPtr& event, log4cxx::helpers::Pool& pool)
 {
+
   rosgraph_msgs::LogPtr msg(new rosgraph_msgs::Log);
 
   msg->header.stamp = ros::Time::now();

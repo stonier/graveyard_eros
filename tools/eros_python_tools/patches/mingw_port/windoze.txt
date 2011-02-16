@@ -148,3 +148,20 @@ the diffs there for details).
 - network.h, network.cpp, master.h, master.cpp
   - api to allow the host and program URI's and port to be set programatically.
   
+== Other ==
+
+Jeff's and service robotic's ports both used the following code to decode 
+chars for msvc. Mingw didn't seem to need this, but we may need to introduce it later. 
+
+<code file_log.cpp>
+#ifdef WIN32
+	LOG4CXX_DECODE_CHAR(temp01, std::string("[%c] [%d] [thread %t]: [%p] %m\n"));
+	log4cxx::LayoutPtr layout = new log4cxx::PatternLayout(temp01);
+	LOG4CXX_DECODE_CHAR(temp02, log_file_name);
+	log4cxx::RollingFileAppenderPtr appender = new log4cxx::RollingFileAppender(layout, temp02, false);
+#else
+<endcode>
+
+== Check ==
+
+io.cpp - why INVALID_SOCKET negative on mingw when SOCKET is unsigned?

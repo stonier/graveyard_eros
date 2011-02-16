@@ -33,13 +33,6 @@
 #include <ros/console.h>
 #include <ros/assert.h>
 
-#if defined(WIN32)
-#else
-  #include <netinet/in.h>
-  #include <sys/socket.h>
-  #include <netdb.h>
-#endif
-
 #ifdef HAVE_IFADDRS_H
   #include <ifaddrs.h>
 #endif

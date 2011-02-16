@@ -32,52 +32,39 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ROSCPP_TRANSPORT_UDP_H
-#define ROSCPP_TRANSPORT_UDP_H
+#ifndef ROSCPP_TRANSPORT_TCP_H
+#define ROSCPP_TRANSPORT_TCP_H
 
 #include <ros/types.h>
 #include <ros/transport/transport.h>
 
-#include <boost/thread/mutex.hpp>
-
-#if defined(WIN32)
-# include<winsock2.h>
-#else
-# include <netinet/in.h>
-#endif
+#include <boost/thread/recursive_mutex.hpp>
+#include "ros/io.h"
 
 namespace ros
 {
 
-class TransportUDP;
-typedef boost::shared_ptr<TransportUDP> TransportUDPPtr;
+class TransportTCP;
+typedef boost::shared_ptr<TransportTCP> TransportTCPPtr;
 
 class PollSet;
 
-#define ROS_UDP_DATA0 0
-#define ROS_UDP_DATAN 1
-#define ROS_UDP_PING 2
-#define ROS_UDP_ERR 3
-typedef struct TransportUDPHeader {
-  uint32_t connection_id_;
-  uint8_t op_;
-  uint8_t message_id_;
-  uint16_t block_;
-} TransportUDPHeader;
-
 /**
- * \brief UDPROS transport
+ * \brief TCPROS transport
  */
-class TransportUDP : public Transport
+class TransportTCP : public Transport
 {
+public:
+  static bool s_use_keepalive_;
+
 public:
   enum Flags
   {
     SYNCHRONOUS = 1<<0,
   };
 
-  TransportUDP(PollSet* poll_set, int flags = 0, int max_datagram_size = 0);
-  virtual ~TransportUDP();
+  TransportTCP(PollSet* poll_set, int flags = 0);
+  virtual ~TransportTCP();
 
   /**
    * \brief Connect to a remote host.
@@ -85,26 +72,35 @@ public:
    * \param port The port to connect to
    * \return Whether or not the connection was successful
    */
-  bool connect(const std::string& host, int port, int conn_id);
+  bool connect(const std::string& host, int port);
 
   /**
    * \brief Returns the URI of the remote host
    */
   std::string getClientURI();
 
+  typedef boost::function<void(const TransportTCPPtr&)> AcceptCallback;
   /**
    * \brief Start a server socket and listen on a port
    * \param port The port to listen on
+   * \param backlog defines the maximum length for the queue of pending connections.  Identical to the backlog parameter to the ::listen function
+   * \param accept_cb The function to call when a client socket has connected
    */
-  bool createIncoming(int port, bool is_server);
+  bool listen(int port, int backlog, const AcceptCallback& accept_cb);
   /**
-   * \brief Create a connection to a server socket.
+   * \brief Accept a connection on a server socket.  Blocks until a connection is available
    */
-  TransportUDPPtr createOutgoing(std::string host, int port, int conn_id, int max_datagram_size);
+  TransportTCPPtr accept();
   /**
    * \brief Returns the port this transport is listening on
    */
-  int getServerPort() const {return server_port_;}
+  int getServerPort() { return server_port_; }
+
+  void setNoDelay(bool nodelay);
+  void setKeepAlive(bool use, uint32_t idle, uint32_t interval, uint32_t count);
+
+  const std::string& getConnectedHost() { return connected_host_; }
+  int getConnectedPort() { return connected_port_; }
 
   // overrides from Transport
   virtual int32_t read(uint8_t* buffer, uint32_t size);
@@ -119,11 +115,9 @@ public:
 
   virtual std::string getTransportInfo();
 
-  virtual bool requiresHeader() {return false;}
+  virtual void parseHeader(const Header& header);
 
-  virtual const char* getType() {return "UDPROS";}
-
-  int getMaxDatagramSize() const {return max_datagram_size_;}
+  virtual const char* getType() { return "TCPROS"; }
 
 private:
   /**
@@ -131,9 +125,11 @@ private:
    */
   bool initializeSocket();
 
+  bool setNonBlocking();
+
   /**
    * \brief Set the socket to be used by this transport
-   * \param sock A valid UDP socket
+   * \param sock A valid TCP socket
    * \return Whether setting the socket was successful
    */
   bool setSocket(int sock);
@@ -142,7 +138,7 @@ private:
 
   int sock_;
   bool closed_;
-  boost::mutex close_mutex_;
+  boost::recursive_mutex close_mutex_;
 
   bool expecting_read_;
   bool expecting_write_;
@@ -150,30 +146,18 @@ private:
   bool is_server_;
   sockaddr_in server_address_;
   int server_port_;
+  AcceptCallback accept_cb_;
 
   std::string cached_remote_host_;
 
   PollSet* poll_set_;
   int flags_;
 
-  uint32_t connection_id_;
-  uint8_t current_message_id_;
-  uint16_t total_blocks_;
-  uint16_t last_block_;
-
-  uint32_t max_datagram_size_;
-
-  uint8_t* data_buffer_;
-  uint8_t* data_start_;
-  uint32_t data_filled_;
-
-  uint8_t* reorder_buffer_;
-  uint8_t* reorder_start_;
-  TransportUDPHeader reorder_header_;
-  uint32_t reorder_bytes_;
+  std::string connected_host_;
+  int connected_port_;
 };
 
 }
 
-#endif // ROSCPP_TRANSPORT_UDP_H
+#endif // ROSCPP_TRANSPORT_TCP_H
 

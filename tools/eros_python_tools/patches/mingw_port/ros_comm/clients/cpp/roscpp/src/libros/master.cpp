@@ -236,13 +236,11 @@ bool execute(const std::string& method, const XmlRpc::XmlRpcValue& request, XmlR
 
         return false;
       }
-
       break;
     }
 
     ok = !ros::isShuttingDown() && !XMLRPCManager::instance()->isShuttingDown();
   } while(ok);
-
   if (ok && slept)
   {
     ROS_INFO("Connected to master at [%s:%d]", master_host.c_str(), master_port);
