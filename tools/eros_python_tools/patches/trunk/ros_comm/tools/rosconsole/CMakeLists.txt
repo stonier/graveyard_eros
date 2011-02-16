@@ -18,13 +18,11 @@ rosbuild_link_boost(${PROJECT_NAME} thread regex)
 rosbuild_add_executable(example examples/example.cpp)
 target_link_libraries(example ${PROJECT_NAME})
 # static libraries all need to be called for mingw. 
-# later this would be better if we could pick up rosconsole's libflags
-# (which would be tailed for mingw_cross) and use that directly here.
 if(MINGW) 
-  set(CMAKE_VERBOSE_MAKEFILE TRUE)
   rosbuild_link_boost(example thread regex)
   target_link_libraries(example log4cxx aprutil-1 expat apr-1 rpcrt4 shell32 ws2_32 advapi32 kernel32 msvcrt)
 endif()
+set_target_properties(example PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/examples)
 
 rosbuild_add_gtest(test/utest test/utest.cpp)
 target_link_libraries(test/utest ${PROJECT_NAME})

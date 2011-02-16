@@ -1,0 +1,69 @@
+diff -NBaur -x .svn rosconsole_original/CMakeLists.txt rosconsole_new/CMakeLists.txt
+--- rosconsole_original/CMakeLists.txt	2011-02-16 15:28:25.533355625 +0900
++++ rosconsole_new/CMakeLists.txt	2011-02-16 15:28:57.133408821 +0900
+@@ -17,6 +17,11 @@
+ 
+ rosbuild_add_executable(example examples/example.cpp)
+ target_link_libraries(example ${PROJECT_NAME})
++# static libraries all need to be called for mingw. 
++if(MINGW) 
++  rosbuild_link_boost(example thread regex)
++  target_link_libraries(example log4cxx aprutil-1 expat apr-1 rpcrt4 shell32 ws2_32 advapi32 kernel32 msvcrt)
++endif()
+ set_target_properties(example PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/examples)
+ 
+ rosbuild_add_gtest(test/utest test/utest.cpp)
+diff -NBaur -x .svn rosconsole_original/include/ros/assert.h rosconsole_new/include/ros/assert.h
+--- rosconsole_original/include/ros/assert.h	2011-02-16 15:00:47.425353611 +0900
++++ rosconsole_new/include/ros/assert.h	2011-02-16 15:01:07.041351180 +0900
+@@ -90,7 +90,12 @@
+  */
+ 
+ #ifdef WIN32
+-# define ROS_ISSUE_BREAK() __debugbreak();
++# include <windows.h>
++# if defined (__MINGW32__)
++#  define ROS_ISSUE_BREAK() DebugBreak();
++# else // MSVC
++#  define ROS_ISSUE_BREAK() __debugbreak();
++# endif
+ #elif defined(__powerpc64__)
+ # define ROS_ISSUE_BREAK() asm volatile ("tw 31,1,1");
+ #elif defined(__i386__) || defined(__ia64__) || defined(__x86_64__)
+diff -NBaur -x .svn rosconsole_original/include/ros/console.h rosconsole_new/include/ros/console.h
+--- rosconsole_original/include/ros/console.h	2011-02-16 15:00:47.425353611 +0900
++++ rosconsole_new/include/ros/console.h	2011-02-16 15:01:07.041351180 +0900
+@@ -35,6 +35,7 @@
+ #include <cstdio>
+ #include <sstream>
+ #include <ros/time.h>
++#include <cstdarg>
+ 
+ // TODO: this header is no longer needed to be included here, but removing it will break various code that incorrectly does not itself include log4cxx/logger.h
+ // We should vet all the code using log4cxx directly and make sure the includes/link flags are used in those packages, and then we can remove this include
+diff -NBaur -x .svn rosconsole_original/src/rosconsole/rosconsole.cpp rosconsole_new/src/rosconsole/rosconsole.cpp
+--- rosconsole_original/src/rosconsole/rosconsole.cpp	2011-02-16 15:00:47.425353611 +0900
++++ rosconsole_new/src/rosconsole/rosconsole.cpp	2011-02-16 15:01:07.093105485 +0900
+@@ -65,11 +65,17 @@
+   log4cxx::Level::getFatal(),
+ };
+ 
+-#define COLOR_NORMAL "\033[0m"
+-#define COLOR_RED "\033[31m"
+-#define COLOR_GREEN "\033[32m"
+-#define COLOR_YELLOW "\033[33m"
+-
++#ifdef WIN32
++	#define COLOR_NORMAL ""
++	#define COLOR_RED ""
++	#define COLOR_GREEN ""
++	#define COLOR_YELLOW ""
++#else
++	#define COLOR_NORMAL "\033[0m"
++	#define COLOR_RED "\033[31m"
++	#define COLOR_GREEN "\033[32m"
++	#define COLOR_YELLOW "\033[33m"
++#endif
+ const char* g_format_string = "[${severity}] [${time}]: ${message}";
+ 
+ struct Token

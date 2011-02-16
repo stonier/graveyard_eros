@@ -51,6 +51,8 @@ function definitions rather than having a scattering of ifdefs.
 
 File : CMakeLists.txt, include/ros/assert.h, include/ros/console.h, rosconsole.cpp
 Revisions: 12943, 8377, 12775, 10539
+Patched Against: 12775
+Ticket: https://code.ros.org/trac/ros/ticket/3334
   
 == Summary ==
 
