@@ -148,19 +148,3 @@ the diffs there for details).
 - network.h, network.cpp, master.h, master.cpp
   - api to allow the host and program URI's and port to be set programatically.
   
-================= Roscpp Tutorials =================
-  
-== Against ==
-
-Files: CMakeLists.txt listener/CMakeLists.txt talker/CMakeLists.txt
-Revision: 10564 (last package revision)
-
-== Summary ==
-
-Just disabling everything but talker/listener and adding targets for mingw
-static linking. All in all, a temporary fix!
-
-== Mingw ==
-  
-- CMakeLists.txt, talker/CMakeLists.txt, listener/CMakeLists.txt
-  - as stated above. 
