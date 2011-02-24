@@ -83,6 +83,7 @@ endif()
 
 # Patch
 add_custom_command(OUTPUT ${PATCHED_FLAG}
+    COMMAND cp ${CMAKE_SOURCE_DIR}/patches/all/liblog4cxx.pc.in ${SOURCE_DIR}
     COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/patches/all/patch_console
     COMMAND ${PATCH_THREAD_COMMAND}
     COMMAND touch ${PATCHED_FLAG}
