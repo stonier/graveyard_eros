@@ -3,8 +3,9 @@
 
 URL: https://code.ros.org/svn/ros/stacks/ros/trunk/tools/rospack/CMakeLists.txt
 URL: https://code.ros.org/svn/ros/stacks/ros/trunk/tools/rospack/Makefile
-Revision: 12874
+Last Changed Revision: 12987, 5350
 Ticket: https://code.ros.org/trac/ros/ticket/2803/
+
 Modification:
     This patch provides two pass build support to rospack,
     one for the native build environment and one for the cross-compiled
