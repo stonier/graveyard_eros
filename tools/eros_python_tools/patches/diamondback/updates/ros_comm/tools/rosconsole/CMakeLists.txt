@@ -16,12 +16,12 @@ target_link_libraries(${PROJECT_NAME} log4cxx)
 rosbuild_link_boost(${PROJECT_NAME} thread regex)
 
 rosbuild_add_executable(example examples/example.cpp)
-target_link_libraries(example ${PROJECT_NAME})
-# static libraries all need to be called for mingw. 
-if(MINGW) 
-  rosbuild_link_boost(example thread regex)
-  target_link_libraries(example log4cxx aprutil-1 expat apr-1 rpcrt4 shell32 ws2_32 advapi32 kernel32 msvcrt)
-endif()
+
+# Make sure we get rosconsole as well all its nonros dependencies
+# (linking just rosconsole doesn't cut it for static compiles)
+rosbuild_invoke_rospack(rosconsole "rosconsole" "LIBRARIES" libs-only-l)
+target_link_libraries(example ${rosconsole_LIBRARIES})
+
 set_target_properties(example PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/examples)
 
 rosbuild_add_gtest(test/utest test/utest.cpp)
@@ -38,4 +38,3 @@ target_link_libraries(test/thread_test ${PROJECT_NAME})
 #rosbuild_add_executable(speed_test test/speed_test.cpp)
 #target_link_libraries(speed_test ${PROJECT_NAME})
 #set_target_properties(speed_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
-
