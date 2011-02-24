@@ -16,31 +16,6 @@ To download their svn tree:
 
 svn co http://ros-win32.servicerobotics.eu/trunk/cturtle/ ./msvc
 
-==================== RosConsole ====================
-
-== Against ==
-
-File : CMakeLists.txt, include/ros/assert.h, include/ros/console.h, rosconsole.cpp
-Revisions: 12943, 8377, 12775, 10539
-Patched Against: 12775
-Ticket: https://code.ros.org/trac/ros/ticket/3334
-  
-== Summary ==
-
-Just put in a special case for mingw, not windows debug breaks and some cleanup.
-Could update the colouring info for windows.
-
-== Mingw ==
-
-- CMakeLists.txt
-  - temporary fix to make example.exe build, had to link by hand ach.
-- assert.h
-  - ifdef for mingw using DebugBreak instead of msvc's __debugbreak().
-- console.h
-  - mingw needs to include <cstdarg> in order to find va_list type.
-- rosconsole.cpp
-  - remove shell colours in windows (probably has a different notation?)
-
 ====================== Roscpp ======================
 
 == Against ==
@@ -63,41 +38,19 @@ in windows vista onwards. Instead, using some old player code but probably needs
 It also overlays across patches from eros in diamondback to slow down timers (see
 the diffs there for details).
 
-- init.cpp
-  - in internalCallbackQueueThreadFunc(), slows down the timer.
-
 == Mingw ==
 
-- poll_set.h
-  - avoid the call to <poll.h> in windows.
-- transport/transport_tcp.h, transport/transport_udf.h
-  - appropriately redirect socket headers.
-- common.cpp
-  - disable signals altogether.
-- poll_set.cpp
-  - this is where that ugly old player code comes in.
-- headers.cpp
-  - removed a seemingly unused <sys/socket.h> call that was not found by mingw.
-- include/ros/transport/transport_tcp.h _udp.h, src/libros/transport/transport_tcp.cpp, _udp.cpp
-  - replaced alot fo the linux socket code with old (pre vista windows code).
-  - for vista and later, see service robotics hacks.
-- file_log.cpp
-  - macros for pid's
-  - minor change in log4cxx handling.
-- init.cpp
-  - alot of cludgy hacks from service robotics (jeff's dropped the appender).
-- subscription.cpp 
-  - avoid the posix header calls in windows.
-- rosout_appender.cpp
-  - undefine windows.h' ERROR macro (can't live with rosgraph_msgs/Log.h)
-- xmlrpc_manager.cpp
-  - define a macro so getpid can be compiled without hackery.
-- network.cpp
-  - avoid posix socket header calls in windows.
-- network.h, network.cpp, master.h, master.cpp
-  - api to allow the host and program URI's and port to be set programatically.
-  
+Lots of minor stuff from jeff and service robotics, kinda mixed in and bugfixed to work.
+  - Couldn't use alot of service robotic's code, it was vista++
+  - Built our own poll function, largely similar to ssh's poll.
+
 == Other ==
+
+  - setUrl for master and network
+  - roslib::Clock -> rosgraph_msgs::Clock
+  - manifest removed roslib dependency, added boost filesystem, system and regex dependencies.
+
+== Todo ==
 
 Jeff's and service robotic's ports both used the following code to decode 
 chars for msvc. Mingw didn't seem to need this, but we may need to introduce it later. 
@@ -111,6 +64,7 @@ chars for msvc. Mingw didn't seem to need this, but we may need to introduce it 
 #else
 <endcode>
 
+Might also be a better way to do a poll, see my email from josh faust.
     
 ==================== Patched ====================
 =
@@ -182,4 +136,29 @@ in the toolchain file.
 - XmlRpcSocket.cpp
   - added an include for <ws2tcpip.h> - will be different for other wins?
   - avoid an EWOULDBLOCK error output on connecting (see comments).
+  
+==================== RosConsole ====================
+
+== Against ==
+
+File : CMakeLists.txt, include/ros/assert.h, include/ros/console.h, rosconsole.cpp
+Revisions: 12943, 8377, 12775, 10539
+Patched Against: 12775
+Ticket: https://code.ros.org/trac/ros/ticket/3334
+  
+== Summary ==
+
+Just put in a special case for mingw, not windows debug breaks and some cleanup.
+Could update the colouring info for windows.
+
+== Mingw ==
+
+- CMakeLists.txt
+  - temporary fix to make example.exe build, had to link by hand ach.
+- assert.h
+  - ifdef for mingw using DebugBreak instead of msvc's __debugbreak().
+- console.h
+  - mingw needs to include <cstdarg> in order to find va_list type.
+- rosconsole.cpp
+  - remove shell colours in windows (probably has a different notation?)
   
