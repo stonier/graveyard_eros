@@ -237,7 +237,7 @@ def select_toolchain_by_name(id_string):
       - return 1 if failure, 0 if success
     '''
     bits = os.path.split(id_string)
-    print bits
+    #print bits
     if  len(bits) == 2 :
         family = bits[0] # if just name is given, this will be empty
         name = bits[1]
@@ -273,6 +273,21 @@ def select_toolchain_by_name(id_string):
         print core.red_string("Aborting, toolchain not found.")
         list_toolchains()
         return 1
+
+def select_toolchain_by_id(id):
+    '''
+    Selects toolchain by id.
+      - return 1 if failure, 0 if success
+    '''
+    toolchains = toolchain_list()
+    if ( int(id) > len(toolchains) ):
+        print core.red_string("-- Aborting, # does not correspond to a toolchain.")
+        list_toolchains()
+        return 1
+    else:
+        selected_toolchain = toolchains[int(id)-1] # indexing starts at zero
+        shutil.copyfile(selected_toolchain.pathname,core.rostoolchain_cmake())
+        return 0
 
 def delete_toolchain():
     '''
@@ -538,8 +553,12 @@ Description: \n\
             if not select_toolchain():
                 return 1
         else:
-            if not select_toolchain_by_name(args[1]):
-                return 1
+            if args[1].isdigit():
+                if select_toolchain_by_id(args[1]):
+                    return 1
+            else:
+                if select_toolchain_by_name(args[1]):
+                    return 1
         # Not currently needing it, but anyway, its good to have.
         print "-- Toolchain copied to rostoolchain.cmake."
         patch_ros()
