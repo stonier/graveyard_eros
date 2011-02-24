@@ -1,8 +1,0 @@
-253c253
-<     // Update the XMLRPC server, blocking for at most 10ms in select()
----
->     // Update the XMLRPC server, blocking for at most 100ms in select()
-256c256
-<       server_.work(0.01);
----
->       server_.work(0.1);

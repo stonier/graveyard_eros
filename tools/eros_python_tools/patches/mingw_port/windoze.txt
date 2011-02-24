@@ -15,35 +15,6 @@ http://www.servicerobotics.eu/index.php?id=37
 To download their svn tree:
 
 svn co http://ros-win32.servicerobotics.eu/trunk/cturtle/ ./msvc
-    
-==================== RosTime ====================
-  
-== Against ==
-
-Files: time.h duration.h time.cpp
-Patched Against: r12815
-Ticket: https://code.ros.org/trac/ros/ticket/3331
-
-== Summary	 ==
-
-Windows dropins for getting the time and sleeping.
-code for catching the time (already there, just needed to edit out the 
-ROS_INFO) and nanosleep (provided by Geoff Biggs).
-
-== Mingw Fixes ==
-
-- duration.h, ros.h
-  - remove the #include <windows.h>, doesn't seem to need it.
-  
-- time.cpp
-  - drop out now broken ROS_INFO calls.
-  - drop in Geoffrey Biggs nanosleep replacement.
-  - fix Geoffrey's bugs in the sleep code.
-  
-== ToDo ==
-
-clock_gettime and nanosleep could probably be set up with their own proper cross platform
-function definitions rather than having a scattering of ifdefs.
 
 ==================== RosConsole ====================
 
@@ -70,28 +41,6 @@ Could update the colouring info for windows.
 - rosconsole.cpp
   - remove shell colours in windows (probably has a different notation?)
 
-===================== Xmlrpcpp =====================
-
-== Against ==
-
-File: CMakeLists.txt, src/XmlRpcSocket.h
-Patched Against: 11844
-Ticket: https://code.ros.org/trac/ros/ticket/3332
-
-== Summary ==
-
-Funny defines for _WINDOW accomodated for as well as an extra header. Note this also
-needed the toolchain to define the macro _WIN32_WINNT=0x0501, but that's easiest done
-in the toolchain file.
-
-== Mingw ==
-
-- CMakeLists.txt
-  - make sure we define xmlrpc's _WINDOW macro when on WIN systems (let cmake detect for us). 
-- XmlRpcSocket.cpp
-  - added an include for <ws2tcpip.h> - will be different for other wins?
-  - avoid an EWOULDBLOCK error output on connecting (see comments).
-  
 ====================== Roscpp ======================
 
 == Against ==
@@ -162,6 +111,75 @@ chars for msvc. Mingw didn't seem to need this, but we may need to introduce it 
 #else
 <endcode>
 
-== Check ==
+    
+==================== Patched ====================
+=
+= Following packages are patched upstream for
+= for diamondback+. No need to worry about them
+= anymore.
+=
+=================================================
 
-io.cpp - why INVALID_SOCKET negative on mingw when SOCKET is unsigned?
+==================== Rospack ====================
+
+== Summary ==
+
+Jeff's patch and fixes have gone.
+
+==================== RosTime ====================
+  
+== Against ==
+
+Files: time.h duration.h time.cpp
+Patched Against: r12815
+Ticket: https://code.ros.org/trac/ros/ticket/3331
+
+== Summary	 ==
+
+Windows dropins for getting the time and sleeping.
+code for catching the time (already there, just needed to edit out the 
+ROS_INFO) and nanosleep (provided by Geoff Biggs).
+
+Note that troy has rearranged this package alot since then in trunk, but
+all the changes are there, so don't worry about it.
+
+== Mingw Fixes ==
+
+- duration.h
+  - remove the #include <windows.h>, doesn't seem to need it.
+- ros.h 
+  - Add a windows exception class.
+  
+- time.cpp
+  - drop out now broken ROS_INFO calls.
+  - drop in Geoffrey Biggs nanosleep replacement.
+  - fix Geoffrey's bugs in the sleep code.
+  
+== ToDo ==
+
+clock_gettime and nanosleep could probably be set up with their own proper cross platform
+function definitions rather than having a scattering of ifdefs.
+
+
+===================== Xmlrpcpp =====================
+
+== Against ==
+
+File: CMakeLists.txt, src/XmlRpcSocket.h
+Patched Against: 11844
+Ticket: https://code.ros.org/trac/ros/ticket/3332
+
+== Summary ==
+
+Funny defines for _WINDOW accomodated for as well as an extra header. Note this also
+needed the toolchain to define the macro _WIN32_WINNT=0x0501, but that's easiest done
+in the toolchain file.
+
+== Mingw ==
+
+- CMakeLists.txt
+  - make sure we define xmlrpc's _WINDOW macro when on WIN systems (let cmake detect for us). 
+- XmlRpcSocket.cpp
+  - added an include for <ws2tcpip.h> - will be different for other wins?
+  - avoid an EWOULDBLOCK error output on connecting (see comments).
+  

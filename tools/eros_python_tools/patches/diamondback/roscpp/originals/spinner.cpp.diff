@@ -1,8 +1,0 @@
-39c39
-<   ros::WallDuration timeout(0.01f);
----
->   ros::WallDuration timeout(0.1f);
-148c148
-<   WallDuration timeout(0.01);
----
->   WallDuration timeout(0.1);
