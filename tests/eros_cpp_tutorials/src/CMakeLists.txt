@@ -1,10 +1,8 @@
 macro(add_mingw_test tgt)
   rosbuild_add_executable(${tgt} ${ARGN})
-#  target_link_libraries(${tgt} ${WINLIBS})
 endmacro()
 
 add_mingw_test(talker talker.cpp common.cpp)
-#add_mingw_test(listener listener.cpp common.cpp)
-#add_mingw_test(nodelist nodelist.cpp common.cpp)
-#add_mingw_test(listener listener.cpp common.cpp)
-#add_mingw_test(rostimers rostime.cpp)
+add_mingw_test(listener listener.cpp common.cpp)
+add_mingw_test(nodelist nodelist.cpp common.cpp)
+add_mingw_test(rostimers rostime.cpp)
