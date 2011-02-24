@@ -1,7 +1,6 @@
 macro(add_mingw_test tgt)
   rosbuild_add_executable(${tgt} ${ARGN})
-  target_link_libraries(${tgt} ${WINLIBS})
-  rosbuild_link_boost(${tgt} thread signals filesystem system regex)
+#  target_link_libraries(${tgt} ${WINLIBS})
 endmacro()
 
 add_mingw_test(talker talker.cpp common.cpp)
