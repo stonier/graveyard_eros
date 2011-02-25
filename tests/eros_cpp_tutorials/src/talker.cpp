@@ -21,7 +21,6 @@ int main(int argc, char **argv)
 //	tests::set_debug_log_levels();
 //	ros::init(argc, argv, "talker",ros::init_options::NoRosout);
 	ros::init(argc, argv, "talker");
-	ros::Time::init();
     ros::NodeHandle n;
 
 	ros::Rate loop_rate(100);
