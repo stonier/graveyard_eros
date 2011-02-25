@@ -67,7 +67,6 @@ uint32_t getPort();
  */
 const std::string& getURI();
 
-#ifdef WIN32
 /**
  * \brief No environment variable in windows, so we program the master
  * location in...hard.
@@ -83,7 +82,6 @@ void setHost(const std::string host);
  * location in...hard.
  */
 void setPort(const uint32_t port);
-#endif //WIN32
 
 /** @brief Check whether the master is up
  *

@@ -41,9 +41,7 @@ namespace network
 
 bool splitURI(const std::string& uri, std::string& host, uint32_t& port);
 const std::string& getHost();
-#ifdef WIN32
 void setHost( const std::string host);
-#endif //WIN32
 uint16_t getTCPROSPort();
 
 } // namespace network

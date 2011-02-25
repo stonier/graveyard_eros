@@ -96,7 +96,6 @@ const std::string& getURI()
   return g_uri;
 }
 
-#ifdef WIN32
 void setURI(const std::string uri)
 {
         g_uri = uri;
@@ -111,7 +110,6 @@ void setPort(const uint32_t port)
 {
         g_port = port;
 }
-#endif //Win32
 
 void setRetryTimeout(ros::WallDuration timeout)
 {

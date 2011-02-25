@@ -51,12 +51,10 @@ const std::string& getHost()
 {
   return g_host;
 }
-#ifdef WIN32
 void setHost( const std::string host)
 {
   g_host = host;
 }
-#endif //WIN32
 
 bool splitURI(const std::string& uri, std::string& host, uint32_t& port)
 {
