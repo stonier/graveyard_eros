@@ -49,6 +49,7 @@ Lots of minor stuff from jeff and service robotics, kinda mixed in and bugfixed 
   - setUrl for master and network
   - roslib::Clock -> rosgraph_msgs::Clock
   - manifest removed roslib dependency, added boost filesystem, system and regex dependencies.
+  - in init.cpp, ros::shutdown() aborts if !initialized (otherwise global queue ptr throws.
 
 == Todo ==
 

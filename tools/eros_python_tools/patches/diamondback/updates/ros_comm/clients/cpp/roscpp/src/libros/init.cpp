@@ -520,7 +520,8 @@ bool ok()
 void shutdown()
 {
   boost::recursive_mutex::scoped_lock lock(g_shutting_down_mutex);
-  if (g_shutting_down)
+  // gracefully return if we've not fired ros up yet, or mid-shutdown
+  if (g_shutting_down || !g_initialized)
   {
     return;
   }
