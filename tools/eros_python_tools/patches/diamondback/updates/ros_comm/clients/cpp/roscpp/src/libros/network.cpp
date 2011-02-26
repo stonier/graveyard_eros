@@ -51,10 +51,6 @@ const std::string& getHost()
 {
   return g_host;
 }
-void setHost( const std::string host)
-{
-  g_host = host;
-}
 
 bool splitURI(const std::string& uri, std::string& host, uint32_t& port)
 {
