@@ -7,6 +7,8 @@
 #include "common.h"
 
 #include <sstream>
+#include <map>
+#include <string>
 
 /*****************************************************************************
 ** Main
@@ -17,10 +19,8 @@
  */
 int main(int argc, char **argv)
 {
-	tests::set_urls();
 //	tests::set_debug_log_levels();
-//	ros::init(argc, argv, "talker",ros::init_options::NoRosout);
-	ros::init(argc, argv, "talker");
+	tests::init("talker");
     ros::NodeHandle n;
 
 	ros::Rate loop_rate(100);

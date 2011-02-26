@@ -13,7 +13,8 @@
 *****************************************************************************/
 
 #include <ros/ros.h>
-#include <ros/network.h>
+#include <map>
+#include <string>
 
 /*****************************************************************************
 ** Namespaces
@@ -36,15 +37,18 @@ void set_debug_log_levels() {
 	ros::console::notifyLoggerLevelsChanged(); // update loging level status
 }
 
-void set_urls() {
+void init(const std::string &name) {
 #if defined(WIN32)
-	ros::master::setURI("http://192.168.10.66:11311/");
-	ros::network::setHost("192.168.10.67");
-//	ros::master::setURI("http://192.168.1.3:11311/");
-//	ros::network::setHost("192.168.1.67");
-//	ros::master::setURI("http://192.168.56.1:11311/");
-//	ros::network::setHost("192.168.56.2");
+	std::map<std::string,std::string> remappings;
+	remappings[std::string("__master")] = std::string("http://192.168.1.3:11311/");
+	remappings[std::string("__hostname")] = std::string("192.168.1.67");
+//	remappings[std::string("__master")] = std::string("http://192.168.10.66:11311/");
+//	remappings[std::string("__hostname")] = std::string("192.168.10.67");
+	ros::init(remappings, name);
+#else
+	ros::init(argc, argv, name);
 #endif
+	ros::Time::init();
 }
 
 }

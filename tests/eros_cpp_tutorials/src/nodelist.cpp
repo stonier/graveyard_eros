@@ -16,9 +16,8 @@
  */
 int main(int argc, char **argv)
 {
-	tests::set_urls();
+	tests::init("nodelist");
 	tests::set_debug_log_levels();
-	ros::init(argc, argv, "nodelist");
 	ros::Time::init();
 
 	ros::V_string nodes;
