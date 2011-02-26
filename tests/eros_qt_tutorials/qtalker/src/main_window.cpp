@@ -48,10 +48,10 @@ MainWindow::~MainWindow() {}
 void MainWindow::on_button_connect_clicked(bool check ) {
 	ui.button_connect->setEnabled(false);
 	qnode.init(ui.line_edit_master->text().toStdString(),
-//			   ui.line_edit_host->text().toStdString(),
+			   ui.line_edit_host->text().toStdString(),
 			   ui.line_edit_topic->text().toStdString());
 	ui.line_edit_master->setReadOnly(true);
-//	ui.line_edit_host->setReadOnly(true);
+	ui.line_edit_host->setReadOnly(true);
 	ui.line_edit_topic->setReadOnly(true);
 	qnode.start();
 }
@@ -73,10 +73,10 @@ void MainWindow::ReadSettings() {
     move(rect.topLeft());
     resize(rect.size());
     QString master_url = settings.value("master_url",QString("http://192.168.1.2:11311/")).toString();
-//    QString host_url = settings.value("host_url", QString("192.168.1.3")).toString();
+    QString host_url = settings.value("host_url", QString("192.168.1.3")).toString();
     QString topic_name = settings.value("topic_name", QString("/chatter")).toString();
     ui.line_edit_master->setText(master_url);
-//    ui.line_edit_host->setText(host_url);
+    ui.line_edit_host->setText(host_url);
     ui.line_edit_topic->setText(topic_name);
 }
 
@@ -84,7 +84,7 @@ void MainWindow::WriteSettings() {
     QSettings settings("Qt-Ros Package", "eros_qtalker");
     settings.setValue("geometry", geometry());
     settings.setValue("master_url",ui.line_edit_master->text());
-//    settings.setValue("host_url",ui.line_edit_host->text());
+    settings.setValue("host_url",ui.line_edit_host->text());
     settings.setValue("topic_name",ui.line_edit_topic->text());
 }
 

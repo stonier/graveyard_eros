@@ -107,8 +107,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>307</width>
-     <height>309</height>
+     <width>318</width>
+     <height>317</height>
     </size>
    </property>
    <property name="allowedAreas">
@@ -166,7 +166,7 @@
            <item row="2" column="0">
             <widget class="QLabel" name="label_2">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="frameShape">
               <enum>QFrame::StyledPanel</enum>
@@ -182,7 +182,7 @@
            <item row="3" column="0" colspan="2">
             <widget class="QLineEdit" name="line_edit_host">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="text">
               <string>192.168.1.67</string>
