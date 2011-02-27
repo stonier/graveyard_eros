@@ -33,9 +33,14 @@ QNode::~QNode() {
 	std::cout << "Waiting for ros thread to finish." << std::endl;
 	wait();
 }
+
+void QNode::init(const std::string &topic_name) {
+	ros::init(init_argc,init_argv,"qtalker");
+    ros::NodeHandle n;
+    chatter_publisher = n.advertise<std_msgs::String>(topic_name, 1000);
+}
+
 void QNode::init(const std::string &master_url, const std::string &host_url, const std::string &topic_name) {
-	// we need a check box to flick between manual and environmental settings.
-	//	ros::init(init_argc,init_argv,"qtalker");
 	std::map<std::string,std::string> remappings;
 	remappings["__master"] = master_url;
 	remappings["__hostname"] = host_url;
