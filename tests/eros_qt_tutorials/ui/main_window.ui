@@ -46,11 +46,11 @@
            </sizepolicy>
           </property>
           <property name="title">
-           <string>Listener</string>
+           <string>Logging</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="0" column="0">
-            <widget class="QListView" name="view_incoming"/>
+            <widget class="QListView" name="view_logging"/>
            </item>
           </layout>
          </widget>
@@ -165,9 +165,6 @@
            </item>
            <item row="2" column="0">
             <widget class="QLabel" name="label_2">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
              <property name="frameShape">
               <enum>QFrame::StyledPanel</enum>
              </property>
@@ -181,9 +178,6 @@
            </item>
            <item row="3" column="0" colspan="2">
             <widget class="QLineEdit" name="line_edit_host">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
              <property name="text">
               <string>192.168.1.67</string>
              </property>

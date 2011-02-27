@@ -31,7 +31,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
 	setWindowIcon(QIcon(":/images/icon.png"));
 	ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
 
-	ui.view_incoming->setModel(qnode.incomingModel());
+	ui.view_logging->setModel(qnode.incomingModel());
 }
 
 MainWindow::~MainWindow() {}
