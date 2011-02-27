@@ -95,6 +95,13 @@ void MainWindow::ReadSettings() {
     ui.line_edit_master->setText(master_url);
     ui.line_edit_host->setText(host_url);
     ui.line_edit_topic->setText(topic_name);
+    bool checked = settings.value("use_environment_variables", false).toBool();
+    ui.checkbox_use_environment->setChecked(checked);
+    if ( checked ) {
+    	ui.line_edit_master->setEnabled(false);
+    	ui.line_edit_host->setEnabled(false);
+    	ui.line_edit_topic->setEnabled(false);
+    }
 }
 
 void MainWindow::WriteSettings() {
@@ -103,6 +110,7 @@ void MainWindow::WriteSettings() {
     settings.setValue("master_url",ui.line_edit_master->text());
     settings.setValue("host_url",ui.line_edit_host->text());
     settings.setValue("topic_name",ui.line_edit_topic->text());
+   	settings.setValue("use_environment_variables",ui.checkbox_use_environment->isEnabled());
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
