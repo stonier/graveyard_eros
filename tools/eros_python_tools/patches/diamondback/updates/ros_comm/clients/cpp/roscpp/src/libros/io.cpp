@@ -284,143 +284,93 @@ int create_signal_pair(signal_fd_t signal_pair[2]) {
 	signal_pair[0] = INVALID_SOCKET;
 	signal_pair[1] = INVALID_SOCKET;
 
-	/*********************
-	** Notes
-	**********************/
-	// Using port 21 - is this a problem always using this port?
+    union {
+       struct sockaddr_in inaddr;
+       struct sockaddr addr;
+    } a;
+    socklen_t addrlen = sizeof(a.inaddr);
 
-	/******************************************
-	** Server
-	*******************************************/
-	struct addrinfo *result = NULL, *ptr = NULL, hints;
-
-	// windows sockets can't do AF_LOCAL
-	ZeroMemory(&hints, sizeof (hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-	// AI_PASSIVE flag indicates the caller intends to use the
-	// returned socket address structure in a call to the bind function.
-	// When the AI_PASSIVE flag is set and nodename parameter to the
-	// getaddrinfo function is a NULL pointer, the IP address portion
-	// of the socket address structure is set to INADDR_ANY for IPv4
-	// addresses or IN6ADDR_ANY_INIT for IPv6 addresses.
-	hints.ai_flags = AI_PASSIVE;
-
-	// Resolve the local address and port to be used by the server
-	// first argument is the nodename parameter as described above.
-	int wsock_error = getaddrinfo(NULL, "21", &hints, &result);
-	if (wsock_error != 0) {
-		return -1;
-	}
-
-	/*********************
-	** Server Socket
+    /*********************
+	** Listen Socket
 	**********************/
 	socket_fd_t listen_socket = INVALID_SOCKET;
-	// Create a socket_fd_t for the server to listen for client connections
-	listen_socket = ::socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    listen_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (listen_socket == INVALID_SOCKET) {
-	    freeaddrinfo(result);
-	    return -1;
-	}
-
-	/*********************
-	** Bind Server
-	**********************/
-	// Bind server to an address.
-	wsock_error = bind( listen_socket, result->ai_addr, (int)result->ai_addrlen);
-	if (wsock_error == SOCKET_ERROR) {
-		freeaddrinfo(result);
-		::closesocket(listen_socket);
 		return -1;
 	}
-	freeaddrinfo(result);
 
-	/*********************
-	** Listen for client
+    // allow it to be bound to an address already in use - do we actually need this?
+    int reuse = 1;
+    if (setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, (char*) &reuse, (socklen_t) sizeof(reuse)) == SOCKET_ERROR ) {
+    	::closesocket(listen_socket);
+		return -1;
+    }
+
+    memset(&a, 0, sizeof(a));
+    a.inaddr.sin_family = AF_INET;
+    a.inaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    // For TCP/IP, if the port is specified as zero, the service provider assigns
+    // a unique port to the application from the dynamic client port range.
+    a.inaddr.sin_port = 0;
+
+    if  (bind(listen_socket, &a.addr, sizeof(a.inaddr)) == SOCKET_ERROR) {
+    	::closesocket(listen_socket);
+		return -1;
+    }
+    // we need this below because the system auto filled in some entries, e.g. port #
+    if  (getsockname(listen_socket, &a.addr, &addrlen) == SOCKET_ERROR) {
+    	::closesocket(listen_socket);
+		return -1;
+    }
+    // max 1 connection permitted
+    if (listen(listen_socket, 1) == SOCKET_ERROR) {
+    	::closesocket(listen_socket);
+		return -1;
+    }
+
+    /*********************
+	** Connection
 	**********************/
-	if ( listen( listen_socket, SOMAXCONN ) == SOCKET_ERROR ) {
-	    closesocket(listen_socket);
-	    return -1;
-	}
-	signal_pair[0] = INVALID_SOCKET;
-
-	/******************************************
-	** Client
-	*******************************************/
-	ZeroMemory( &hints, sizeof(hints) );
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-	// Resolve the server address and port
-	wsock_error = getaddrinfo("localhost", "21", &hints, &result);
-	if (wsock_error != 0) {
-	    ::closesocket(listen_socket);
-	    return -1;
-	}
-	signal_pair[1] = INVALID_SOCKET;
-
-	/*********************
-	** Create client
+    // do we need io overlapping?
+    // DWORD flags = (make_overlapped ? WSA_FLAG_OVERLAPPED : 0);
+    DWORD overlapped_flag = 0;
+    signal_pair[0] = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, overlapped_flag);
+    if (signal_pair[0] == INVALID_SOCKET) {
+    	::closesocket(listen_socket);
+    	::closesocket(signal_pair[0]);
+    	return -1;
+    }
+    // reusing the information from above to connect to the listener
+    if (connect(signal_pair[0], &a.addr, sizeof(a.inaddr)) == SOCKET_ERROR) {
+    	::closesocket(listen_socket);
+    	::closesocket(signal_pair[0]);
+    	return -1;
+    }
+    /*********************
+	** Accept
 	**********************/
-	ptr=result;
-	signal_pair[1] = ::socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-	if (signal_pair[1] == INVALID_SOCKET) {
-	    ::closesocket(listen_socket);
-	    freeaddrinfo(result);
-	    return -1;
-	}
-
-	/*********************
-	** Connect to server
-	**********************/
-	wsock_error = connect( signal_pair[1], ptr->ai_addr, (int)ptr->ai_addrlen);
-	if (wsock_error == SOCKET_ERROR) {
-	    ::closesocket(listen_socket);
-	    closesocket(signal_pair[1]);
-	    signal_pair[1] = INVALID_SOCKET;
-	    return -1;
-	}
-
-	// Should really try the next address returned by getaddrinfo
-	// if the connect call failed
-	// But for this simple example we just free the resources
-	// returned by getaddrinfo and print an error message
-
-	freeaddrinfo(result);
-
-	if (signal_pair[1] == INVALID_SOCKET) {
-	    return -1;
-	}
-
-	/*********************
-	** Accept connection
-	**********************/
-	signal_pair[0] = accept(listen_socket, NULL, NULL);
-	if (signal_pair[0] == INVALID_SOCKET) {
-	    ::closesocket(listen_socket);
-	    ::closesocket(signal_pair[1]);
-	    return -1;
-	}
-
+    signal_pair[1] = accept(listen_socket, NULL, NULL);
+    if (signal_pair[1] == INVALID_SOCKET) {
+    	::closesocket(listen_socket);
+    	::closesocket(signal_pair[0]);
+    	::closesocket(signal_pair[1]);
+    	return -1;
+    }
 	/*********************
 	** Nonblocking
 	**********************/
-	unsigned long non_blocking_flag = 1;
-	if(ioctlsocket( signal_pair[0], FIONBIO, &non_blocking_flag ) != 0 ) {
+    // should we do this or should we set io overlapping?
+    if ( (set_non_blocking(signal_pair[0]) != 0) || (set_non_blocking(signal_pair[1]) != 0)  ) {
 		::closesocket(listen_socket);
 		::closesocket(signal_pair[0]);
 		::closesocket(signal_pair[1]);
-		return -1;
-	}
-	if(ioctlsocket( signal_pair[1], FIONBIO, &non_blocking_flag ) != 0 ) {
-		::closesocket(listen_socket);
-		::closesocket(signal_pair[0]);
-		::closesocket(signal_pair[1]);
-		return -1;
-	}
-	return 0;
+    	return -1;
+    }
+	/*********************
+	** Cleanup
+	**********************/
+    ::closesocket(listen_socket);  // the listener has done its job.
+    return 0;
 #else // use a pipe pair
 	// initialize
 	signal_pair[0] = -1;
