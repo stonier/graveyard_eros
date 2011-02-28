@@ -34,7 +34,7 @@ class Flags:
 ###############################################################################
 
 def minimal_package_set():
-    ''' Return the minimal set of packages needed for a cross compiled ros runtime that can run ros clients and server. '''
+    ''' Define the minimal set of packages needed for a cross compiled ros runtime that can run ros clients and server. '''
     version = ros_version()
     if ( version == "boxturtle" ):
         packages = ["rospack", "genmsg_cpp", "roslang", "xmlrpcpp", "pycrypto", "paramiko", "roslib", "rospy", "rosconsole", "roscpp", "rosout", "roslaunch", "rostest"]
@@ -45,6 +45,26 @@ def minimal_package_set():
     else:
         print "Unsupported version - defaulting to build/protect the latest official release's minimal set (diamondback)."
         packages = ["rospack", "rosbuild", "cpp_common", "roslib", "roslang", "xmlrpcpp", "rosgraph_msgs", "roscpp_traits", "rostime", "std_msgs", "roscpp_serialization", "rosconsole", "roscpp", "rosclean", "rosgraph", "rosmaster", "rosunit", "rospy", "rosout", "roslaunch", "rostest", "topic_tools", "rosbag", "rosmsg" ]
+    return packages
+
+
+def comms_package_set():
+    '''
+    Defines the minimum set of packages required for cpp communications. Only 
+    supported for diamondback and later.
+    '''
+    version = ros_version()
+    if ( version == "boxturtle" ):
+        print "Boxturtle is unsupported (req. diamondback+)."
+        packages = []
+    elif ( version == "cturtle" ):
+        print "Cturtle is unsupported (req. diamondback+)."
+        packages = []
+    elif ( version == "diamondback" ):
+        packages = ["rosbuild", "roslang", "cpp_common", "roscpp_traits", "rostime", "roscpp_serialization", "rospack", "roslib", "xmlrpcpp", "rosconsole", "std_msgs", "rosgraph_msgs", "roscpp" ]
+    else:
+        print "Unsupported version - defaulting to build/protect the latest official release's minimal set (diamondback)."
+        packages = ["rosbuild", "roslang", "cpp_common", "roscpp_traits", "rostime", "roscpp_serialization", "rospack", "roslib", "xmlrpcpp", "rosconsole", "std_msgs", "rosgraph_msgs", "roscpp" ]
     return packages
 
 def stacks_package_set(stacks):
@@ -106,7 +126,8 @@ Description:\n\
   a package list, stack list or one of the preconfigured groups (e.g. --minimal)." 
     parser = OptionParser(usage=usage)
     parser.add_option("-x","--clean", action="store_true", dest="clean", default=False, help="depracated, use --pre-clean instead.")
-    parser.add_option("-c","--pre-clean", action="store_true", dest="pre_clean", default=False, help="pre-clean packages before building and protecting them.")
+    parser.add_option("-p","--pre-clean", action="store_true", dest="pre_clean", default=False, help="pre-clean packages before building and protecting them.")
+    parser.add_option("-c","--comms", action="store_true", dest="comms", default=False, help="target the set of package required only for cpp communications.")
     parser.add_option("-m","--minimal", action="store_true", dest="minimal", default=False, help="target a selected minimal set of ros packages necessary for a cross-compile environment.")
     parser.add_option("-r","--rosdeps", action="store_true", dest="rosdeps", default=False, help="pass --rosdep-install and rosdep-yes to rosmake when protecting.")
     parser.add_option("-s","--stacks", action="store_true", dest="stacks", default=False, help="target stacks instead of packages.")
@@ -116,7 +137,7 @@ Description:\n\
     ###################
     # Abort Check
     ###################
-    if ( not options.minimal and not args ):
+    if ( not options.comms and not options.minimal and not args ):
         print
         parser.print_help()
         print    
@@ -147,8 +168,10 @@ Description:\n\
     ###################
     # Packages
     ###################
-    if options.minimal :
+    if options.minimal:
         packages = minimal_package_set()
+    elif options.comms:
+        packages = comms_package_set()
     elif options.stacks:
         packages = stacks_package_set(args)
     else:
