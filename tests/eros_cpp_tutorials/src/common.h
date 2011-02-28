@@ -31,7 +31,7 @@ namespace tests {
 *****************************************************************************/
 
 void set_debug_log_levels();
-void init(const std::string& name);
+void init(int argc, char** argv, const std::string& name);
 
 } // namespace tests
 

@@ -16,7 +16,7 @@
  */
 int main(int argc, char **argv)
 {
-	tests::init("nodelist");
+	tests::init(argc, argv, "nodelist");
 	tests::set_debug_log_levels();
 	ros::Time::init();
 

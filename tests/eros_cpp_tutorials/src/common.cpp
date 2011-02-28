@@ -37,7 +37,7 @@ void set_debug_log_levels() {
 	ros::console::notifyLoggerLevelsChanged(); // update loging level status
 }
 
-void init(const std::string &name) {
+void init(int argc, char** argv, const std::string &name) {
 #if defined(WIN32)
 	std::map<std::string,std::string> remappings;
 	remappings[std::string("__master")] = std::string("http://192.168.1.3:11311/");

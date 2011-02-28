@@ -20,7 +20,7 @@
 int main(int argc, char **argv)
 {
 //	tests::set_debug_log_levels();
-	tests::init("talker");
+	tests::init(argc, argv, "talker");
     ros::NodeHandle n;
 
 	ros::Rate loop_rate(100);
