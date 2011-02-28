@@ -52,7 +52,6 @@ void QNode::init(const std::string &master_url, const std::string &host_url, con
 }
 
 void QNode::run() {
-	std::cout << "Spinning." << std::endl;
 	ros::spin();
 }
 
