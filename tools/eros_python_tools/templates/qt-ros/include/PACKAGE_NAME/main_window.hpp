@@ -14,6 +14,7 @@
 
 #include <QtGui/QMainWindow>
 #include "ui_main_window.h"
+#include "qnode.hpp"
 
 /*****************************************************************************
 ** Namespace
@@ -31,7 +32,7 @@ class MainWindow : public QMainWindow {
 Q_OBJECT
 
 public:
-	MainWindow(QWidget *parent = 0);
+	MainWindow(int argc, char** argv, QWidget *parent = 0);
 	~MainWindow();
 
 	void ReadSettings(); // Load up qt program settings at startup
@@ -43,12 +44,12 @@ public slots:
 	// Put automatically triggered slots here (because of connectSlotsByName())
 	// void on_button_enable_clicked(bool check); // example only
 	void on_actionAbout_triggered();
-	// examples: typical ros style connection slots
-	// void on_button_connect_clicked(bool check );
-	// void on_checkbox_use_environment_stateChanged(int state);
+	void on_button_connect_clicked(bool check );
+	void on_checkbox_use_environment_stateChanged(int state);
 
 private:
 	Ui::MainWindowDesign ui;
+	QNode qnode;
 };
 
 }  // namespace %(package)s

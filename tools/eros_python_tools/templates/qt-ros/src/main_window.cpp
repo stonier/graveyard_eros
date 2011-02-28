@@ -26,8 +26,9 @@ using namespace Qt;
 ** Implementation [MainWindow]
 *****************************************************************************/
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
 	: QMainWindow(parent)
+	, qnode(argc,argv)
 {
 	ui.setupUi(this); // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
     QObject::connect(ui.actionAbout_Qt, SIGNAL(triggered(bool)), qApp, SLOT(aboutQt())); // qApp is a global variable for the application
@@ -36,8 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
 	setWindowIcon(QIcon(":/images/icon.png"));
 	ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
 
-	// example connection to the logging viewer
-	// ui.view_logging->setModel(qnode.loggingModel());
+	ui.view_logging->setModel(qnode.loggingModel());
 }
 
 MainWindow::~MainWindow() {}
@@ -51,33 +51,31 @@ MainWindow::~MainWindow() {}
  * is already checked or not.
  */
 
-//void MainWindow::on_button_connect_clicked(bool check ) {
-//	ui.button_connect->setEnabled(false);
-	// typical ros connect code.
-//	if ( ui.checkbox_use_environment->isChecked() ) {
-//		qnode.init(ui.line_edit_topic->text().toStdString());
-//	} else {
-//		qnode.init(ui.line_edit_master->text().toStdString(),
-//				   ui.line_edit_host->text().toStdString(),
-//				   ui.line_edit_topic->text().toStdString());
-//		ui.line_edit_master->setReadOnly(true);
-//		ui.line_edit_host->setReadOnly(true);
-//		ui.line_edit_topic->setReadOnly(true);
-//	}
-//}
+void MainWindow::on_button_connect_clicked(bool check ) {
+	ui.button_connect->setEnabled(false);
+	if ( ui.checkbox_use_environment->isChecked() ) {
+		qnode.init(ui.line_edit_topic->text().toStdString());
+	} else {
+		qnode.init(ui.line_edit_master->text().toStdString(),
+				   ui.line_edit_host->text().toStdString(),
+				   ui.line_edit_topic->text().toStdString());
+		ui.line_edit_master->setReadOnly(true);
+		ui.line_edit_host->setReadOnly(true);
+		ui.line_edit_topic->setReadOnly(true);
+	}
+}
 
-//void MainWindow::on_checkbox_use_environment_stateChanged(int state) {
-	// typical ros environment state changed code.
-//	bool enabled;
-//	if ( state == 0 ) {
-//		enabled = true;
-//	} else {
-//		enabled = false;
-//	}
-//	ui.line_edit_master->setEnabled(enabled);
-//	ui.line_edit_host->setEnabled(enabled);
-//	ui.line_edit_topic->setEnabled(enabled);
-//}
+void MainWindow::on_checkbox_use_environment_stateChanged(int state) {
+	bool enabled;
+	if ( state == 0 ) {
+		enabled = true;
+	} else {
+		enabled = false;
+	}
+	ui.line_edit_master->setEnabled(enabled);
+	ui.line_edit_host->setEnabled(enabled);
+	ui.line_edit_topic->setEnabled(enabled);
+}
 
 /*****************************************************************************
 ** Implementation [Menu]
@@ -96,11 +94,28 @@ void MainWindow::ReadSettings() {
     QRect rect = settings.value("geometry", QRect(200, 200, 400, 400)).toRect();
     move(rect.topLeft());
     resize(rect.size());
+    QString master_url = settings.value("master_url",QString("http://192.168.1.2:11311/")).toString();
+    QString host_url = settings.value("host_url", QString("192.168.1.3")).toString();
+    QString topic_name = settings.value("topic_name", QString("/chatter")).toString();
+    ui.line_edit_master->setText(master_url);
+    ui.line_edit_host->setText(host_url);
+    ui.line_edit_topic->setText(topic_name);
+    bool checked = settings.value("use_environment_variables", false).toBool();
+    ui.checkbox_use_environment->setChecked(checked);
+    if ( checked ) {
+    	ui.line_edit_master->setEnabled(false);
+    	ui.line_edit_host->setEnabled(false);
+    	ui.line_edit_topic->setEnabled(false);
+    }
 }
 
 void MainWindow::WriteSettings() {
     QSettings settings("Qt-Ros Package", "%(package)s");
     settings.setValue("geometry", geometry());
+    settings.setValue("master_url",ui.line_edit_master->text());
+    settings.setValue("host_url",ui.line_edit_host->text());
+    settings.setValue("topic_name",ui.line_edit_topic->text());
+   	settings.setValue("use_environment_variables",QVariant(ui.checkbox_use_environment->isChecked()));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
