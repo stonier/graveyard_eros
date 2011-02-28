@@ -218,9 +218,9 @@ int poll_sockets(socket_pollfd *fds, nfds_t nfds, int timeout) {
 #else
 	// use an existing poll implementation
 	int result = poll(fds, nfds, timeout);
-	// EINTR means that we got interrupted by a signal, and is not an error
 	if ( result < 0 ) {
-		if(errno != EINTR) {
+		// EINTR means that we got interrupted by a signal, and is not an error
+		if(errno == EINTR) {
 			result = 0;
 		}
 	}
