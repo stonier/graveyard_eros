@@ -38,6 +38,7 @@ void QNode::init(const std::string &topic_name) {
 	ros::init(init_argc,init_argv,"qlistener");
     ros::NodeHandle n;
 	chatter_subscriber = n.subscribe(topic_name, 1000, &QNode::chatterCallback, this);
+	start();
 }
 
 void QNode::init(const std::string &master_url, const std::string &host_url, const std::string &topic_name) {
@@ -51,7 +52,8 @@ void QNode::init(const std::string &master_url, const std::string &host_url, con
 }
 
 void QNode::run() {
-		ros::spin();
+	std::cout << "Spinning." << std::endl;
+	ros::spin();
 }
 
 void QNode::chatterCallback(const std_msgs::String::ConstPtr &msg) {

@@ -38,6 +38,7 @@ void QNode::init(const std::string &topic_name) {
 	ros::init(init_argc,init_argv,"qtalker");
     ros::NodeHandle n;
     chatter_publisher = n.advertise<std_msgs::String>(topic_name, 1000);
+	start();
 }
 
 void QNode::init(const std::string &master_url, const std::string &host_url, const std::string &topic_name) {
@@ -47,6 +48,7 @@ void QNode::init(const std::string &master_url, const std::string &host_url, con
 	ros::init(remappings,"talker");
     ros::NodeHandle n;
     chatter_publisher = n.advertise<std_msgs::String>(topic_name, 1000);
+	start();
 }
 
 void QNode::run() {
