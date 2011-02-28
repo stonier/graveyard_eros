@@ -47,22 +47,22 @@ compile: extract
 	@echo "Compiling the mingw gcc toolchain."
 	@if [ ! -f $(PREFIX)/usr/installed/gcc ]; then \
 		cd $(PREFIX); make gcc; \
-	    @echo; \
-	    @echo "Mingw cross environment successfully installed in /opt/mingw."; \
-	    @echo " - run 'make links' or 'make install' to install symbolic links in"; \
-	    @echo "   /usr/local/bin from binaries in /opt/mingw/usr/bin"; \
-	    @echo " - run 'make uninstall' to delete links and /opt/mingw."; \
-	    @echo; \
-	    @echo "The cross environment has many build scripts that can be used to"; \
-	    @echo "install packages into your toolchain. Refer to"; \
-	    @echo; \
-	    @echo "  http://mingw-cross-env.nongnu.org/ for a full list."; \
-	    @echo; \
-	    @echo "Boost and qt are both useful additions, to compile, simply:"; \
-	    @echo; \
-	    @echo "  cd /opt/mingw"; \
-	    @echo "  make qt boost"; \
-	    @echo; \
+	    echo; \
+	    echo "Mingw cross environment successfully installed in /opt/mingw."; \
+	    echo " - run 'make links' or 'make install' to install symbolic links in"; \
+	    echo "   /usr/local/bin from binaries in /opt/mingw/usr/bin"; \
+	    echo " - run 'make uninstall' to delete links and /opt/mingw."; \
+	    echo; \
+	    echo "The cross environment has many build scripts that can be used to"; \
+	    echo "install packages into your toolchain. Refer to"; \
+	    echo; \
+	    echo "  http://mingw-cross-env.nongnu.org/ for a full list."; \
+	    echo; \
+	    echo "Boost and qt are both useful additions, to compile, simply:"; \
+	    echo; \
+	    echo "  cd /opt/mingw"; \
+	    echo "  make qt boost"; \
+	    echo; \
 	else \
 		echo "There is already an installed gcc in $(PREFIX)."; \
 	fi
