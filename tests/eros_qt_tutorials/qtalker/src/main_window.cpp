@@ -31,7 +31,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
 	setWindowIcon(QIcon(":/images/icon.png"));
 	ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
 
-	ui.view_logging->setModel(qnode.outgoingModel());
+	ui.view_logging->setModel(qnode.loggingModel());
 }
 
 MainWindow::~MainWindow() {}
@@ -109,7 +109,7 @@ void MainWindow::WriteSettings() {
     settings.setValue("master_url",ui.line_edit_master->text());
     settings.setValue("host_url",ui.line_edit_host->text());
     settings.setValue("topic_name",ui.line_edit_topic->text());
-   	settings.setValue("use_environment_variables",ui.checkbox_use_environment->isEnabled());
+   	settings.setValue("use_environment_variables",QVariant(ui.checkbox_use_environment->isChecked()));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

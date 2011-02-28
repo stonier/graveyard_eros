@@ -35,9 +35,9 @@ QNode::~QNode() {
 }
 
 void QNode::init(const std::string &topic_name) {
-	ros::init(init_argc,init_argv,"qlistener");
+	ros::init(init_argc,init_argv,"add_two_ints_server");
     ros::NodeHandle n;
-	chatter_subscriber = n.subscribe(topic_name, 1000, &QNode::chatterCallback, this);
+    add_server = n.advertiseService("add_two_ints", &QNode::add, this);
 	start();
 }
 
@@ -45,9 +45,9 @@ void QNode::init(const std::string &master_url, const std::string &host_url, con
 	std::map<std::string,std::string> remappings;
 	remappings["__master"] = master_url;
 	remappings["__hostname"] = host_url;
-	ros::init(remappings,"qlistener");
+	ros::init(remappings,"add_two_ints_server");
     ros::NodeHandle n;
-	chatter_subscriber = n.subscribe(topic_name, 1000, &QNode::chatterCallback, this);
+    add_server = n.advertiseService("add_two_ints",&QNode::add,this);
 	start();
 }
 
@@ -55,11 +55,16 @@ void QNode::run() {
 	ros::spin();
 }
 
-void QNode::chatterCallback(const std_msgs::String::ConstPtr &msg) {
-	ROS_INFO("I heard: [%s]", msg->data.c_str());
+bool QNode::add(eros_qt_tutorials::TwoInts::Request  &req, eros_qt_tutorials::TwoInts::Response &res) {
+	res.sum = req.a + req.b;
+	ROS_INFO("request: x=%ld, y=%ld", (long int)req.a, (long int)req.b);
+	ROS_INFO("  sending back response: [%ld]", (long int)res.sum);
+
 	logging.insertRows(0,1);
 	std::stringstream logging_msg;
-	logging_msg << "[ INFO] [" << ros::Time::now() << "]: I heard: " << msg->data;
+	logging_msg << "[ INFO] [" << ros::Time::now() << "]: request: " << req.a << " + " << req.b << " = " << res.sum;
 	QVariant new_row(QString(logging_msg.str().c_str()));
 	logging.setData(logging.index(0),new_row);
+
+	return true;
 }

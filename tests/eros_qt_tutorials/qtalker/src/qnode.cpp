@@ -60,11 +60,11 @@ void QNode::run() {
 		msg.data = ss.str();
 		ROS_INFO("%s", msg.data.c_str());
 
-		outgoing.insertRows(0,1);
-		std::stringstream outgoing_msg;
-		outgoing_msg << "[ INFO] [" << ros::Time::now() << "]: " << msg.data;
-		QVariant new_row(QString(outgoing_msg.str().c_str()));
-		outgoing.setData(outgoing.index(0),new_row);
+		logging.insertRows(0,1);
+		std::stringstream logging_msg;
+		logging_msg << "[ INFO] [" << ros::Time::now() << "]: " << msg.data;
+		QVariant new_row(QString(logging_msg.str().c_str()));
+		logging.setData(logging.index(0),new_row);
 
 		chatter_publisher.publish(msg);
 		ros::spinOnce();

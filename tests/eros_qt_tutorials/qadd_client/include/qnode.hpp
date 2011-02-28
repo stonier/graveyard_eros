@@ -20,6 +20,8 @@
 #include <string>
 #include <QThread>
 #include <QStringListModel>
+#include <std_msgs/String.h>
+#include "eros_qt_tutorials/TwoInts.h"
 
 /*****************************************************************************
 ** Class
@@ -38,8 +40,8 @@ public:
 private:
 	int init_argc;
 	char** init_argv;
-	ros::Publisher chatter_publisher;
-    QStringListModel logging;
+	ros::ServiceClient add_client;
+	QStringListModel logging;
 };
 
 #endif /* NODE_HPP_ */

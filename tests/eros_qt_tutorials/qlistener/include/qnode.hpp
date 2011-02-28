@@ -38,13 +38,13 @@ public:
 
 	void chatterCallback(const std_msgs::String::ConstPtr &msg);
 
-	QStringListModel* incomingModel() { return &incoming; }
+	QStringListModel* loggingModel() { return &logging; }
 
 private:
 	int init_argc;
 	char** init_argv;
 	ros::Subscriber chatter_subscriber;
-    QStringListModel incoming;
+    QStringListModel logging;
 };
 
 #endif /* NODE_HPP_ */

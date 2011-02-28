@@ -1,9 +1,11 @@
 /**
  * @file /eros_qtalker/include/eros_qtalker/qnode.hpp
  *
- * @brief Ros communication central!
+ * @brief File comment
  *
- * @date February 2011
+ * File comment
+ *
+ * @date 25/02/2011
  **/
 /*****************************************************************************
 ** Ifdefs
@@ -20,6 +22,8 @@
 #include <string>
 #include <QThread>
 #include <QStringListModel>
+#include <std_msgs/String.h>
+#include "eros_qt_tutorials/TwoInts.h"
 
 /*****************************************************************************
 ** Class
@@ -33,12 +37,14 @@ public:
 	void init(const std::string &master_url, const std::string &host_url, const std::string &topic_name);
 	void run();
 
+	bool add(eros_qt_tutorials::TwoInts::Request  &req, eros_qt_tutorials::TwoInts::Response &res);
+
 	QStringListModel* loggingModel() { return &logging; }
 
 private:
 	int init_argc;
 	char** init_argv;
-	ros::Publisher chatter_publisher;
+	ros::ServiceServer add_server;
     QStringListModel logging;
 };
 
