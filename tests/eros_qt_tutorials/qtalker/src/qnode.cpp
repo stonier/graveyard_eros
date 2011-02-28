@@ -1,11 +1,9 @@
 /**
  * @file /eros_qtalker/src/qnode.cpp
  *
- * @brief File comment
+ * @brief Ros communication central!
  *
- * File comment
- *
- * @date 25/02/2011
+ * @date February 2011
  **/
 
 /*****************************************************************************
@@ -45,7 +43,7 @@ void QNode::init(const std::string &master_url, const std::string &host_url, con
 	std::map<std::string,std::string> remappings;
 	remappings["__master"] = master_url;
 	remappings["__hostname"] = host_url;
-	ros::init(remappings,"talker");
+	ros::init(remappings,"qtalker");
     ros::NodeHandle n;
     chatter_publisher = n.advertise<std_msgs::String>(topic_name, 1000);
 	start();
@@ -73,5 +71,4 @@ void QNode::run() {
 		loop_rate.sleep();
 		++count;
 	}
-
 }
