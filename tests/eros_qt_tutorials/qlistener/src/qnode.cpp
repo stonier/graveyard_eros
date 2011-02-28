@@ -35,7 +35,7 @@ QNode::~QNode() {
 }
 
 void QNode::init(const std::string &topic_name) {
-	ros::init(init_argc,init_argv,"qtalker");
+	ros::init(init_argc,init_argv,"qlistener");
     ros::NodeHandle n;
 	chatter_subscriber = n.subscribe(topic_name, 1000, &QNode::chatterCallback, this);
 }
