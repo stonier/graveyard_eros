@@ -1,11 +1,20 @@
-===== private.cmake =====
 
-File : CMakeLists.txt, include/ros/assert.h, include/ros/console.h, src/rosconsole/rosconsole.cpp
+File Set I  : CMakeLists.txt, include/ros/assert.h, include/ros/console.h, src/rosconsole/rosconsole.cpp
+File Set II : CMakeLists.txt, scripts/roslog4cxx-cfg.py, manifest.xml
 Last Changed Revision: 12775, Jan 06, 2011
 Ticket: https://code.ros.org/trac/ros/ticket/3334
 Modification: 
-    Critical fix in a find_file argument that forces find_file with
-    NO_CMAKE_FIND_ROOT_PATH. Without this it won't look outside the toolchain root.
+  Patch Set I : These were patched in trunk (not diamondback).
     
-    Also removes the -fPIC for mingw library builds (not in diamondback, but patched in trunk).
+  - CMakeLists.txt
+    - temporary fix to make example.exe build, had to link by hand ach.
+  - assert.h
+    - ifdef for mingw using DebugBreak instead of msvc's __debugbreak().
+  - console.h
+    - mingw needs to include <cstdarg> in order to find va_list type.
+  - rosconsole.cpp
+    - remove shell colours in windows (probably has a different notation?)
     
+  Patch Set II : These are not patched but probably also will not be ticketed as
+  rosbuild2 is coming. They are simply tools to help find log4cxx's dependencies.
+  

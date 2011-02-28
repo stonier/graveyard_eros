@@ -9,5 +9,5 @@ Ticket: https://code.ros.org/trac/ros/ticket/2803/
 Modification:
     This patch provides two pass build support to rospack,
     one for the native build environment and one for the cross-compiled
-    build environment.
+    build environment. It wont be patched as rosbuild2 is coming.
 
