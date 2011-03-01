@@ -15,7 +15,7 @@
      Simply run the following commands.
      
      @code
-     roscd code_sourcery
+     roscd code_sourcery_arm_gnueabi
      make
      make install
      @endcode
