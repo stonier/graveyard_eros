@@ -63,7 +63,7 @@ def comms_package_set():
     elif ( version == "diamondback" ):
         packages = ["rosbuild", "roslang", "cpp_common", "roscpp_traits", "rostime", "roscpp_serialization", "rospack", "roslib", "xmlrpcpp", "rosconsole", "std_msgs", "rosgraph_msgs", "roscpp" ]
     else:
-        print "Unsupported version - defaulting to build/protect the latest official release's minimal set (diamondback)."
+        print "Unsupported version - defaulting to build/protect the latest official release's comms set (diamondback)."
         packages = ["rosbuild", "roslang", "cpp_common", "roscpp_traits", "rostime", "roscpp_serialization", "rospack", "roslib", "xmlrpcpp", "rosconsole", "std_msgs", "rosgraph_msgs", "roscpp" ]
     return packages
 
@@ -127,8 +127,8 @@ Description:\n\
     parser = OptionParser(usage=usage)
     parser.add_option("-x","--clean", action="store_true", dest="clean", default=False, help="depracated, use --pre-clean instead.")
     parser.add_option("-p","--pre-clean", action="store_true", dest="pre_clean", default=False, help="pre-clean packages before building and protecting them.")
-    parser.add_option("-c","--comms", action="store_true", dest="comms", default=False, help="target the set of package required only for cpp communications.")
-    parser.add_option("-m","--minimal", action="store_true", dest="minimal", default=False, help="target a selected minimal set of ros packages necessary for a cross-compile environment.")
+    parser.add_option("-c",  "--comms", action="store_true", dest="comms", default=False, help="target the set of package required only for cpp communications.")
+    parser.add_option("-m","--minimal", action="store_true", dest="minimal", default=False, help="target a selected minimal set for a minimal ros environment.")
     parser.add_option("-r","--rosdeps", action="store_true", dest="rosdeps", default=False, help="pass --rosdep-install and rosdep-yes to rosmake when protecting.")
     parser.add_option("-s","--stacks", action="store_true", dest="stacks", default=False, help="target stacks instead of packages.")
     parser.add_option("-u","--unprotect", action="store_true", dest="unprotect", default=False, help="unprotect packages instead of protecting them.")
