@@ -24,10 +24,16 @@ set(CMAKE_VERBOSE_MAKEFILE TRUE)
 # Variables
 ##############################################################################
 
-set(BINARY_TARBALL arm-2010q1-202-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2)
-set(BINARY_TARBALL_URL http://www.codesourcery.com/public/gnu_toolchain/arm-none-linux-gnueabi/${BINARY_TARBALL})
-set(SOURCE_TARBALL arm-2010q1-202-arm-none-linux-gnueabi.src.tar.bz2)
-set(SOURCE_TARBALL_URL http://www.codesourcery.com/public/gnu_toolchain/arm-none-linux-gnueabi/${SOURCE_TARBALL})
+#set(VERSION_NAME arm-2010q1)
+#set(BINARY_TARBALL arm-2010q1-202-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2)
+#set(BINARY_TARBALL_URL http://www.codesourcery.com/public/gnu_toolchain/arm-none-linux-gnueabi/${BINARY_TARBALL})
+#set(SOURCE_TARBALL arm-2010q1-202-arm-none-linux-gnueabi.src.tar.bz2)
+#set(SOURCE_TARBALL_URL http://www.codesourcery.com/public/gnu_toolchain/arm-none-linux-gnueabi/${SOURCE_TARBALL})
+set(VERSION_NAME arm-2010.09)
+set(BINARY_TARBALL ${VERSION_NAME}-50-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2)
+set(BINARY_TARBALL_URL http://www.codesourcery.com/sgpp/lite/arm/portal/package7851/public/arm-none-linux-gnueabi/${BINARY_TARBALL})
+set(SOURCE_TARBALL ${VERSION_NAME}-50-arm-none-linux-gnueabi-i686-pc-linux-gnu.src.tar.bz2)
+set(BINARY_TARBALL_URL http://www.codesourcery.com/sgpp/lite/arm/portal/package7850/public/arm-none-linux-gnueabi/${SOURCE_TARBALL})
 
 ##############################################################################
 # Download
@@ -59,27 +65,27 @@ add_custom_target(
 # Install
 ##############################################################################
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/arm-2010q1/lib/
+install(DIRECTORY ${CMAKE_BINARY_DIR}/${VERSION_NAME}/lib/
         DESTINATION lib
         USE_SOURCE_PERMISSIONS
         )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/arm-2010q1/share/
+install(DIRECTORY ${CMAKE_BINARY_DIR}/${VERSION_NAME}/share/
         DESTINATION share
         USE_SOURCE_PERMISSIONS
         )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/arm-2010q1/libexec/
+install(DIRECTORY ${CMAKE_BINARY_DIR}/${VERSION_NAME}/libexec/
         DESTINATION libexec
         USE_SOURCE_PERMISSIONS
         )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/arm-2010q1/bin/
+install(DIRECTORY ${CMAKE_BINARY_DIR}/${VERSION_NAME}/bin/
         DESTINATION bin
         USE_SOURCE_PERMISSIONS
         )
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/arm-2010q1/arm-none-linux-gnueabi/
+install(DIRECTORY ${CMAKE_BINARY_DIR}/${VERSION_NAME}/arm-none-linux-gnueabi/
         DESTINATION arm-none-linux-gnueabi
         USE_SOURCE_PERMISSIONS
         )
