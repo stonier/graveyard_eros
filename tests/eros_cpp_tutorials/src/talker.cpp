@@ -42,9 +42,6 @@ int main(int argc, char **argv)
 		++count;
 	}
 	ros::Duration(1,0).sleep();
-//	ROS_INFO("Shutdown commencing");
-///	ros::shutdown();
-
 
   return 0;
 }
