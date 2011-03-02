@@ -12,6 +12,15 @@
   <url>http://mingw-cross-env.nongnu.org/</url>
   <depend package="eros_license"/>
   <depend package="eros_build"/>
+  <!-- provided by eros/rosdep.yaml -->
+  <rosdep name="xz"/>
+  <rosdep name="flex"/>
+  <rosdep name="bison"/>
+  <rosdep name="yasm"/>
+  <!-- provided by ros/rosdep.yaml -->
+  <rosdep name="intltool"/>
+  <rosdep name="libtool"/>
+  <rosdep name="scons"/>
 </package>
 
 

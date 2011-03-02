@@ -2,9 +2,9 @@
 
 PREFIX=/opt/mingw
 TUPLE=i686-pc-mingw32
-NAME=mingw-cross-env-2.16
-TARBALL=mingw-cross-env-2.16.tar.gz
-URL=http://download.savannah.gnu.org/releases-redirect/mingw-cross-env/$(TARBALL)
+NAME=mingw-cross-env-2.18
+TARBALL=mingw-cross-env-2.18.tar.gz
+URL=http://download.savannah.nongnu.org/releases/mingw-cross-env/$(TARBALL)
 
 ##############################################################################
 # Primary targets
@@ -46,7 +46,7 @@ links:
 compile: extract
 	@echo "Compiling the mingw gcc toolchain."
 	@if [ ! -f $(PREFIX)/usr/installed/gcc ]; then \
-		cd $(PREFIX); make gcc; \
+		cd $(PREFIX); make gcc boost qt; \
 	    echo; \
 	    echo "Mingw cross environment successfully installed in /opt/mingw."; \
 	    echo " - run 'make links' or 'make install' to install symbolic links in"; \
@@ -58,10 +58,10 @@ compile: extract
 	    echo; \
 	    echo "  http://mingw-cross-env.nongnu.org/ for a full list."; \
 	    echo; \
-	    echo "Boost and qt are both useful additions, to compile, simply:"; \
+	    echo "Example (installation of gdb and wxwidgets):"; \
 	    echo; \
 	    echo "  cd /opt/mingw"; \
-	    echo "  make qt boost"; \
+	    echo "  make gdb wxwidgets"; \
 	    echo; \
 	else \
 		echo "There is already an installed gcc in $(PREFIX)."; \
