@@ -32,6 +32,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
 	ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
 
 	ui.view_logging->setModel(qnode.loggingModel());
+	setWindowTitle(QApplication::translate("MainWindowDesign", "QAdd Server", 0, QApplication::UnicodeUTF8));
 }
 
 MainWindow::~MainWindow() {}
