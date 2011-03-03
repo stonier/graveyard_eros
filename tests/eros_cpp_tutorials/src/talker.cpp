@@ -7,8 +7,6 @@
 #include "common.h"
 
 #include <sstream>
-#include <map>
-#include <string>
 
 /*****************************************************************************
 ** Main
@@ -42,6 +40,8 @@ int main(int argc, char **argv)
 		++count;
 	}
 	ros::Duration(1,0).sleep();
-
+    ROS_INFO("Message1");
+    ros::shutdown();
+    ROS_INFO("Message");
   return 0;
 }
