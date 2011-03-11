@@ -1,0 +1,9 @@
+bison:
+  ubuntu: bison
+flex:
+  ubuntu: flex
+yasm:
+  ubuntu: yasm
+xz:
+  ubuntu: xz-utils
+
