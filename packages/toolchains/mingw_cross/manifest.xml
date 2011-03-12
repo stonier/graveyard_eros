@@ -2,7 +2,7 @@
   <description brief="Build recipe to install the mingw cross environment">
 
      Installer script for the mingw cross environment. This will install to /opt/mingw
-	 and immediately begin cross-compiling gcc. Other libraries can be added by
+	 and immediately begin cross-compiling gcc, boost and qt. Other libraries can be added by
 	 simply cd'ing to /opt/mingw and running make for the desired target.
 
   </description>
