@@ -160,7 +160,7 @@ def _init_signal_handlers():
     if not roslib.is_interactive():
         _signal_chain[signal.SIGTERM] = signal.signal(signal.SIGTERM, rl_signal)
         _signal_chain[signal.SIGINT]  = signal.signal(signal.SIGINT, rl_signal)
-        if sys.platform in ['win32']: # cygwin seems to be ok
+        if not sys.platform in ['win32']: # cygwin seems to be ok
             _signal_chain[signal.SIGHUP]  = signal.signal(signal.SIGHUP, rl_signal)
     atexit.register(pmon_shutdown)
     _sig_initialized = True
