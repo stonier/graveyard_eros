@@ -1,3 +1,11 @@
 
 This is a hack to let programs run purely on python with winmaster. It's no good though, so not official in any way.
 
+===== Bugfixes =====
+
+Where: around line 504 in find_node:
+
+    test_path = os.path.join(p, node_type) -> test_path = os.path.join(p, m)
+    
+    
+
