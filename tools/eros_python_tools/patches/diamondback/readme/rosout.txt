@@ -2,8 +2,8 @@
 ===== Rosout.cpp for Mingw =====
 
 URL: https://code.ros.org/svn/ros/stacks/ros_comm/trunk/tools/rosout/rosout.cpp
-Last Changed Revision: ???
 Ticket: https://code.ros.org/trac/ros/ticket/3410
+Ticket Status: fixed in trunk.
 
 Modification:
     Just undef'd ERROR so that it doesn't clash with rosgraph_msgs/Log.h's definition

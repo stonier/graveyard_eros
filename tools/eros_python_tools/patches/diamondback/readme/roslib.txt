@@ -3,6 +3,8 @@ This is a hack to let programs run purely on python with winmaster. It's no good
 
 ===== Bugfixes =====
 
+Ticket: https://code.ros.org/trac/ros/attachment/ticket/3415/
+Last Changed Revision: 13509
 Where: around line 504 in find_node:
 
     test_path = os.path.join(p, node_type) -> test_path = os.path.join(p, m)
