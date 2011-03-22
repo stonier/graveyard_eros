@@ -9,5 +9,11 @@ Where: around line 504 in find_node:
 
     test_path = os.path.join(p, node_type) -> test_path = os.path.join(p, m)
     
-    
+===== Windoze .py =====
+
+Ticket: todo
+Last Changed Revision: 13509
+Where: around line 504 in find_node:
+
+Let roslaunch and co handle .py files which aren't recognised as executable.
 

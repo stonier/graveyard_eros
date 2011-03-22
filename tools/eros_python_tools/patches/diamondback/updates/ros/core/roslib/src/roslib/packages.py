@@ -517,6 +517,11 @@ def find_node(pkg, node_type, ros_root=None, ros_package_path=None):
             for m in matches:
                 if m in files:
                     test_path = os.path.join(p, m)
+                    # windoze python files aren't executable, return 
+                    # these so roslaunch can handle them
+                    if sys.platform in ['win32']:
+                        if( os.path.splitext(test_path)[1] == ".py"):
+                            return test_path
                     s = os.stat(test_path)
                     if (s.st_mode & (stat.S_IRUSR | stat.S_IXUSR) == 
                         (stat.S_IRUSR | stat.S_IXUSR)):
