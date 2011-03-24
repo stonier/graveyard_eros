@@ -50,7 +50,6 @@ PollSet::PollSet()
 : sockets_changed_(false)
 {
 	if ( create_signal_pair(signal_pipe_) != 0 ) {
-//	if ( create_pipe(signal_pipe_) != 0) {
         ROS_FATAL("create_signal_pair() failed");
         ROS_BREAK();
 	}

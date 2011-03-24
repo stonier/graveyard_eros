@@ -172,11 +172,6 @@ def get_pkg_dir(package, required=True, ros_root=None, ros_package_path=None):
 
     # SEMI CROSS PLATFORM
     # TODO: replace with non-rospack-based solution (e.g. os.walk())
-    #
-    # Now has a backup plan if rospack not available
-    #  - it will update the internal cache via a psuedo-walk (fast)
-    #  - to remove rospack completely, should have a means of
-    #    updating the external cache.
     try:
         penv = os.environ.copy()
         if ros_root:
@@ -214,17 +209,21 @@ def get_pkg_dir(package, required=True, ros_root=None, ros_package_path=None):
             rpout, rperr = Popen([rospack, 'find', package], \
                                      stdout=PIPE, stderr=PIPE, env=penv).communicate()
             pkg_dir = (rpout or '').strip()
-        except OSError, e:
+        except OSError, unused_e:
             # Backup plan if we have no cpp rospack
-            _pkg_dir_cache.clear()
-            list_pkgs_by_path(ros_root, None, _pkg_dir_cache)
-            for path in ros_package_path.split(':'):
-                # could break if our package is found in here, but probably
-                # should update the cache entirely
-                list_pkgs_by_path(path, None, _pkg_dir_cache)
-            if package in _pkg_dir_cache:
-                pkg_dir = _pkg_dir_cache[package][0] or "" 
-
+            _backup_dir_cache = {}
+            list_pkgs_by_path(ros_root, None, _backup_dir_cache)
+            if sys.platform in ['win32']:
+                for path in ros_package_path.split(';'):
+                    list_pkgs_by_path(path, None, _backup_dir_cache)
+            else:
+                for path in ros_package_path.split(':'):
+                    list_pkgs_by_path(path, None, _backup_dir_cache)
+            if package in _backup_dir_cache:
+                pkg_dir = _backup_dir_cache[package][0] or "" 
+            # should update the internal and external caches.
+            # todo: update the external cache.
+            _pkg_dir_cache = _backup_dir_cache
         if not pkg_dir:
             raise InvalidROSPkgException("Cannot locate installation of package %s: %s. ROS_ROOT[%s] ROS_PACKAGE_PATH[%s]" % (package, rperr.strip(), ros_root, ros_package_path))
 
@@ -517,8 +516,8 @@ def find_node(pkg, node_type, ros_root=None, ros_package_path=None):
             for m in matches:
                 if m in files:
                     test_path = os.path.join(p, m)
-                    # windoze python files aren't executable, return 
-                    # these so roslaunch can handle them
+                    # windoze python files aren't labelled as executable, 
+                    # return these so roslaunch can run them with python.exe
                     if sys.platform in ['win32']:
                         if( os.path.splitext(test_path)[1] == ".py"):
                             return test_path

@@ -3,7 +3,9 @@
 == Against ==
 
 Files: lots
-Revision: 12965 (last package revision)
+Ticket: https://code.ros.org/trac/ros/ticket/3424
+Ticket Status: pending
+Revision: 13526.
 
 == Summary ==
 
@@ -48,3 +50,12 @@ chars for msvc. Mingw didn't seem to need this, but we may need to introduce it 
 
 Might also be a better way to do a poll, see my email from josh faust.
     
+===== Features =====
+
+- Cross platform organisation of headers, macros, typedefs [io.h/io.cpp] 
+- Cross platform abstractions for low level functions (close_socket, last_socket_error, poll, signal_pair) [io.h/io.cpp]
+- Disable some signal functionality (check this!) [common.cpp, init.cpp]
+- Move Time::init() to a good place [init.cpp]
+- Utilise the cross platform socket_poll and signal_pair [poll_set.cpp]
+- Undef ERROR to avoid a bug caused by windows macro pollution [rosout_appender.cpp]
+- Utilise cross platform abstractions, also win32 send/recv socket code [transport_tcp/udp.cpp]

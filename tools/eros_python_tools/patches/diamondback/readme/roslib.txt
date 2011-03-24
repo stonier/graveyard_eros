@@ -1,19 +1,22 @@
 
-This is a hack to let programs run purely on python with winmaster. It's no good though, so not official in any way.
-
 ===== Bugfixes =====
 
-Ticket: https://code.ros.org/trac/ros/attachment/ticket/3415/
+File packages.py
+Ticket: https://code.ros.org/trac/ros/ticket/3415 && https://code.ros.org/trac/ros/ticket/3422
+Ticket Status : pending
 Last Changed Revision: 13509
-Where: around line 504 in find_node:
 
-    test_path = os.path.join(p, node_type) -> test_path = os.path.join(p, m)
+Modifications: 
+    At around line 504 in find_node:
+      test_path = os.path.join(p, node_type) -> test_path = os.path.join(p, m)
     
-===== Windoze .py =====
+===== Does not recognize .py as executable in Windoze =====
 
-Ticket: todo
+File: packages.py
+Ticket: https://code.ros.org/trac/ros/ticket/3422
+Ticket Status: pending
 Last Changed Revision: 13509
-Where: around line 504 in find_node:
 
-Let roslaunch and co handle .py files which aren't recognised as executable.
+Modifications:
 
+    Let roslaunch and co handle .py files which aren't recognised as executable.

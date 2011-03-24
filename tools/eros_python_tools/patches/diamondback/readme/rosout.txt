@@ -1,7 +1,7 @@
 
 ===== Rosout.cpp for Mingw =====
 
-URL: https://code.ros.org/svn/ros/stacks/ros_comm/trunk/tools/rosout/rosout.cpp
+File: rosout.cpp
 Ticket: https://code.ros.org/trac/ros/ticket/3410
 Ticket Status: fixed in trunk.
 

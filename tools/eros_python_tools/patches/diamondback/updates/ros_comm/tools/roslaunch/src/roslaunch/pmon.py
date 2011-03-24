@@ -469,7 +469,17 @@ class ProcessMonitor(Thread):
         blocks until the process monitor is complete.
         """
         while not self.done:
-            time.sleep(0.1)
+            if sys.platform in ['win32']: # cygwin seems to be ok
+                # windows sleep throws an exception when a signal has arrived, even when 
+                # it has a handler. We can either use win32api.Sleep OR....catch
+                # the exception
+                try:
+                     time.sleep(0.1)
+                except IOError:
+                    pass
+            else:
+                 time.sleep(0.1)
+                    
             if self.has_main_thread_jobs():
                 self.do_main_thread_jobs()
 

@@ -1,6 +1,6 @@
 ===== private.cmake =====
 
-URL: https://code.ros.org/svn/ros/stacks/ros/trunk/core/rosbuild/private.cmake
+Files: private.cmake
 Last Changed Revision: 12704
 Ticket: https://code.ros.org/trac/ros/ticket/2994
 Modification: 
