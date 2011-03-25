@@ -21,14 +21,14 @@ int main(int argc, char **argv)
 	tests::init(argc, argv, "talker");
     ros::NodeHandle n;
 
-	ros::Rate loop_rate(100);
+	ros::Rate loop_rate(1);
 
     ROS_INFO("Setting up publisher");
     ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
 	ros::Duration(1,000000000).sleep(); // give it some time to make the subscriber connection.
     ROS_INFO("Commencing Loop.");
 	int count = 0;
-	while (ros::ok() && (count < 4) ) {
+	while (ros::ok()  ) {
 	    std_msgs::String msg;
 	    std::stringstream ss;
 		ss << "hello world " << count;

@@ -1,4 +1,4 @@
 - svn:
-    uri: https://code.ros.org/svn/eros/trunk
+    uri: https://code.ros.org/svn/eros/tags/diamondback
     local-name: eros
 
