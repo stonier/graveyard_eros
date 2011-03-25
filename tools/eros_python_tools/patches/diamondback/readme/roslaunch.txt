@@ -2,7 +2,7 @@
 
 File: core.py
 Ticket: https://code.ros.org/trac/ros/ticket/3420
-Ticket Status: pending
+Ticket Status: applied on trunk@13536
 Last Changed Rev: 13228
 
 Modifications:
@@ -16,7 +16,7 @@ Ticket Status: pending
 Last Changed Rev: 10269
 
 Modifications:
-     Makes up for windows not being able to recognize and launch python files as executabels directly.
+     Makes up for windows not being able to recognize and launch python files as executables directly.
      This recognises a .py extension and runs the python file with python.exe.
 
 ===== Processes =====
@@ -35,7 +35,7 @@ Modifications:
 
 File: pmon.py
 Ticket: https://code.ros.org/trac/ros/ticket/3421
-Ticket Status: pending
+Ticket Status: applied on trunk@13534,13535
 Last Changed Rev: 10575
 
 Modifications:

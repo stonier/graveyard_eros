@@ -30,7 +30,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
-# Revision $Id: pmon.py 10575 2010-07-31 22:13:41Z kwc $
+# Revision $Id: pmon.py 13535 2011-03-24 17:40:30Z kwc $
 
 """
 Process monitoring implementation for roslaunch.
@@ -152,16 +152,19 @@ def rl_signal(sig, stackframe):
         except KeyboardInterrupt:
             pass #filter out generic keyboard interrupt handler
         
+if sys.platform in ['win32']: # cygwin seems to be ok
+    _signal_list = [signal.SIGTERM, signal.SIGINT]
+else:
+    _signal_list = [signal.SIGTERM, signal.SIGINT, signal.SIGHUP]
+
 _sig_initialized = False
 def _init_signal_handlers():
     global _sig_initialized
     if _sig_initialized:
         return
     if not roslib.is_interactive():
-        _signal_chain[signal.SIGTERM] = signal.signal(signal.SIGTERM, rl_signal)
-        _signal_chain[signal.SIGINT]  = signal.signal(signal.SIGINT, rl_signal)
-        if not sys.platform in ['win32']: # cygwin seems to be ok
-            _signal_chain[signal.SIGHUP]  = signal.signal(signal.SIGHUP, rl_signal)
+        for s in _signal_list:
+            _signal_chain[s] = signal.signal(s, rl_signal)
     atexit.register(pmon_shutdown)
     _sig_initialized = True
 
@@ -515,14 +518,9 @@ class ProcessMonitor(Thread):
 
             # check current signal handlers to see if children have stolen them away
             # TODO: this code may not be necessary anymore (have to test)
-            if sys.platform in ['win32']: # cygwin seems to be ok
-                for s in [signal.SIGTERM, signal.SIGINT]:
-                    if signal.getsignal(s) !=  rl_signal:
-                        self.reacquire_signals.add(s)
-            else:
-                for s in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP]:
-                    if signal.getsignal(s) !=  rl_signal:
-                        self.reacquire_signals.add(s)
+            for s in _signal_list:
+                if signal.getsignal(s) !=  rl_signal:
+                    self.reacquire_signals.add(s)
 
             for p in procs:
                 try:
