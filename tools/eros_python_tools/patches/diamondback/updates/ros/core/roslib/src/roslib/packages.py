@@ -222,8 +222,6 @@ def get_pkg_dir(package, required=True, ros_root=None, ros_package_path=None):
             if package in _backup_dir_cache:
                 pkg_dir = _backup_dir_cache[package][0] or "" 
             # should update the internal and external caches.
-            # todo: update the external cache.
-            _pkg_dir_cache = _backup_dir_cache
         if not pkg_dir:
             raise InvalidROSPkgException("Cannot locate installation of package %s: %s. ROS_ROOT[%s] ROS_PACKAGE_PATH[%s]" % (package, rperr.strip(), ros_root, ros_package_path))
 
