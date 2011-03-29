@@ -1,0 +1,16 @@
+<package>
+  <description brief="roscpplight">
+
+     roscpplight
+
+  </description>
+  <author>Morten Kjærgaard</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/roscpplight</url>
+  <depend package="xmlrpcpp"/>
+  <depend package="std_msgs"/>
+  <depend package="roscpp_serialization"/>
+</package>
+
+
