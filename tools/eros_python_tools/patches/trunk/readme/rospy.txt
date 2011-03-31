@@ -1,6 +1,6 @@
 ===== Windows Time.sleep =====
 
-File: client.py
+File: client.py, core.py, rostime.py, timer.py
 Ticket: https://code.ros.org/trac/ros/ticket/3427
 Ticket Status: pending
 Last Changed Rev: 13530
