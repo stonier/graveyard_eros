@@ -362,11 +362,23 @@ def create_toolchain():
     if ( toolchain_sysroot == ''):
         toolchain_sysroot = toolchain_sysroot_default
     print
+    print core.bold_string("  Toolchain Install Prefix")
+    print 
+    print "  This is the where your headers and libraries will get installed."
+    print "  e.g. if your toolchain sysroot is /usr/i686-pc-linux-gnu/ then typically"
+    print "  your install prefix will be /usr/i686-pc-linux-gnu/usr"
+    print 
+    toolchain_install_prefix_default = toolchain_sysroot + "/usr/"
+    toolchain_install_prefix = raw_input("  Enter a string for the toolchain install prefix [" + toolchain_install_prefix_default + "]: ")
+    if ( toolchain_install_prefix == ''):
+        toolchain_install_prefix = toolchain_install_prefix_default
+    print
     
     toolchain_template = open(eros_toolchain_template()).read()
     toolchain_template = toolchain_template.replace('${toolchain_family}',toolchain_family)
     toolchain_template = toolchain_template.replace('${toolchain_tuple}',toolchain_tuple)
     toolchain_template = toolchain_template.replace('${toolchain_sysroot}',toolchain_sysroot)
+    toolchain_template = toolchain_template.replace('${toolchain_install_prefix}',toolchain_install_prefix)
     #print toolchain_template
     user_defined_toolchain_pathname = os.path.join(user_toolchain_dir(),toolchain_family,toolchain_tuple+'.cmake')
     if ( os.path.exists(user_defined_toolchain_pathname) ):
@@ -382,6 +394,7 @@ def create_toolchain():
     print "-- Family: %s" %toolchain_family
     print "-- Tuple: %s" %toolchain_tuple
     print "-- Sysroot: %s" %toolchain_sysroot
+    print "-- Install Prefix: %s" %toolchain_install_prefix
     print "-- File: %s" %user_defined_toolchain_pathname
     print
     

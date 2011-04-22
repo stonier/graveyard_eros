@@ -8,6 +8,7 @@
 set(TOOLCHAIN_FAMILY "${toolchain_family}")
 set(TOOLCHAIN_TUPLE "${toolchain_tuple}" CACHE STRING "Toolchain signature identifying cpu-vendor-platform-clibrary.")
 set(TOOLCHAIN_SYSROOT "${toolchain_sysroot}" CACHE STRING "Root of the target development environment (libraries, headers etc).")
+set(TOOLCHAIN_INSTALL_PREFIX "${toolchain_install_prefix}"  CACHE STRING "Where to install headers/libraries etc).")
 
 # Now the cmake variables
 set(CMAKE_SYSTEM_NAME Linux)
