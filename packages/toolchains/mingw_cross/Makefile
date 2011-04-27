@@ -2,9 +2,9 @@
 
 PREFIX=/opt/mingw
 TUPLE=i686-pc-mingw32
-NAME=mingw-cross-env-2.18
-TARBALL=mingw-cross-env-2.18.tar.gz
-URL=http://download.savannah.nongnu.org/releases/mingw-cross-env/$(TARBALL)
+NAME=mingw-cross-env-2.20
+TARBALL=${NAME}.tar.gz
+URL=https://bitbucket.org/vog/mingw-cross-env/downloads/$(TARBALL)
 
 ##############################################################################
 # Primary targets
@@ -43,6 +43,7 @@ links:
 		echo "Not installed yet, run make first."; \
 	fi
 
+
 compile: extract
 	@echo "Compiling the mingw gcc toolchain."
 	@if [ ! -f $(PREFIX)/usr/installed/gcc ]; then \
@@ -78,7 +79,7 @@ extract: download
 	else \
 		echo "$(TARBALL) already extracted to $(PREFIX)."; \
 	fi
-	@cp patches/*.mk /opt/mingw/src
+#	@cp patches/*.mk /opt/mingw/src
 
 download:
 	@mkdir -p build
