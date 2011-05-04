@@ -9,6 +9,12 @@ set(TOOLCHAIN_FAMILY "mingw_cross")
 set(TOOLCHAIN_TUPLE "i686-pc-mingw32" CACHE STRING "Toolchain signature identifying cpu-vendor-platform-clibrary.")
 set(TOOLCHAIN_SYSROOT "/opt/mingw/usr/${TOOLCHAIN_TUPLE}" CACHE STRING "Root of the target development environment (libraries, headers etc).")
 set(TOOLCHAIN_INSTALL_PREFIX "${TOOLCHAIN_SYSROOT}" CACHE STRING "Preferred install location when using the toolchain.")
+# Boost needs to be hand held on windoze for boost_thread.
+# Maybe bad place for this? Could also embed in rosbuild/public.cmake
+# Also need this - http://lists-archives.org/mingw-users/04689-linking-help.html
+set(TOOLCHAIN_COMPILE_FLAGS "-DBOOST_THREAD_USE_LIB -D_WIN32_WINNT=0x0501")
+set(Boost_THREADAPI "win32" CACHE STRING "Necessary variable for cmake to find mingw boost, needs cmake v2.8.3+")
+#set(Boost_USE_STATIC_LIBS TRUE CACHE STRING "Using static libs for boost.")
 
 # Now the cmake variables
 set(CMAKE_SYSTEM_NAME Windows)
@@ -18,19 +24,17 @@ set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_SYSROOT} CACHE STRING "Cmake search variabl
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER) # Don't search for programs in sysroot
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)  # Headers and libs from sysroot only
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-
-# Boost needs to be hand held on windoze for boost_thread.
-# Maybe bad place for this? Could also embed in rosbuild/public.cmake
-# Also need this - http://lists-archives.org/mingw-users/04689-linking-help.html
-set(TOOLCHAIN_COMPILE_FLAGS "-DBOOST_THREAD_USE_LIB -D_WIN32_WINNT=0x0501")
+set(CMAKE_INSTALL_PREFIX ${TOOLCHAIN_INSTALL_PREFIX} CACHE PATH "Installation path")
+set(CMAKE_C_FLAGS ${TOOLCHAIN_COMPILE_FLAGS} CACHE PATH "Compile flags for c.")
+set(CMAKE_CXX_FLAGS ${TOOLCHAIN_COMPILE_FLAGS} CACHE PATH "Compile flags for c++.")
 
 ###############################
 # Mingw Ecosystem is Static
 ###############################
-set(ROS_BUILD_STATIC_EXES true)
-set(ROS_BUILD_SHARED_EXES false)
-set(ROS_BUILD_STATIC_LIBS true)
-set(ROS_BUILD_SHARED_LIBS false)
+set(ROS_BUILD_STATIC_EXES true CACHE BOOL "Build static executables")
+set(ROS_BUILD_SHARED_EXES false CACHE BOOL "Build shared executables")
+set(ROS_BUILD_STATIC_LIBS true CACHE BOOL "Build static libraries")
+set(ROS_BUILD_SHARED_LIBS false CACHE BOOL "Build shared libraries")
 
 ###############################
 # Prepare Qt Environment
@@ -38,5 +42,16 @@ set(ROS_BUILD_SHARED_LIBS false)
 set(QT_IS_STATIC 1) # Works on my gentoo (cmake 2.8.1), fails on lucid ubuntu (cmake 2.8.0)
 set(QT_QMAKE_EXECUTABLE ${TOOLCHAIN_TUPLE}-qmake) 
 
+###############################
+# SSE
+###############################
+# No way of knowing if the target machine has sse, so lets disable by default
+# so ros doesn't fall over on the TRY_RUN tests.
+# The user can always renable them in his cache config file.
+set(HAS_SSE_EXTENSIONS_EXITCODE FALSE CACHE BOOL "Cross-compiling variable en/disabling sse extensions.")
+set(HAS_SSE2_EXTENSIONS_EXITCODE FALSE CACHE BOOL "Cross-compiling variable en/disabling sse2 extensions.")
+set(HAS_SSE3_EXTENSIONS_EXITCODE FALSE CACHE BOOL "Cross-compiling variable en/disabling sse3 extensions.")
+
 # Hide from cache's front page
 MARK_AS_ADVANCED(CMAKE_GENERATOR CMAKE_FIND_ROOT_PATH CMAKE_TOOLCHAIN_FILE TOOLCHAIN_FAMILY TOOLCHAIN_TUPLE TOOLCHAIN_SYSROOT)
+
