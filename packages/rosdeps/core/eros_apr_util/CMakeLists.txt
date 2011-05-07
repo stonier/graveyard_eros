@@ -25,7 +25,8 @@ set(SOURCE_TARBALL_URL "http://mirror.apache-kr.org/apr/${SOURCE_TARBALL}")
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 
 # maybe need --with-expat=builtin?
-set(PACKAGE_OPTIONS --without-pgsql --without-iconv --without-sqlite2 --without-sqlite3 --with-apr=${CMAKE_INSTALL_PREFIX})
+# log4cxx needs iconv, can we remove --without-iconv
+set(PACKAGE_OPTIONS --without-pgsql --without-sqlite2 --without-sqlite3 --with-apr=${CMAKE_INSTALL_PREFIX})
 if(MINGW)
   # Fix a bug in mingw cross compiler not setting this macro for you.
   set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} -D_WIN32_WINNT=0x0500")
