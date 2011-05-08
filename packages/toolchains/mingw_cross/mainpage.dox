@@ -28,10 +28,17 @@
      cd /opt/mingw
      make wxwidgets
      @endcode
+
+\section ToDo
+    
+     Create apr, apr-util and log4cxx build makefiles and submit upstream.
+     
+     - apr : backup url's, update and test program.
+     - apr-util : backup url's update and test program.
+     - log4cxx : all
      
 \section ChangeLog
 
 	- <b>Nov 10</b> : Done and road tested.
 
-bison, xz-util
 */
