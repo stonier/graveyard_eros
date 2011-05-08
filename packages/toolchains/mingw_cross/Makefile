@@ -42,6 +42,9 @@ links:
 	else \
 		echo "Not installed yet, run make first."; \
 	fi
+	sudo ln -sf ${PREFIX}/usr/${TUPLE}/lib/libboost_thread_win32-mt.a ${PREFIX}/usr/${TUPLE}/lib/libboost_thread-mt.a
+	sudo ln -sf ${PREFIX}/usr/${TUPLE}/lib/libboost_thread_win32-mt-d.a ${PREFIX}/usr/${TUPLE}/lib/libboost_thread-mt-d.a
+
 
 
 compile: extract
