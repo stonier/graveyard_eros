@@ -82,7 +82,7 @@ extract: download
 	else \
 		echo "$(TARBALL) already extracted to $(PREFIX)."; \
 	fi
-#	@cp patches/*.mk /opt/mingw/src
+	@cp patches/*.mk /opt/mingw/src
 
 download:
 	@mkdir -p build
