@@ -18,8 +18,8 @@ eros_3rd_party_init()
 ##############################################################################
 
 set(SOURCE_NAME "apache-log4cxx-0.10.0")
-set(SOURCE_TARBALL "apache-log4cxx-0.10.0-wg_patched.tar.gz")
-set(SOURCE_TARBALL_URL "http://pr.willowgarage.com/downloads/${SOURCE_TARBALL}")
+set(SOURCE_TARBALL "apache-log4cxx-0.10.0.tar.gz")
+set(SOURCE_TARBALL_URL "http://apache.naggo.co.kr//logging/log4cxx/0.10.0/${SOURCE_TARBALL}")
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 
 if(MINGW)                    
@@ -75,20 +75,20 @@ set(PATCHED_FLAG ${CMAKE_BINARY_DIR}/patched)
 eros_download(${SOURCE_TARBALL_URL} ${CMAKE_BINARY_DIR}/${SOURCE_TARBALL})
 eros_extract_tarball(${CMAKE_BINARY_DIR}/${SOURCE_TARBALL} ${CMAKE_BINARY_DIR})
 
-if(MINGW)
-  set(PATCH_THREAD_COMMAND patch -d ${SOURCE_DIR}/src/main/include/log4cxx/helpers -p0 < ${CMAKE_SOURCE_DIR}/patches/mingw/patch_thread)
-else()
-  set(PATCH_THREAD_COMMAND echo "Only need to patch for threads on mingw.")
-endif()
+set(PATCH_THREAD_COMMAND_ONE patch -p1 < ${CMAKE_SOURCE_DIR}/patches/log4cxx-1-gcc.4.4.patch)
+set(PATCH_THREAD_COMMAND_TWO patch -p1 < ${CMAKE_SOURCE_DIR}/patches/log4cxx-2-pkgconfig.patch)
+set(PATCH_THREAD_COMMAND_THREE patch -p1 < ${CMAKE_SOURCE_DIR}/patches/log4cxx-3-warnings.patch)
+set(PATCH_THREAD_COMMAND_FOUR patch -p1 < ${CMAKE_SOURCE_DIR}/patches/log4cxx-4-mingw.definitions.patch)
 
 # Patch
 add_custom_command(OUTPUT ${PATCHED_FLAG}
-    COMMAND cp ${CMAKE_SOURCE_DIR}/patches/all/liblog4cxx.pc.in ${SOURCE_DIR}
-    COMMAND patch -p0 < ${CMAKE_SOURCE_DIR}/patches/all/patch_console
-    COMMAND ${PATCH_THREAD_COMMAND}
+    COMMAND ${PATCH_THREAD_COMMAND_ONE}
+    COMMAND ${PATCH_THREAD_COMMAND_TWO}
+    COMMAND ${PATCH_THREAD_COMMAND_THREE}
+    COMMAND ${PATCH_THREAD_COMMAND_FOUR}
     COMMAND touch ${PATCHED_FLAG}
     DEPENDS ${CMAKE_BINARY_DIR}/extracted
-    WORKING_DIRECTORY ${SOURCE_DIR}/src/examples/cpp
+    WORKING_DIRECTORY ${SOURCE_DIR}
     COMMENT "Patching ${SOURCE_DIR}."
     VERBATIM
     )
