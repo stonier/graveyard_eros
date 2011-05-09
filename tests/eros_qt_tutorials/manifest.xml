@@ -14,6 +14,17 @@
   <depend package="std_msgs"/>
   <rosdep name="qt4"/>
 
+  <rosbuild2>
+    <!--
+    <depend package="eros_build"/>
+    -->
+    <depend package="roscpp"/>
+    <depend package="std_msgs"/>
+    <rosdep name="qt4"/>
+
+    <srvs>srv/TwoInts.srv</srvs>
+  </rosbuild2>
+
 </package>
 
 
