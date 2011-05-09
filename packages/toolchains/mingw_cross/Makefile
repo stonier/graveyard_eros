@@ -50,7 +50,7 @@ links:
 compile: extract
 	@echo "Compiling the mingw gcc toolchain."
 	@if [ ! -f $(PREFIX)/usr/installed/gcc ]; then \
-		cd $(PREFIX); make gcc boost qt; \
+		cd $(PREFIX); make gcc log4cxx boost qt; \
 	    echo; \
 	    echo "Mingw cross environment successfully installed in /opt/mingw."; \
 	    echo " - run 'make links' or 'make install' to install symbolic links in"; \

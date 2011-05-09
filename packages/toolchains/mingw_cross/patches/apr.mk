@@ -35,11 +35,11 @@ $(PKG)_WEBSITE  := http://apr.apache.org/
 $(PKG)_URL      := http://mirror.apache-kr.org/apr/$($(PKG)_FILE)
 $(PKG)_DEPS     := gcc
 
-define $(PKG)_UPDATE
-    wget -q -O- 'http://www.ijg.org/' | \
-    $(SED) -n 's,.*jpegsrc\.v\([0-9][^>]*\)\.tar.*,\1,p' | \
-    head -1
-endef
+#define $(PKG)_UPDATE
+#    wget -q -O- 'http://www.ijg.org/' | \
+#    $(SED) -n 's,.*jpegsrc\.v\([0-9][^>]*\)\.tar.*,\1,p' | \
+#    head -1
+#endef
 
 define $(PKG)_BUILD
     cd '$(1)' && ./configure \

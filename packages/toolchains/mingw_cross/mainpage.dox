@@ -35,7 +35,7 @@
      
      - apr : backup url's, update and test program.
      - apr-util : backup url's update and test program.
-     - log4cxx : all
+     - log4cxx : backup url's and test program.
      
 \section ChangeLog
 
