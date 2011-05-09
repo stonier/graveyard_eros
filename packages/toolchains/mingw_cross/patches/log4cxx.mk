@@ -23,6 +23,7 @@ $(PKG)_SUBDIR   := apache-log4cxx-$($(PKG)_VERSION)
 $(PKG)_FILE     := apache-log4cxx-$($(PKG)_VERSION).tar.gz
 $(PKG)_WEBSITE  := http://logging.apache.org/log4cxx/index.html
 $(PKG)_URL      := http://apache.naggo.co.kr//logging/log4cxx/0.10.0/$($(PKG)_FILE)
+$(PKG)_URL_2    := http://apache.mirror.cdnetworks.com//logging/log4cxx/0.10.0/$($(PKG)_FILE)
 $(PKG)_DEPS     := gcc apr-util
 
 #define $(PKG)_UPDATE

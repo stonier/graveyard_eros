@@ -1,3 +1,9 @@
+This file is part of mingw-cross-env.
+See doc/index.html for further information.
+
+These changes have already been applied to log4cxx trunk to update inclusions
+for recent gcc's.
+
 diff -NBaur vanilla/src/examples/cpp/console.cpp mingw_cross/src/examples/cpp/console.cpp
 --- vanilla/src/examples/cpp/console.cpp	2008-04-01 07:34:52.000000000 +0900
 +++ mingw_cross/src/examples/cpp/console.cpp	2011-05-09 10:27:52.923808248 +0900

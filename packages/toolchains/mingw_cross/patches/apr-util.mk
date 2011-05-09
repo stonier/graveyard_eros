@@ -23,6 +23,7 @@ $(PKG)_SUBDIR   := apr-util-$($(PKG)_VERSION)
 $(PKG)_FILE     := apr-util-$($(PKG)_VERSION).tar.gz
 $(PKG)_WEBSITE  := http://apr.apache.org/
 $(PKG)_URL      := http://mirror.apache-kr.org/apr/$($(PKG)_FILE)
+$(PKG)_URL_2    := http://apache.mirror.cdnetworks.com/apr/$($(PKG)_FILE)
 $(PKG)_DEPS     := gcc libiconv apr
 
 #define $(PKG)_UPDATE
