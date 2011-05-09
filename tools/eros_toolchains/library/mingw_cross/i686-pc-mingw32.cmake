@@ -21,9 +21,9 @@ set(CMAKE_SYSTEM_NAME Windows)
 set(CMAKE_C_COMPILER   ${TOOLCHAIN_TUPLE}-gcc) # Make sure these are in your PATH
 set(CMAKE_CXX_COMPILER ${TOOLCHAIN_TUPLE}-g++)
 set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_SYSROOT} CACHE STRING "Cmake search variable for finding libraries/headers.")
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER) # Don't search for programs in sysroot
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)  # Headers and libs from sysroot only
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER CACHE STRING "Whether to search for programs in the system root path")
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY CACHE STRING "Whether to search for libraries in the system root path")
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY CACHE STRING "Whether to search for headers in the system root path")
 set(CMAKE_INSTALL_PREFIX ${TOOLCHAIN_INSTALL_PREFIX} CACHE PATH "Installation path")
 set(CMAKE_C_FLAGS ${TOOLCHAIN_COMPILE_FLAGS} CACHE PATH "Compile flags for c.")
 set(CMAKE_CXX_FLAGS ${TOOLCHAIN_COMPILE_FLAGS} CACHE PATH "Compile flags for c++.")
