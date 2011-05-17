@@ -19,9 +19,10 @@ eros_3rd_party_init()
 
 set(SOURCE_NAME "apr-util-1.3.10")
 set(SOURCE_TARBALL "${SOURCE_NAME}.tar.gz")
-# Use ecl's repo, mirrors at apache keep bloody changing and they don't have
-# a constant alias to use!
-set(SOURCE_TARBALL_URL "http://mirror.apache-kr.org/apr/${SOURCE_TARBALL}")
+#set(SOURCE_TARBALL_URL "http://mirror.apache-kr.org/apr/${SOURCE_TARBALL}")
+# New stable version out, using the archived for now.
+set(SOURCE_TARBALL_URL "http://archive.apache.org/dist/apr/${SOURCE_TARBALL}")
+
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 
 # maybe need --with-expat=builtin?
@@ -64,6 +65,8 @@ if(CMAKE_CROSSCOMPILING)
 else()
   set(CONFIGURE_COMMAND ./configure ${PACKAGE_OPTIONS} ${COMMON_ARGS})
 endif()
+MESSAGE(STATUS "PACKAGE_OPTIONS......${PACKAGE_OPTIONS}")
+MESSAGE(STATUS "CONFIGURE_COMMAND....${CONFIGURE_COMMAND}")
 
 ##############################################################################
 # Build
