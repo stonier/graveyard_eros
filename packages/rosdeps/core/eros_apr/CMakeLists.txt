@@ -21,8 +21,10 @@ set(CMAKE_VERBOSE_MAKEFILE true)
 
 set(SOURCE_NAME "apr-1.4.2")
 set(SOURCE_TARBALL "${SOURCE_NAME}.tar.gz")
-# Use ecl's repo, mirrors at apache keep bloody changing and they don't have a constant alias to use!
-set(SOURCE_TARBALL_URL "http://mirror.apache-kr.org/apr/${SOURCE_TARBALL}")
+#set(SOURCE_TARBALL_URL "http://mirror.apache-kr.org/apr/${SOURCE_TARBALL}")
+# New version out, using the archive for now.
+set(SOURCE_TARBALL_URL "http://archive.apache.org/dist/apr/${SOURCE_TARBALL}")
+
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 
 # The compilers and ros compile flags are all set by rostoolchain.cmake and rosconfig.cmake
