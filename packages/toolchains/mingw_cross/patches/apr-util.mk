@@ -22,9 +22,11 @@ $(PKG)_CHECKSUM := f5aaf15542209fee479679299dc4cb1ac0924a59
 $(PKG)_SUBDIR   := apr-util-$($(PKG)_VERSION)
 $(PKG)_FILE     := apr-util-$($(PKG)_VERSION).tar.gz
 $(PKG)_WEBSITE  := http://apr.apache.org/
-$(PKG)_URL      := http://mirror.apache-kr.org/apr/$($(PKG)_FILE)
-$(PKG)_URL_2    := http://apache.mirror.cdnetworks.com/apr/$($(PKG)_FILE)
-$(PKG)_DEPS     := gcc libiconv apr
+#$(PKG)_URL=     := http://archive.apache.org/dist/apr/$($(PKG)_FILE)
+$(PKG)_URL      := http://archive.apache.org/dist/apr/$($(PKG)_FILE)
+#$(PKG)_URL      := http://mirror.apache-kr.org/apr/$($(PKG)_FILE)
+#$(PKG)_URL_2    := http://apache.mirror.cdnetworks.com/apr/$($(PKG)_FILE)
+$(PKG)_DEPS     := gcc libiconv apr expat
 
 #define $(PKG)_UPDATE
 #    wget -q -O- 'http://www.ijg.org/' | \

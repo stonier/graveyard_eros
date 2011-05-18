@@ -32,8 +32,10 @@ $(PKG)_CHECKSUM := d48324efb0280749a5d7ccbb053d68545c568b4b
 $(PKG)_SUBDIR   := apr-$($(PKG)_VERSION)
 $(PKG)_FILE     := apr-$($(PKG)_VERSION).tar.gz
 $(PKG)_WEBSITE  := http://apr.apache.org/
-$(PKG)_URL      := http://mirror.apache-kr.org/apr/$($(PKG)_FILE)
-$(PKG)_URL_2    := http://apache.mirror.cdnetworks.com/apr/$($(PKG)_FILE)
+#$(PKG)_URL=	:= http://archive.apache.org/dist/apr/$($(PKG)_FILE)
+$(PKG)_URL      := http://archive.apache.org/dist/apr/$($(PKG)_FILE)
+#$(PKG)_URL      := http://mirror.apache-kr.org/apr/$($(PKG)_FILE)
+#$(PKG)_URL_2    := http://apache.mirror.cdnetworks.com/apr/$($(PKG)_FILE)
 $(PKG)_DEPS     := gcc
 
 #define $(PKG)_UPDATE
