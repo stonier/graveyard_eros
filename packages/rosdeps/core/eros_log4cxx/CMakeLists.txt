@@ -19,7 +19,8 @@ eros_3rd_party_init()
 
 set(SOURCE_NAME "apache-log4cxx-0.10.0")
 set(SOURCE_TARBALL "apache-log4cxx-0.10.0.tar.gz")
-set(SOURCE_TARBALL_URL "http://apache.naggo.co.kr//logging/log4cxx/0.10.0/${SOURCE_TARBALL}")
+#set(SOURCE_TARBALL_URL "http://apache.naggo.co.kr//logging/log4cxx/0.10.0/${SOURCE_TARBALL}")
+set(SOURCE_TARBALL_URL "http://apache.mirror.cdnetworks.com/logging/log4cxx/0.10.0/${SOURCE_TARBALL}")
 set(SOURCE_DIR ${CMAKE_BINARY_DIR}/${SOURCE_NAME})
 
 if(MINGW)                    
