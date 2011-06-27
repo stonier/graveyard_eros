@@ -41,11 +41,17 @@ public:
 	void closeEvent(QCloseEvent *event); // Overloaded function
 
 public slots:
-	// Put automatically triggered slots here (because of connectSlotsByName())
-	// void on_button_enable_clicked(bool check); // example only
+	/******************************************
+	** Auto-connections (connectSlotsByName())
+	*******************************************/
 	void on_actionAbout_triggered();
 	void on_button_connect_clicked(bool check );
 	void on_checkbox_use_environment_stateChanged(int state);
+
+    /******************************************
+    ** Manual connections
+    *******************************************/
+    void updateLoggingView(); // no idea why this can't connect automatically
 
 private:
 	Ui::MainWindowDesign ui;

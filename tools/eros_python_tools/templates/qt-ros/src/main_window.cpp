@@ -37,7 +37,13 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
 	setWindowIcon(QIcon(":/images/icon.png"));
 	ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
 
+	/*********************
+	** Logging
+	**********************/
 	ui.view_logging->setModel(qnode.loggingModel());
+    QObject::connect(&qnode, SIGNAL(loggingUpdated()), this, SLOT(updateLoggingView()));
+    QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
+
 }
 
 MainWindow::~MainWindow() {}
@@ -78,6 +84,19 @@ void MainWindow::on_checkbox_use_environment_stateChanged(int state) {
 }
 
 /*****************************************************************************
+** Implemenation [Slots][manually connected]
+*****************************************************************************/
+
+/**
+ * This function is signalled by the underlying model. When the model changes,
+ * this will drop the cursor down to the last line in the QListview to ensure
+ * the user can always see the latest log message.
+ */
+void MainWindow::updateLoggingView() {
+        ui.view_logging->scrollToBottom();
+}
+
+/*****************************************************************************
 ** Implementation [Menu]
 *****************************************************************************/
 
@@ -91,9 +110,8 @@ void MainWindow::on_actionAbout_triggered() {
 
 void MainWindow::ReadSettings() {
     QSettings settings("Qt-Ros Package", "%(package)s");
-    QRect rect = settings.value("geometry", QRect(200, 200, 400, 400)).toRect();
-    move(rect.topLeft());
-    resize(rect.size());
+    restoreGeometry(settings.value("geometry").toByteArray());
+    restoreState(settings.value("windowState").toByteArray());
     QString master_url = settings.value("master_url",QString("http://192.168.1.2:11311/")).toString();
     QString host_url = settings.value("host_url", QString("192.168.1.3")).toString();
     QString topic_name = settings.value("topic_name", QString("/chatter")).toString();
@@ -111,17 +129,18 @@ void MainWindow::ReadSettings() {
 
 void MainWindow::WriteSettings() {
     QSettings settings("Qt-Ros Package", "%(package)s");
-    settings.setValue("geometry", geometry());
     settings.setValue("master_url",ui.line_edit_master->text());
     settings.setValue("host_url",ui.line_edit_host->text());
     settings.setValue("topic_name",ui.line_edit_topic->text());
    	settings.setValue("use_environment_variables",QVariant(ui.checkbox_use_environment->isChecked()));
+   	settings.setValue("geometry", saveGeometry());
+   	settings.setValue("windowState", saveState());
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
 	WriteSettings();
-	event->accept();
+	QMainWindow::closeEvent(event);
 }
 
 }  // namespace %(package)s

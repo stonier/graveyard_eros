@@ -33,6 +33,7 @@ namespace %(package)s {
 *****************************************************************************/
 
 class QNode : public QThread {
+    Q_OBJECT
 public:
 	QNode(int argc, char** argv );
 	~QNode();
@@ -40,7 +41,23 @@ public:
 	void init(const std::string &master_url, const std::string &host_url, const std::string &topic_name);
 	void run();
 
+	/*********************
+	** Logging
+	**********************/
+	enum LogLevel {
+	         Debug,
+	         Info,
+	         Warn,
+	         Error,
+	         Fatal
+	 };
+
 	QStringListModel* loggingModel() { return &logging_model; }
+	void log( const LogLevel &level, const std::string &msg);
+
+signals:
+	void loggingUpdated();
+    void rosShutdown();
 
 private:
 	int init_argc;
