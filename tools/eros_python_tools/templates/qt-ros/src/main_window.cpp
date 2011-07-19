@@ -44,6 +44,12 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
     QObject::connect(&qnode, SIGNAL(loggingUpdated()), this, SLOT(updateLoggingView()));
     QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
 
+    /*********************
+    ** Auto Start
+    **********************/
+    if ( ui.checkbox_remember_settings->isChecked() ) {
+        on_button_connect_clicked(true);
+    }
 }
 
 MainWindow::~MainWindow() {}
@@ -118,6 +124,8 @@ void MainWindow::ReadSettings() {
     ui.line_edit_master->setText(master_url);
     ui.line_edit_host->setText(host_url);
     ui.line_edit_topic->setText(topic_name);
+    bool remember = settings.value("remember_settings", false).toBool();
+    ui.checkbox_remember_settings->setChecked(remember);
     bool checked = settings.value("use_environment_variables", false).toBool();
     ui.checkbox_use_environment->setChecked(checked);
     if ( checked ) {
@@ -132,9 +140,11 @@ void MainWindow::WriteSettings() {
     settings.setValue("master_url",ui.line_edit_master->text());
     settings.setValue("host_url",ui.line_edit_host->text());
     settings.setValue("topic_name",ui.line_edit_topic->text());
-   	settings.setValue("use_environment_variables",QVariant(ui.checkbox_use_environment->isChecked()));
-   	settings.setValue("geometry", saveGeometry());
-   	settings.setValue("windowState", saveState());
+    settings.setValue("use_environment_variables",QVariant(ui.checkbox_use_environment->isChecked()));
+    settings.setValue("geometry", saveGeometry());
+    settings.setValue("windowState", saveState());
+    settings.setValue("remember_settings",QVariant(ui.checkbox_remember_settings->isChecked()));
+
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

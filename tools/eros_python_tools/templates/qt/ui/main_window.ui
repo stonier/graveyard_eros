@@ -94,7 +94,7 @@
    <property name="minimumSize">
     <size>
      <width>318</width>
-     <height>342</height>
+     <height>363</height>
     </size>
    </property>
    <property name="allowedAreas">
@@ -199,7 +199,17 @@
              </property>
             </widget>
            </item>
-           <item row="7" column="0">
+           <item row="7" column="0" colspan="2">
+            <widget class="QCheckBox" name="checkbox_remember_settings">
+             <property name="layoutDirection">
+              <enum>Qt::RightToLeft</enum>
+             </property>
+             <property name="text">
+              <string>Remember settings on startup</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="0">
             <spacer name="horizontalSpacer">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
@@ -212,7 +222,7 @@
              </property>
             </spacer>
            </item>
-           <item row="7" column="1">
+           <item row="8" column="1">
             <widget class="QPushButton" name="button_connect">
              <property name="enabled">
               <bool>true</bool>
