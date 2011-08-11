@@ -2,7 +2,7 @@
 
 PREFIX=/opt/mingw
 TUPLE=i686-pc-mingw32
-NAME=mingw-cross-env-2.20
+NAME=mingw-cross-env-2.21
 TARBALL=${NAME}.tar.gz
 URL=https://bitbucket.org/vog/mingw-cross-env/downloads/$(TARBALL)
 
@@ -48,7 +48,7 @@ links:
 
 
 compile: extract
-	@echo "Compiling the mingw gcc toolchain."
+	@echo "Compiling mingw gcc, log4cxx, boost and qt."
 	@if [ ! -f $(PREFIX)/usr/installed/gcc ]; then \
 		cd $(PREFIX); make gcc log4cxx boost qt; \
 	    echo; \

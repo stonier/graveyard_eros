@@ -31,16 +31,6 @@ set(PACKAGE_OPTIONS --without-pgsql --without-sqlite2 --without-sqlite3 --with-a
 if(MINGW)
   # Fix a bug in mingw cross compiler not setting this macro for you.
   set(ROS_COMPILE_FLAGS "${ROS_COMPILE_FLAGS} -D_WIN32_WINNT=0x0500")
-  # Can't find any documentation on this option (--no-undefined is there, but this aint!)
-  # Anyway, it bombs when gcc tries to use it, but seems to help libtool at the final
-  # linking stage. If its not there, then mingw aborts with unfound symbol errors.
-  # That too is a problem, and maybe should be resolved better than just by saying
-  # -no-undefined.
-  if(ROS_LINK_FLAGS)
-    set(ROS_LINK_FLAGS "-no-undefined ${ROS_LINK_FLAGS}")
-  else()
-    set(ROS_LINK_FLAGS "-no-undefined")
-  endif()
 endif()
 
 set(COMMON_ARGS --prefix=${CMAKE_INSTALL_PREFIX} 
