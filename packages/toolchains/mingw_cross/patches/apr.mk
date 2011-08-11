@@ -1,20 +1,6 @@
 # This file is part of mingw-cross-env.
 # See doc/index.html for further information.
 
-# Special flags
-#
-# -no-undefined
-#
-# Can't find any documentation on this option 
-# (--no-undefined is there, but this aint!)
-# Anyway, it bombs when gcc tries to use it, 
-# but seems to help libtool at the final
-# linking stage. If its not there, then 
-# mingw aborts with unfound symbol errors.
-# That too is a problem, and maybe should 
-# resolved better than just by saying
-# -no-undefined.
-#
 # Type sizes
 #
 # Sometimes wine has an emulation environment which runs conf tests,
@@ -54,7 +40,6 @@ define $(PKG)_BUILD
         ac_cv_sizeof_pid_t=4 \
         ac_cv_sizeof_size_t=4 \
         ac_cv_sizeof_ssize_t=4 \
-        CFLAGS=-D_WIN32_WINNT=0x0500 \
-        LDFLAGS=-no-undefined
+        CFLAGS=-D_WIN32_WINNT=0x0500 
     $(MAKE) -C '$(1)' -j '$(JOBS)' install bin_PROGRAMS= sbin_PROGRAMS= noinst_PROGRAMS= man_MANS=
 endef

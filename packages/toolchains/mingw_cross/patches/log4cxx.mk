@@ -1,20 +1,6 @@
 # This file is part of mingw-cross-env.
 # See doc/index.html for further information.
 
-# Special flags
-#
-# -no-undefined
-#
-# Can't find any documentation on this option 
-# (--no-undefined is there, but this aint!)
-# Anyway, it bombs when gcc tries to use it, 
-# but seems to help libtool at the final
-# linking stage. If its not there, then 
-# mingw aborts with unfound symbol errors.
-# That too is a problem, and maybe should 
-# resolved better than just by saying
-# -no-undefined.
-
 PKG             := log4cxx
 $(PKG)_IGNORE   :=
 $(PKG)_VERSION  := 0.10.0
