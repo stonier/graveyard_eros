@@ -455,17 +455,20 @@ def patch_ros():
     else:
         print "-- Assuming you have unstable or trunk installed."
         print "-- Will use patches from diamondback which should be compatible."
-        overlay_patches('diamondback')
+        #overlay_patches('diamondback')
 
 def overlay_patches(version):
     print "-- Applied various cross-compiling patches for " + version + "." 
     patches_dir = os.path.join(roslib.packages.get_pkg_dir('eros_python_tools'),"patches",version,"updates")
     ros_patches_dir = os.path.join(patches_dir,"ros")
     ros_comm_patches_dir = os.path.join(patches_dir,"ros_comm")
+    common_msgs_patches_dir = os.path.join(patches_dir,"common_msgs")
     ros_dir = roslib.stacks.get_stack_dir('ros')
     ros_comm_dir = roslib.stacks.get_stack_dir('ros_comm')
+    common_msgs_dir = roslib.stacks.get_stack_dir('common_msgs')
     copy_tree(ros_patches_dir,ros_dir)
     copy_tree(ros_comm_patches_dir,ros_comm_dir)
+    copy_tree(common_msgs_patches_dir,common_msgs_dir)
     #shutil.copytree(ros_patches_dir,ros_dir,ignore=shutil.ignore_patterns(IGNORE_PATTERNS))
 
 def copy_tree(src_dir, dest_dir):
