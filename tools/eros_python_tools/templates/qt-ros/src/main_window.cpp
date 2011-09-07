@@ -58,24 +58,39 @@ MainWindow::~MainWindow() {}
 ** Implementation [Slots]
 *****************************************************************************/
 
+void MainWindow::showNoMasterMessage() {
+	QMessageBox msgBox;
+	msgBox.setText("Couldn't find the ros master.");
+	msgBox.exec();
+    close();
+}
+
 /*
  * These triggers whenever the button is clicked, regardless of whether it
  * is already checked or not.
  */
 
 void MainWindow::on_button_connect_clicked(bool check ) {
-	ui.button_connect->setEnabled(false);
 	if ( ui.checkbox_use_environment->isChecked() ) {
-		qnode.init(ui.line_edit_topic->text().toStdString());
+		if ( !qnode.init(ui.line_edit_topic->text().toStdString()) ) {
+			showNoMasterMessage();
+		} else {
+			ui.button_connect->setEnabled(false);
+		}
 	} else {
-		qnode.init(ui.line_edit_master->text().toStdString(),
+		if ( ! qnode.init(ui.line_edit_master->text().toStdString(),
 				   ui.line_edit_host->text().toStdString(),
-				   ui.line_edit_topic->text().toStdString());
-		ui.line_edit_master->setReadOnly(true);
-		ui.line_edit_host->setReadOnly(true);
-		ui.line_edit_topic->setReadOnly(true);
+				   ui.line_edit_topic->text().toStdString()) ) {
+			showNoMasterMessage();
+		} else {
+			ui.button_connect->setEnabled(false);
+			ui.line_edit_master->setReadOnly(true);
+			ui.line_edit_host->setReadOnly(true);
+			ui.line_edit_topic->setReadOnly(true);
+		}
 	}
 }
+
 
 void MainWindow::on_checkbox_use_environment_stateChanged(int state) {
 	bool enabled;

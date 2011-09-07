@@ -39,6 +39,7 @@ public:
 	void WriteSettings(); // Save qt program settings when closing
 
 	void closeEvent(QCloseEvent *event); // Overloaded function
+	void showNoMasterMessage();
 
 public slots:
 	/******************************************

@@ -35,13 +35,16 @@ QNode::QNode(int argc, char** argv ) :
 QNode::~QNode() {
     if(ros::isStarted()) {
       ros::shutdown(); // explicitly needed since we use ros::start();
+      ros::waitForShutdown();
     }
-    ros::waitForShutdown();
 	wait();
 }
 
-void QNode::init(const std::string &topic_name) {
+bool QNode::init(const std::string &topic_name) {
 	ros::init(init_argc,init_argv,"%(package)s");
+	if ( ! ros::master::check() ) {
+		return false;
+	}
 	ros::start(); // explicitly needed since our nodehandle is going out of scope.
 	ros::NodeHandle n;
 	// Add your ros communications here.
@@ -49,11 +52,14 @@ void QNode::init(const std::string &topic_name) {
 	start();
 }
 
-void QNode::init(const std::string &master_url, const std::string &host_url, const std::string &topic_name) {
+bool QNode::init(const std::string &master_url, const std::string &host_url, const std::string &topic_name) {
 	std::map<std::string,std::string> remappings;
 	remappings["__master"] = master_url;
 	remappings["__hostname"] = host_url;
 	ros::init(remappings,"%(package)s");
+	if ( ! ros::master::check() ) {
+		return false;
+	}
 	ros::start(); // explicitly needed since our nodehandle is going out of scope.
 	ros::NodeHandle n;
 	// Add your ros communications here.
