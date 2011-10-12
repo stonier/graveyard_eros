@@ -13,6 +13,7 @@
   <depend package="eros_license"/>
   <depend package="eros_build"/>
   <!-- provided by eros/rosdep.yaml -->
+  <rosdep name="hg"/>
   <rosdep name="autoconf"/>
   <rosdep name="xz"/>
   <rosdep name="flex"/>

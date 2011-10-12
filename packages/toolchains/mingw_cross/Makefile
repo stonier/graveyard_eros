@@ -3,8 +3,7 @@
 PREFIX=/opt/mingw
 TUPLE=i686-pc-mingw32
 NAME=mingw-cross-env-2.21
-TARBALL=${NAME}.tar.gz
-URL=https://bitbucket.org/vog/mingw-cross-env/downloads/$(TARBALL)
+URL=http://hg.savannah.nongnu.org/hgweb/mingw-cross-env
 
 ##############################################################################
 # Primary targets
@@ -28,11 +27,11 @@ clean:
 ##############################################################################
 
 help:
-	@echo "all       : downloads, extracts to /opt/mingw and compiles gcc."
+	@echo "all       : clones to /opt/mingw and compiles gcc, qt, boost and apache libs."
 	@echo "links     : installs links to binaries in /opt/mingw/usr/bin."
 	@echo "install   : same as above."
 	@echo "uninstall : uninstalls links and deletes /opt/mingw."
-	@echo "download  : downloads the mingw cross tarball."
+	@echo "clone     : just clone the stable mingw cross repo."
 
 links:
 	@if [ -d $(PREFIX)/usr/bin ]; then \
@@ -47,7 +46,7 @@ links:
 
 
 
-compile: extract
+compile: clone
 	@echo "Compiling mingw gcc, log4cxx, boost and qt."
 	@if [ ! -f $(PREFIX)/usr/installed/gcc ]; then \
 		cd $(PREFIX); make gcc log4cxx boost qt; \
@@ -67,29 +66,27 @@ compile: extract
 	    echo "  cd /opt/mingw"; \
 	    echo "  make gdb wxwidgets"; \
 	    echo; \
+	    echo "If the download links should ever happen to be broken, try"; \
+	    echo; \
+	    echo "  cd /opt/mingw/src"; \
+	    echo "  hg pull -u"; \
+	    echo; \
+	    echo "that will sometimes work. If it fails, then contact help as something is";  \
+	    echo "probably really broken."; \ 
+	    echo; \
 	else \
 		echo "There is already an installed gcc in $(PREFIX)."; \
 	fi
 
-extract: download
-	@echo "Extracting to $(PREFIX)"
+clone: 
+	@echo "Cloning stable branch to $(PREFIX)"
 	sudo mkdir -p $(PREFIX)
 	sudo chown -R $(USER):$(USER) $(PREFIX)
 	@if [ ! -f $(PREFIX)/Makefile ]; then \
-		rm -rf build/$(NAME); \
-		tar -xvzf build/$(TARBALL) -C build; \
-		mv build/$(NAME)/* $(PREFIX); \
+		hg clone -b stable $(URL) $(PREFIX); \
 	else \
-		echo "$(TARBALL) already extracted to $(PREFIX)."; \
+		echo "Mingw cross has already been cloned at $(PREFIX)."; \
 	fi
 	@cp patches/*.mk /opt/mingw/src
+	@cp patches/*.c /opt/mingw/src
 	@cp patches/*.patch /opt/mingw/src
-
-download:
-	@mkdir -p build
-	@if [ -f build/$(TARBALL) ]; then \
-		echo "$(TARBALL) already downloaded."; \
-	else \
-		cd build; wget $(URL); \
-	fi
-	

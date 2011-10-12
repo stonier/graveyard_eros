@@ -33,12 +33,14 @@
     
      Create apr, apr-util and log4cxx build makefiles and submit upstream.
      
+     - binutils, libpng : take out patches when mingw cross updates.
      - apr : backup url's, update and test program.
      - apr-util : backup url's update and test program.
      - log4cxx : backup url's and test program.
      
 \section ChangeLog
 
-	- <b>Nov 10</b> : Done and road tested.
+     - <b>Oct 11</b> : converting to use hg clone and hg pull instead of the tarball.
+     - <b>Nov 10</b> : Done and road tested.
 
 */

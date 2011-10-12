@@ -2,6 +2,8 @@ bison:
   ubuntu: bison
 flex:
   ubuntu: flex
+hg:
+  ubuntu: mercurial
 yasm:
   ubuntu: yasm
 xz:
