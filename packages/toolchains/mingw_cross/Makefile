@@ -11,7 +11,11 @@ URL=http://hg.savannah.nongnu.org/hgweb/mingw-cross-env
 
 .PHONY: clean
 
-all: compile
+# Using sudo to make the directories anyway, may as well as get it to do
+# the lot - should perhaps move mingw_cross to user's home directory.
+all: links
+
+# all: compile
 
 install: links
 	
